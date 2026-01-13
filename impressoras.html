@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Impressoras Ricoh - Fichas Técnicas | Brücker Printers</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-black: #000000;
+            --primary-white: #f8f7f7;
+            --secondary-orange: #FF8C42;
+            --secondary-red: #be1622;
+            --accent-yellow: #ebcc01;
+            --light-orange: #FFF4ED;
+            --gray-900: #1A1A1A;
+            --gray-700: #4A4A4A;
+            --gray-500: #6B6B6B;
+            --gray-300: #D1D5DB;
+            --gray-100: #F3F4F6;
+            --white: #FFFFFF;
+            --font-primary: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-primary);
+            color: var(--gray-900);
+            line-height: 1.6;
+            overflow-x: hidden;
+            background: var(--gray-100);
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: var(--white);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .header-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 80px;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-black);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-image {
+            height: 50px;
+            width: auto;
+            max-width: 200px;
+            object-fit: contain;
+        }
+
+        .nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: var(--gray-700);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease;
+            position: relative;
+        }
+
+        .nav-link:hover {
+            color: var(--secondary-orange);
+        }
+
+        .nav-link.active {
+            color: var(--secondary-orange);
+        }
+
+        .btn-header {
+            background: var(--secondary-red);
+            color: var(--white);
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            border: 2px solid var(--secondary-red);
+        }
+
+        .btn-header:hover {
+            background: #9a111a;
+            transform: translateY(-2px);
+        }
+
+        .menu-toggle {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        .menu-toggle span {
+            width: 25px;
+            height: 3px;
+            background: var(--gray-900);
+            transition: all 0.3s ease;
+            border-radius: 2px;
+        }
+
+        .page-header {
+            margin-top: 80px;
+            background: linear-gradient(135deg, var(--primary-black) 0%, #2a2a2a 100%);
+            color: var(--white);
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+
+        .page-header h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .page-header p {
+            font-size: 1.15rem;
+            color: rgba(255, 255, 255, 0.9);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .main-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+
+        .printer-section {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 3rem;
+            margin-bottom: 3rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .printer-header {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 3rem;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid var(--gray-100);
+        }
+
+        .printer-image {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--gray-100);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .printer-image img {
+            max-width: 100%;
+            height: auto;
+            max-height: 250px;
+            object-fit: contain;
+        }
+
+        .printer-intro h2 {
+            font-size: 2.2rem;
+            color: var(--gray-900);
+            margin-bottom: 1rem;
+        }
+
+        .printer-category {
+            display: inline-block;
+            background: var(--light-orange);
+            color: var(--secondary-red);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .printer-description {
+            color: var(--gray-700);
+            font-size: 1.05rem;
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+        }
+
+        .printer-highlights {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .highlight-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--gray-700);
+            font-size: 0.95rem;
+        }
+
+        .highlight-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--secondary-orange);
+            border-radius: 50%;
+        }
+
+        .specs-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2.5rem;
+        }
+
+        .spec-category {
+            margin-bottom: 2rem;
+        }
+
+        .spec-category:last-child {
+            margin-bottom: 0;
+        }
+
+        .spec-category h3 {
+            font-size: 1.3rem;
+            color: var(--gray-900);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--secondary-orange);
+        }
+
+        .spec-table {
+            width: 100%;
+        }
+
+        .spec-row {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .spec-row:last-child {
+            border-bottom: none;
+        }
+
+        .spec-label {
+            font-weight: 600;
+            color: var(--gray-900);
+            font-size: 0.95rem;
+        }
+
+        .spec-value {
+            color: var(--gray-700);
+            font-size: 0.95rem;
+        }
+
+        .spec-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .spec-list li {
+            padding: 0.4rem 0;
+            color: var(--gray-700);
+            font-size: 0.95rem;
+        }
+
+        .cta-section {
+            background: var(--light-orange);
+            padding: 2rem;
+            border-radius: 8px;
+            text-align: center;
+            margin-top: 3rem;
+        }
+
+        .cta-section h3 {
+            font-size: 1.5rem;
+            color: var(--gray-900);
+            margin-bottom: 1rem;
+        }
+
+        .cta-section p {
+            color: var(--gray-700);
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-cta {
+            display: inline-block;
+            background: var(--secondary-red);
+            color: var(--white);
+            padding: 1rem 2.5rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.05rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-cta:hover {
+            background: #9a111a;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(190, 22, 34, 0.3);
+        }
+
+        .footer {
+            background: var(--gray-900);
+            color: var(--white);
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .footer p {
+            margin: 0.5rem 0;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        @media (max-width: 1024px) {
+            .specs-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .printer-header {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav {
+                position: fixed;
+                top: 80px;
+                left: 0;
+                right: 0;
+                background: var(--white);
+                flex-direction: column;
+                padding: 1rem;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+                transform: translateY(-100%);
+                opacity: 0;
+                transition: all 0.3s ease;
+                pointer-events: none;
+            }
+
+            .nav.active {
+                transform: translateY(0);
+                opacity: 1;
+                pointer-events: all;
+            }
+
+            .menu-toggle {
+                display: flex;
+            }
+
+            .page-header h1 {
+                font-size: 2rem;
+            }
+
+            .printer-section {
+                padding: 2rem 1.5rem;
+            }
+
+            .printer-intro h2 {
+                font-size: 1.8rem;
+            }
+
+            .spec-row {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+
+            .main-content {
+                padding: 2rem 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .page-header h1 {
+                font-size: 1.6rem;
+            }
+
+            .printer-section {
+                padding: 1.5rem 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-container">
+            <a href="index.html" class="logo">
+                <img src="imagens/logoTransparente.png" alt="Brücker Printers Logo" class="logo-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
+                <span style="display: none;">Brücker Printers</span>
+            </a>
+            <nav class="nav" id="nav">
+                <a href="impressoras.html" class="nav-link active">Impressoras</a>
+                <a href="index.html#sobre" class="nav-link">Sobre</a>
+                <a href="index.html#solucoes" class="nav-link">Soluções</a>
+                <a href="index.html#vantagens" class="nav-link">Vantagens</a>
+                <a href="index.html#diferenciais" class="nav-link">Diferenciais</a>
+                <a href="https://wa.me/5551997371666?text=Olá!%20Gostaria%20de%20solicitar%20um%20orçamento." class="btn-header" target="_blank">Falar no WhatsApp</a>
+            </nav>
+            <button class="menu-toggle" id="menuToggle" aria-label="Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <div class="page-header">
+        <h1>Impressoras Ricoh - Fichas Técnicas</h1>
+        <p>Conheça em detalhes as especificações técnicas de cada modelo disponível em nossa linha de impressoras corporativas</p>
+    </div>
+
+    <main class="main-content">
+        <!-- Ricoh Pro C5200 -->
+        <section class="printer-section" id="ricoh-c5200">
+            <div class="printer-header">
+                <div class="printer-image">
+                    <img src="impressoras/RicohProC5200.png" alt="Ricoh Pro C5200">
+                </div>
+                <div class="printer-intro">
+                    <h2>Ricoh Pro C5200</h2>
+                    <span class="printer-category">Produção de Médio Volume</span>
+                    <p class="printer-description">Impressora colorida de alta performance projetada para ambientes de produção que exigem qualidade excepcional e versatilidade. Ideal para gráficas rápidas e departamentos de impressão corporativos.</p>
+                    <div class="printer-highlights">
+                        <div class="highlight-item">
+                            <span class="highlight-dot"></span>
+                            <span>Até 80 ppm em cores</span>
+                        </div>
+                        <div class="highlight-item">
+                            <span class="highlight-dot"></span>
+                            <span>Resolução 1200 x 1200 dpi</span>
+                        </div>
+                        <div class="highlight-item">
+                            <span class="highlight-dot"></span>
+                            <span>Suporta até 350 g/m²</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="specs-grid">
+                <div>
+                    <div class="spec-category">
+                        <h3>Velocidade de Impressão</h3>
+                        <div class="spec-table">
+                            <div class="spec-row">
+                                <span class="spec-label">Cores</span>
+                                <span class="spec-value">80 ppm (A4)</span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Preto e Branco</span>
+                                <span class="spec-value">80 ppm (A4)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="spec-category">
+                        <h3>Qualidade de Impressão</h3>
+                        <div class="spec-table">
+                            <div class="spec-row">
+                                <span class="spec-label">Resolução</span>
+                                <span class="spec-value">1200 x 1200 dpi</span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Tecnologia</span>
+                                <span class="spec-value">LED com toner em pó</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="spec-category">
+                        <h3>Capacidade de Papel</h3>
+                        <div class="spec-table">
+                            <div class="spec-row">
+                                <span class="spec-label">Entrada padrão</span>
+                                <span class="spec-value">2.500 folhas</span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Entrada máxima</span>
+                                <span class="spec-value">8.500 folhas</span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Gramatura</span>
+                                <span class="spec-value">52 a 350 g/m²</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="spec-category">
+                        <h3>Formatos Suportados</h3>
+                        <div class="spec-table">
+                            <div class="spec-row">
+                                <span class="spec-label">Tamanhos</span>
+                                <span class="spec-value">A6 até SRA3 (320 x 488 mm)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="spec-category">
+                        <h3>Acabamento</h3>
+                        <div class="spec-table">
+                            <div class="spec-row">
+                                <span class="spec-label">Opções disponíveis</span>
+                                <div class="spec-value">
+                                    <ul class="spec-list">
+                                        <li>Grampeamento (até 100 folhas)</li>
+                                        <li>Dobra em C e Z</li>
+                                        <li>Perfuração de 2 ou 4 furos</li>
+                                        <li>Corte e vinco</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="spec-category">
+                        <h3>Conectividade</h3>
+                        <div class="spec-table">
+                            <div class="spec-row">
+                                <span class="spec-label">Interfaces</span>
+                                <span class="spec-value">Ethernet 1000Base-T, USB 2.0</span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Protocolos</span>
+                                <span class="spec-value">TCP/IP, IPX/SPX, NetBEUI</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Ricoh Pro C7200 -->
+        <section class="printer-section" id="ricoh-c7200">
+            <div class="printer-header">
+                <div class="printer-image">
+                    <img src="impressoras/RicohProC7200.png" alt="Ricoh Pro C7200">
+                </div>
+                <div class="printer-intro">
+                    <h2>Ricoh Pro C7200</h2>
+                    <span class="printer-category">Alto Volume de Produção</span>
+                    <p class="printer-description">Sistema de impressão colorida de alta velocidade e qualidade profissional, desenvolvido para ambientes de produção exigentes. Oferece consistência de cor excepcional e produtividade superior.</p>
+                    <div class="printer-highlights">
+                        <div class="highlight-item">
+                            <span class="highlight-dot"></span>
+                            <span>Até 95 ppm em cores</span>
+                        </div>
+                        <div class="highlight-item">
+                            <span class="highlight-dot"></span>
+                            <span>Resolução 1200 x 4800 dpi</span>
+                        </div>
+                        <div class="highlight-item">
+                            <span class="highlight-dot"></span>
+                            <span>Banner até 1.300 mm</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="specs-grid">
+                <div>
+                    <div class="spec-category">
+                        <h3>Velocidade de Impressão</h3>
+                        <div class="spec-table">
+                            <div class="spec-row">
+                                <span class="spec-label">Cores</span>
+                                <span class="spec-value">95 ppm (A4)</span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Preto e Branco</span>
+                                <span class="spec-value">95 ppm (A4)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="spec-category">
+                        <h3>Qualidade de Impressão</h3>
+                        <div class="spec-table">
+                            <div class="spec-row">
+                                <span class="spec-label">Resolução</span>
+                                <span class="spec-value">1200 x 4800 dpi</span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Tecnologia</span>
+                                <span class="spec-value">LED com toner EA</span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Cores</span>
+                                <span class="spec-value">CMYK + Branco/Neon</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="spec-category">
+                        <h3>Capacidade de Papel</h3>
+                        <div class="spec-table">
+                            <div class="spec-row">
+                                <span class="spec-label">Entrada padrão</span>
+                                <span class="spec-value">3.500 folhas</span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Entrada máxima</span>
+                                <span class="spec-value">13.500 folhas</span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Gramatura</span>
+                                <span class="spec-value">52 a 400 g/m²</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="spec-category">
+                        <h3>Formatos Suportados</h3>
+                        <div class="spec-table">
+                            <div class="spec-row">
+                                <span class="spec-label">Tamanhos</span>
+                                <span class="spec-value">A6 até SRA3 (330 x 488 mm)</span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Banner</span>
+                                <span class="spec-value">Até 330 x 1.300 mm</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="spec-category">
+                        <h3>Acabamento</h3>
+                        <div class="spec-table">
+                            <div class="spec-row">
+                                <span class="spec-label">Opções disponíveis</span>
+                                <div class="spec-value">
+                                    <ul class="spec-list">
+                                        <li>Grampeamento avançado</li>
+                                        <li>Dobra múltipla</li>
+                                        <li>Perfuração personalizada</li>
+                                        <li>Corte, vinco e perfuração</li>
+                                        <li>Encadernação</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="spec-category">
+                        <h3>Recursos Especiais</h3>
+                        <div class="spec-table">
+                            <div class="spec-row">
+                                <span class="spec-label">Toner especial</span>
+                                <span class="spec-value">Branco e cores neon opcionais</span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Servidor integrado</span>
+                                <span class="spec-value">Fiery FS400 Pro</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Ricoh Pro C9200 -->
+        <section class="printer-section" id="ricoh-c9200">
+            <div class="printer-header">
+                <div class="printer-image">
+                    <img src="impressoras/RicohProC9200.png" alt="Ricoh Pro C9200">
+                </div>
+                <div class="printer-intro">
+                    <h2>Ricoh Pro C9200</h2>
+                    <span class="printer-category">Produção Industrial</span>
+                    <p class="printer-description">Impressora colorida de produção de altíssimo desempenho, desenvolvida para operações gráficas industriais. Oferece velocidade excepcional, qualidade premium e versatilidade incomparável.</p>
+                    <div class="printer-highlights">
+                        <div class="highlight-item">
+                            <span class="highlight-dot"></span>
+                            <span>Até 135 ppm em cores</span>
+                        </div>
+                        <div class="highlight-item">
+                            <span class="highlight-dot"></span>
+                            <span>Resolução 1200 x 4800 dpi</span>
+                        </div>
+                        <div class="highlight-item">
+                            <span class="highlight-dot"></span>
+                            <span>5ª e 6ª cor opcional</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="specs-grid">
+                <div>
+                    <div class="spec-category">
+                        <h3>Velocidade de Impressão</h3>
+                        <div class="spec-table">
+                            <div class="spec-row">
+                                <span class="spec-label">Cores</span>
+                                <span class="spec-value">135 ppm (A4)</span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Preto e Branco</span>
+                                <span class="spec-value">135 ppm (A4)</span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Volume mensal</span>
+                                <span class="spec-value">Até 1.500.000 páginas</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="spec-category">
+                        <h3>Qualidade de Impressão</h3>
+                        <div class="spec-table">
+                            <div class="spec-row">
+                                <span class="spec-label">Resolução</span>
+                                <span class="spec-value">1200 x 4800 dpi</span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Tecnologia</span>
+                                <span class="spec-value">LED Scanning Array</span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Sistema de cores</span>
+                                <span class="spec-value">CMYK + Branco + Clear/Neon</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="spec-category">
+                        <h3>Capacidade de Papel</h3>
+                        <div class="spec-table">
+                            <div class="spec-row">
+                                <span class="spec-label">Entrada padrão</span>
+                                <span class="spec-value">5.500 folhas</span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Entrada máxima</span>
+                                <span class="spec-value">18.500 folhas</span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Gramatura</span>
+                                <span class="spec-value">52 a 450 g/m²</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="spec-category">
+                        <h3>Formatos Suportados</h3>
+                        <div class="spec-table">
+                            <div class="spec-row">
+                                <span class="spec-label">Tamanhos</span>
+                                <span class="spec-value">A6 até SRA3 (330 x 488 mm)</span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Banner</span>
+                                <span class="spec-value">Até 330 x 1.300 mm</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="spec-category">
+                        <h3>Acabamento Inline</h3>
+                        <div class="spec-table">
+                            <div class="spec-row">
+                                <span class="spec-label">Opções disponíveis</span>
+                                <div class="spec-value">
+                                    <ul class="spec-list">
+                                        <li>Grampeamento inline (até 200 folhas)</li>
+                                        <li>Sistema de dobra profissional</li>
+                                        <li>Perfuração e corte automatizado</li>
+                                        <li>Inserção de capas</li>
+                                        <li>Encadernação térmica</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="spec-category">
+                        <h3>Recursos Premium</h3>
+                        <div class="spec-table">
+                            <div class="spec-row">
+                                <span class="spec-label">5ª cor</span>
+                                <span class="spec-value">Toner branco para aplicações especiais</span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">6ª cor</span>
+                                <span class="spec-value">Clear toner ou cores neon</span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Controlador</span>
+                                <span class="spec-value">Fiery FS550 Pro</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Ricoh Pro 8300 -->
+        <section class="printer-section" id="ricoh-8300">
+            <div class="printer-header">
+                <div class="printer-image">
+                    <img src="impressoras/RicohPro8300.png" alt="Ricoh Pro 8300">
+                </div>
+                <div class="printer-intro">
+                    <h2>Ricoh Pro 8300</h2>
+                    <span class="printer-category">Monocromático de Alta Produção</span>
+                    <p class="printer-description">Impressora monocromática de produção projetada para alto volume de impressão em preto e branco. Ideal para impressão de livros, manuais, apostilas e documentos corporativos em grande escala.</p>
+                    <div class="printer-highlights">
+                        <div class="highlight-item">
+                            <span class="highlight-dot"></span>
+                            <span>Até 135 ppm</span>
+                        </div>
+                        <div class="highlight-item">
+                            <span class="highlight-dot"></span>
+                            <span>Resolução 1200 x 1200 dpi</span>
+                        </div>
+                        <div class="highlight-item">
+                            <span class="highlight-dot"></span>
+                            <span>Duty cycle 1.500.000 páginas/mês</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="specs-grid">
+                <div>
+                    <div class="spec-category">
+                        <h3>Velocidade de Impressão</h3>
+                        <div class="spec-table">
+                            <div class="spec-row">
+                                <span class="spec-label">Preto e Branco</span>
+                                <span class="spec-value">135 ppm (A4)</span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Primeira página</span>
+                                <span class="spec-value">2,8 segundos</span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Volume mensal</span>
+                                <span class="spec-value">Até 1.500.000 páginas</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="spec-category">
+                        <h3>Qualidade de Impressão</h3>
+                        <div class="spec-table">
+                            <div class="spec-row">
+                                <span class="spec-label">Resolução</span>
+                                <span class="spec-value">1200 x 1200 dpi</span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Tecnologia</span>
+                                <span class="spec-value">LED com toner seco</span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Tons de cinza</span>
+                                <span class="spec-value">256 níveis</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="spec-category">
+                        <h3>Capacidade de Papel</h3>
+                        <div class="spec-table">
+                            <div class="spec-row">
+                                <span class="spec-label">Entrada padrão</span>
+                                <span class="spec-value">4.500 folhas</span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Entrada máxima</span>
+                                <span class="spec-value">14.500 folhas</span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Gramatura</span>
+                                <span class="spec-value">52 a 300 g/m²</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="spec-category">
+                        <h3>Formatos Suportados</h3>
+                        <div class="spec-table">
+                            <div class="spec-row">
+                                <span class="spec-label">Tamanhos</span>
+                                <span class="spec-value">A5 até SRA3 (330 x 488 mm)</span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Banner</span>
+                                <span class="spec-value">Até 330 x 1.200 mm</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="spec-category">
+                        <h3>Acabamento</h3>
+                        <div class="spec-table">
+                            <div class="spec-row">
+                                <span class="spec-label">Opções disponíveis</span>
+                                <div class="spec-value">
+                                    <ul class="spec-list">
+                                        <li>Grampeamento até 100 folhas</li>
+                                        <li>Dobra em C, Z e sanfona</li>
+                                        <li>Perfuração de 2 a 4 furos</li>
+                                        <li>Corte e refilamento</li>
+                                        <li>Encadernação termal</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="spec-category">
+                        <h3>Recursos Especiais</h3>
+                        <div class="spec-table">
+                            <div class="spec-row">
+                                <span class="spec-label">Duplex</span>
+                                <span class="spec-value">Automático em alta velocidade</span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Controlador</span>
+                                <span class="spec-value">TotalFlow Print Server R-71</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Ricoh MP C2004 -->
+        <section class="printer-section" id="ricoh-c2004">
+            <div class="printer-header">
+                <div class="printer-image">
+                    <img src="impressoras/RicohMPC2004.png" alt="Ricoh MP C2004">
+                </div>
+                <div class="printer-intro">
+                    <h2>Ricoh MP C2004</h2>
+                    <span class="printer-category">Multifuncional Corporativa</span>
+                    <p class="printer-description">Multifuncional colorida compacta e eficiente, ideal para escritórios e pequenas empresas. Combina impressão, cópia, digitalização e fax em um único equipamento com excelente custo-benefício.</p>
+                    <div class="printer-highlights">
+                        <div class="highlight-item">
+                            <span class="highlight-dot"></span>
+                            <span>Até 20 ppm em cores</span>
+                        </div>
+                        <div class="highlight-item">
+                            <span class="highlight-dot"></span>
+                            <span>Resolução 1200 x 1200 dpi</span>
+                        </div>
+                        <div class="highlight-item">
+                            <span class="highlight-dot"></span>
+                            <span>Scanner 600 dpi</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="specs-grid">
+                <div>
+                    <div class="spec-category">
+                        <h3>Velocidade de Impressão</h3>
+                        <div class="spec-table">
+                            <div class="spec-row">
+                                <span class="spec-label">Cores</span>
+                                <span class="spec-value">20 ppm (A4)</span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Preto e Branco</span>
+                                <span class="spec-value">20 ppm (A4)</span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Volume mensal</span>
+                                <span class="spec-value">Até 50.000 páginas</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="spec-category">
+                        <h3>Qualidade de Impressão</h3>
+                        <div class="spec-table">
+                            <div class="spec-row">
+                                <span class="spec-label">Resolução</span>
+                                <span class="spec-value">1200 x 1200 dpi</span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Tecnologia</span>
+                                <span class="spec-value">Laser colorido</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="spec-category">
+                        <h3>Capacidade de Papel</h3>
+                        <div class="spec-table">
+                            <div class="spec-row">
+                                <span class="spec-label">Entrada padrão</span>
+                                <span class="spec-value">550 folhas</span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Entrada máxima</span>
+                                <span class="spec-value">2.300 folhas</span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Gramatura</span>
+                                <span class="spec-value">60 a 220 g/m²</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="spec-category">
+                        <h3>Funcionalidades</h3>
+                        <div class="spec-table">
+                            <div class="spec-row">
+                                <span class="spec-label">Funções</span>
+                                <div class="spec-value">
+                                    <ul class="spec-list">
+                                        <li>Impressão colorida</li>
+                                        <li>Cópia colorida</li>
+                                        <li>Scanner colorido</li>
+                                        <li>Fax (opcional)</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="spec-category">
+                        <h3>Scanner</h3>
+                        <div class="spec-table">
+                            <div class="spec-row">
+                                <span class="spec-label">Resolução</span>
+                                <span class="spec-value">600 dpi</span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Velocidade</span>
+                                <span class="spec-value">50 ipm (frente e verso)</span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Formatos</span>
+                                <span class="spec-value">PDF, TIFF, JPEG</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="spec-category">
+                        <h3>Conectividade</h3>
+                        <div class="spec-table">
+                            <div class="spec-row">
+                                <span class="spec-label">Interfaces</span>
+                                <span class="spec-value">Ethernet, USB, Wi-Fi (opcional)</span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Mobile print</span>
+                                <span class="spec-value">AirPrint, Mopria, Smart Device Connector</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="cta-section">
+            <h3>Interessado em algum destes modelos?</h3>
+            <p>Entre em contato conosco e solicite um orçamento personalizado para sua empresa</p>
+            <a href="https://wa.me/5551997371666?text=Olá!%20Gostaria%20de%20mais%20informações%20sobre%20as%20impressoras%20Ricoh." class="btn-cta" target="_blank">Solicitar Orçamento via WhatsApp</a>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <h3 style="margin-bottom: 1rem;">Brücker Printers</h3>
+            <p>Soluções corporativas em impressão para empresas de todos os portes.</p>
+            <p>Venda | Locação | Manutenção Especializada</p>
+            <p style="margin-top: 1.5rem;">&copy; 2026 Brücker Printers. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <script>
+        const menuToggle = document.getElementById('menuToggle');
+        const nav = document.getElementById('nav');
+
+        menuToggle.addEventListener('click', () => {
+            menuToggle.classList.toggle('active');
+            nav.classList.toggle('active');
+        });
+
+        const menuToggleActive = menuToggle.classList.contains('active');
+        if (menuToggleActive) {
+            menuToggle.children[0].style.transform = 'rotate(45deg) translate(8px, 8px)';
+            menuToggle.children[1].style.opacity = '0';
+            menuToggle.children[2].style.transform = 'rotate(-45deg) translate(7px, -7px)';
+        }
+    </script>
+</body>
+</html>
