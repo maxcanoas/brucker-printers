@@ -636,11 +636,10 @@ img {
 
 .clients-carousel {
     display: flex;
-    animation: scroll 40s linear infinite;
     width: fit-content;
 }
 
-.clients-carousel:hover {
+.clients-carousel:hover .clients-track {
     animation-play-state: paused;
 }
 
@@ -649,6 +648,7 @@ img {
     align-items: center;
     gap: 4rem;
     padding: 0 2rem;
+    animation: scroll 40s linear infinite;
 }
 
 .client-logo {
