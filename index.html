@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Brücker Printers | Impressoras Corporativas Ricoh</title>
+    <!-- Favicons -->
+    <link rel="icon" type="image/x-icon" href="imagens/favicon.ico">
+    <link rel="icon" type="image/png" sizes="16x16" href="imagens/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="imagens/favicon-32x32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="imagens/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="imagens/android-chrome-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="imagens/android-chrome-512x512.png">
+    <meta name="theme-color" content="#be1622">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -62,7 +70,7 @@
             <div class="section-header">
                 <div class="section-subtitle">Quem Somos</div>
                 <h2 class="section-title">Especialistas em Impressão Profissional para Gráficas</h2>
-                <p class="section-description">Bem-vindo à Brücker Printers, sua parceira em soluções completas de impressão para gráficas de todos os portes. A Brücker Printers é especialista em venda e aluguel de impressoras profissionais para gráficas que querem produzir mais, com qualidade superior e total controle de custos.</p>
+                <p class="section-description">Bem-vindo à Brücker Printers, sua parceira em soluções completas de impressão para gráficas de todos os portes. Atuamos com a venda e locação de impressoras de alta performance, oferecendo equipamentos modernos, confiáveis e prontos para atender às mais diversas demandas do mercado gráfico. A Brücker Printers é especialista em venda e aluguel de impressoras profissionais para gráficas que querem produzir mais, com qualidade superior e total controle de custos. Trabalhamos com equipamentos de última geração, prontos para altas demandas e resultados impecáveis.</p>
             </div>
             <div class="about-content">
                 <div class="about-text">
@@ -165,47 +173,43 @@
     </section>
 
     <section class="clients-section">
-        <div class="container">
-            <div class="section-header">
-                <div class="section-subtitle">Nossos Clientes</div>
-                <h2 class="section-title">Empresas que Confiam na Brücker Printers</h2>
-                <p class="section-description">Atendemos gráficas, empresas e instituições de todo o Brasil com soluções profissionais de impressão.</p>
-            </div>
+    <div class="container">
+        <div class="section-header">
+            <div class="section-subtitle">Nossos Clientes</div>
+            <h2 class="section-title">Empresas que Confiam na Brücker Printers</h2>
+            <p class="section-description">Atendemos gráficas, empresas e instituições de todo o Brasil com soluções profissionais de impressão.</p>
         </div>
-        
-        <div class="clients-carousel-wrapper">
-            <div class="clients-carousel" id="clientsCarousel">
-                <!-- O JavaScript irá duplicar este conteúdo -->
-                <div class="clients-track">
-                    <!-- Exemplo com nomes de empresas - Substitua pelos logos reais -->
-                    <div class="client-logo">
-                        <span class="client-name">Gráfica Alpha</span>
-                    </div>
-                    <div class="client-logo">
-                        <span class="client-name">Print Solutions</span>
-                    </div>
-                    <div class="client-logo">
-                        <span class="client-name">Express Gráfica</span>
-                    </div>
-                    <div class="client-logo">
-                        <span class="client-name">Digital Print</span>
-                    </div>
-                    <div class="client-logo">
-                        <span class="client-name">ColorMax</span>
-                    </div>
-                    <div class="client-logo">
-                        <span class="client-name">QuickPrint</span>
-                    </div>
-                    <div class="client-logo">
-                        <span class="client-name">Mega Gráfica</span>
-                    </div>
-                    <div class="client-logo">
-                        <span class="client-name">Premium Print</span>
-                    </div>
+    </div>
+    
+    <div class="clients-carousel-wrapper">
+        <div class="clients-carousel" id="clientsCarousel">
+            <div class="clients-track">
+                <!-- Adicione o atributo data-company-name em cada logo -->
+                <div class="client-logo" data-company-name="ARTPONTOCOM Comunicação Visual">
+                    <span class="client-name"><img src="clientes/artpontocom.jpg" alt="ARTPONTOCOM Comunicação Visual"></span>
+                </div>
+                <div class="client-logo" data-company-name="Cardnet">
+                    <span class="client-name"><img src="clientes/cardnet.png" alt="Cardnet"></span>
+                </div>
+                <div class="client-logo" data-company-name="CTD - Cia. de Tecnologia Digital">
+                    <span class="client-name"><img src="clientes/ctd.jpg" alt="Cia. de Tecnologia Digital"></span>
+                </div>
+                <div class="client-logo" data-company-name="Gráfica Pinguim">
+                    <span class="client-name"><img src="clientes/grafica-pinguin.jpg" alt="Gráfica Pinguim"></span>
+                </div>
+                <div class="client-logo" data-company-name="Gráfica Valeform">
+                    <span class="client-name"><img src="clientes/grafica-valeform.jpg" alt="Gráfica Valeform"></span>
+                </div>
+                <div class="client-logo" data-company-name="Grafimax Editora Gráfica">
+                    <span class="client-name"><img src="clientes/grafimax.jpg" alt="Grafimax Editora Gráfica"></span>
+                </div>
+                <div class="client-logo" data-company-name="Raizler Promocional">
+                    <span class="client-name"><img src="clientes/raizler.jpg" alt="Raizler Promocional"></span>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
     <section class="section section-alt" id="diferenciais">
         <div class="container">
@@ -326,7 +330,7 @@
             </div>
             
             <div class="footer-bottom">
-                <p>&copy; 2026 Brücker Printers. Todos os direitos reservados.</p>
+                <p>&copy; <span id="currentYear"></span> Brücker Printers. Todos os direitos reservados.</p>
                 <div class="dev-credit">
                     <p>Desenvolvido por <a href="https://www.instagram.com/devmrmoraes/" target="_blank" rel="noopener noreferrer">devmrmoraes</a></p>
                 </div>
