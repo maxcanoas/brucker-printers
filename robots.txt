@@ -1,0 +1,23 @@
+# Robots.txt para Brücker Printers
+# Atualizado em: 28/01/2026
+
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /cgi-bin/
+Disallow: /*.json$
+Disallow: /*.xml$
+Disallow: /404.html
+
+# Crawl-delay para bots específicos (opcional)
+User-agent: Googlebot
+Crawl-delay: 0
+
+User-agent: Bingbot
+Crawl-delay: 1
+
+# Sitemap
+Sitemap: https://bruckerprinters.com.br/sitemap.xml
+
+# Informações adicionais
+# Host: bruckerprinters.com.br
