@@ -980,6 +980,37 @@ img {
    MEDIA QUERIES - RESPONSIVIDADE
    =================================== */
 
+/* Laptops de 14 polegadas (1366x768, 1440x900) */
+@media (max-height: 800px) and (min-width: 769px) {
+    .hero {
+        padding: 2rem var(--spacing-lg);
+    }
+    
+    .hero-content h1 {
+        font-size: 2.8rem;
+        margin-bottom: 1rem;
+    }
+    
+    .hero-content p {
+        font-size: 1rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .hero-content p:last-of-type {
+        margin-bottom: 1.5rem;
+    }
+    
+    .carousel {
+        height: 320px;
+    }
+    
+    .btn-primary,
+    .btn-secondary {
+        padding: 0.875rem 1.75rem;
+        font-size: 1rem;
+    }
+}
+
 /* Tablets e telas médias (1024px) */
 @media (max-width: 1024px) {
     .hero-content h1 {
