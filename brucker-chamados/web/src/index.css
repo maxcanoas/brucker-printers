@@ -1,0 +1,54 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Barlow', sans-serif;
+  background-color: #0D1117;
+  color: #FFFFFF;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+input, select, textarea, button {
+  font-family: 'Barlow', sans-serif;
+}
+
+input::placeholder, textarea::placeholder {
+  color: #8A94A6;
+}
+
+select option {
+  background-color: #141920;
+  color: #FFFFFF;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0D1117;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1E2533;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2A3345;
+}
+
+a {
+  color: #E84C1E;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}

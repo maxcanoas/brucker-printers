@@ -1,0 +1,90 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+import toast from 'react-hot-toast';
+import { LogIn, Shield } from 'lucide-react';
+
+export default function LoginAdmin() {
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
+  const [carregando, setCarregando] = useState(false);
+  const { loginAdmin } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!email || !senha) return;
+
+    setCarregando(true);
+    try {
+      await loginAdmin(email, senha);
+      toast.success('Login realizado com sucesso!');
+      navigate('/admin/dashboard');
+    } catch {
+      toast.error('Credenciais inválidas');
+    } finally {
+      setCarregando(false);
+    }
+  };
+
+  const inputStyle = {
+    width: '100%', padding: '14px 16px', backgroundColor: '#0D1117',
+    border: '1px solid #1E2533', borderRadius: '8px', color: '#FFFFFF',
+    fontSize: '15px', outline: 'none', boxSizing: 'border-box',
+    fontFamily: "'Barlow', sans-serif", marginBottom: '16px'
+  };
+
+  return (
+    <div style={{
+      minHeight: '100vh', backgroundColor: '#0D1117',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px'
+    }}>
+      <div style={{
+        backgroundColor: '#141920', borderRadius: '16px', border: '1px solid #1E2533',
+        padding: '48px', width: '100%', maxWidth: '440px'
+      }}>
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <div style={{
+            width: '56px', height: '56px', borderRadius: '14px',
+            backgroundColor: 'rgba(232, 76, 30, 0.15)', display: 'flex',
+            alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px'
+          }}>
+            <Shield size={28} color="#E84C1E" />
+          </div>
+          <h1 style={{
+            fontFamily: "'Barlow Condensed', sans-serif", fontSize: '24px',
+            fontWeight: 700, color: '#FFFFFF', marginBottom: '8px'
+          }}>
+            Painel Administrativo
+          </h1>
+          <p style={{ color: '#8A94A6', fontSize: '14px' }}>Brucker Printers</p>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          <label style={{ color: '#8A94A6', fontSize: '13px', display: 'block', marginBottom: '6px' }}>
+            E-mail
+          </label>
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+            placeholder="admin@bruckerprinters.com.br" style={inputStyle} />
+
+          <label style={{ color: '#8A94A6', fontSize: '13px', display: 'block', marginBottom: '6px' }}>
+            Senha
+          </label>
+          <input type="password" value={senha} onChange={(e) => setSenha(e.target.value)}
+            placeholder="••••••••" style={inputStyle} />
+
+          <button type="submit" disabled={carregando} style={{
+            width: '100%', padding: '14px', backgroundColor: '#E84C1E', color: '#FFFFFF',
+            border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: 600,
+            cursor: carregando ? 'not-allowed' : 'pointer', opacity: carregando ? 0.7 : 1,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+            fontFamily: "'Barlow', sans-serif", marginTop: '8px'
+          }}>
+            <LogIn size={18} />
+            {carregando ? 'Entrando...' : 'Entrar'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}

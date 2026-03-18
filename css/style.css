@@ -157,6 +157,17 @@ img {
     box-shadow: 0 4px 12px rgba(190, 22, 34, 0.3);
 }
 
+.btn-chamado {
+    background: transparent;
+    color: var(--secondary-red);
+    border: 2px solid var(--secondary-red);
+}
+
+.btn-chamado:hover {
+    background: var(--secondary-red);
+    color: var(--white);
+}
+
 .menu-toggle {
     display: none;
     flex-direction: column;
