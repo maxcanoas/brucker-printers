@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import toast from 'react-hot-toast';
@@ -8,8 +8,20 @@ export default function LoginAdmin() {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [carregando, setCarregando] = useState(false);
-  const { loginAdmin } = useAuth();
+  const { loginAdmin, usuario, logout } = useAuth();
   const navigate = useNavigate();
+
+  // Se já está logado como admin, vai direto ao dashboard
+  // Se está logado como outro tipo, limpa a sessão para permitir login admin
+  useEffect(() => {
+    if (usuario) {
+      if (usuario.tipo === 'admin') {
+        navigate('/admin/dashboard');
+      } else {
+        logout();
+      }
+    }
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

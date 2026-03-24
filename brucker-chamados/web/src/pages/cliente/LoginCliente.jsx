@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import toast from 'react-hot-toast';
@@ -7,8 +7,20 @@ import { LogIn } from 'lucide-react';
 export default function LoginCliente() {
   const [codigo, setCodigo] = useState('');
   const [carregando, setCarregando] = useState(false);
-  const { loginCliente } = useAuth();
+  const { loginCliente, usuario, logout } = useAuth();
   const navigate = useNavigate();
+
+  // Se já está logado como cliente, vai direto ao dashboard
+  // Se está logado como outro tipo, limpa a sessão para permitir login cliente
+  useEffect(() => {
+    if (usuario) {
+      if (usuario.tipo === 'cliente') {
+        navigate('/cliente/dashboard');
+      } else {
+        logout();
+      }
+    }
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
