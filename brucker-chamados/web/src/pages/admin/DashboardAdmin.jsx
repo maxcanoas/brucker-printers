@@ -9,7 +9,7 @@ import toast from 'react-hot-toast';
 import {
   LayoutDashboard, FileText, Users, Printer, UserCog, BarChart3,
   LogOut, AlertTriangle, CheckCircle, Clock, Wrench, PlusCircle,
-  Search, ChevronDown
+  Search, ChevronDown, Copy, RefreshCw, Edit3, Eye, Phone, Mail
 } from 'lucide-react';
 
 const cardStyle = {
@@ -46,6 +46,8 @@ export default function DashboardAdmin() {
   const [filtroStatus, setFiltroStatus] = useState('');
   const [modalChamado, setModalChamado] = useState(null);
   const [modalCliente, setModalCliente] = useState(false);
+  const [modalDetalheCliente, setModalDetalheCliente] = useState(null);
+  const [modalEditarCliente, setModalEditarCliente] = useState(null);
   const [modalTecnico, setModalTecnico] = useState(false);
 
   const carregarDashboard = useCallback(async () => {
@@ -244,23 +246,55 @@ export default function DashboardAdmin() {
                 <PlusCircle size={16} /> Novo Cliente
               </button>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '16px' }}>
               {clientes.map(c => (
-                <div key={c.id} style={cardStyle}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div key={c.id} style={{ ...cardStyle, cursor: 'pointer', transition: 'border-color 0.2s' }}
+                  onClick={() => setModalDetalheCliente(c)}
+                  onMouseEnter={(e) => e.currentTarget.style.borderColor = '#E84C1E'}
+                  onMouseLeave={(e) => e.currentTarget.style.borderColor = '#1E2533'}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
                     <div>
-                      <p style={{ color: '#FFFFFF', fontWeight: 600, margin: '0 0 4px', fontSize: '16px' }}>{c.nome}</p>
-                      <p style={{ color: '#8A94A6', fontSize: '13px', margin: '0 0 2px' }}>{c.email}</p>
-                      <p style={{ color: '#8A94A6', fontSize: '13px', margin: 0 }}>{c.telefone}</p>
+                      <p style={{ color: '#FFFFFF', fontWeight: 600, margin: '0 0 6px', fontSize: '16px' }}>{c.nome}</p>
+                      {c.email && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+                          <Mail size={12} color="#8A94A6" />
+                          <p style={{ color: '#8A94A6', fontSize: '13px', margin: 0 }}>{c.email}</p>
+                        </div>
+                      )}
+                      {c.telefone && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <Phone size={12} color="#8A94A6" />
+                          <p style={{ color: '#8A94A6', fontSize: '13px', margin: 0 }}>{c.telefone}</p>
+                        </div>
+                      )}
                     </div>
                     <div style={{
-                      padding: '6px 12px', backgroundColor: '#0D1117', borderRadius: '6px',
-                      border: '1px solid #1E2533'
+                      padding: '8px 14px', backgroundColor: '#0D1117', borderRadius: '8px',
+                      border: '1px solid #1E2533', textAlign: 'center'
                     }}>
-                      <p style={{ color: '#8A94A6', fontSize: '10px', margin: '0 0 2px' }}>Código</p>
-                      <p style={{ color: '#E84C1E', fontSize: '13px', fontWeight: 600, margin: 0, fontFamily: 'monospace' }}>
+                      <p style={{ color: '#8A94A6', fontSize: '10px', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Código de Acesso</p>
+                      <p style={{ color: '#E84C1E', fontSize: '14px', fontWeight: 700, margin: 0, fontFamily: 'monospace' }}>
                         {c.codigo_acesso}
                       </p>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #1E2533', paddingTop: '10px' }}>
+                    <span style={{ color: '#8A94A6', fontSize: '11px' }}>
+                      Cadastrado em {new Date(c.criado_em).toLocaleDateString('pt-BR')}
+                    </span>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <button onClick={(e) => { e.stopPropagation(); setModalEditarCliente(c); }} style={{
+                        padding: '6px 10px', backgroundColor: 'rgba(77, 142, 245, 0.15)', border: 'none',
+                        borderRadius: '6px', color: '#4D8EF5', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px'
+                      }}>
+                        <Edit3 size={12} /> Editar
+                      </button>
+                      <button onClick={(e) => { e.stopPropagation(); setModalDetalheCliente(c); }} style={{
+                        padding: '6px 10px', backgroundColor: 'rgba(232, 76, 30, 0.15)', border: 'none',
+                        borderRadius: '6px', color: '#E84C1E', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px'
+                      }}>
+                        <Eye size={12} /> Detalhes
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -321,6 +355,20 @@ export default function DashboardAdmin() {
         isOpen={modalCliente}
         onClose={() => setModalCliente(false)}
         onCriado={() => { setModalCliente(false); carregarClientes(); }}
+      />
+
+      {/* Modal Detalhes do Cliente */}
+      <ModalDetalheCliente
+        cliente={modalDetalheCliente}
+        onClose={() => setModalDetalheCliente(null)}
+        onAtualizado={() => { carregarClientes(); }}
+      />
+
+      {/* Modal Editar Cliente */}
+      <ModalEditarCliente
+        cliente={modalEditarCliente}
+        onClose={() => setModalEditarCliente(null)}
+        onAtualizado={() => { setModalEditarCliente(null); carregarClientes(); }}
       />
 
       {/* Modal Novo Técnico */}
@@ -479,6 +527,7 @@ function ModalChamadoAdmin({ chamado, tecnicos, onClose, onAtualizado }) {
 function ModalNovoCliente({ isOpen, onClose, onCriado }) {
   const [form, setForm] = useState({ nome: '', email: '', telefone: '' });
   const [salvando, setSalvando] = useState(false);
+  const [clienteCriado, setClienteCriado] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -486,9 +535,8 @@ function ModalNovoCliente({ isOpen, onClose, onCriado }) {
     setSalvando(true);
     try {
       const { data } = await api.post('/clientes', form);
-      toast.success(`Cliente criado! Código: ${data.codigo_acesso}`);
-      setForm({ nome: '', email: '', telefone: '' });
-      onCriado();
+      setClienteCriado(data);
+      toast.success('Cliente criado com sucesso!');
     } catch {
       toast.error('Erro ao criar cliente');
     } finally {
@@ -496,25 +544,336 @@ function ModalNovoCliente({ isOpen, onClose, onCriado }) {
     }
   };
 
+  const copiarCodigo = async () => {
+    if (clienteCriado?.codigo_acesso) {
+      try {
+        await navigator.clipboard.writeText(clienteCriado.codigo_acesso);
+        toast.success('Código copiado!');
+      } catch {
+        toast.error('Erro ao copiar');
+      }
+    }
+  };
+
+  const handleClose = () => {
+    if (clienteCriado) {
+      setForm({ nome: '', email: '', telefone: '' });
+      setClienteCriado(null);
+      onCriado();
+    } else {
+      onClose();
+    }
+  };
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Novo Cliente">
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ color: '#8A94A6', fontSize: '13px', display: 'block', marginBottom: '6px' }}>Nome *</label>
-          <input value={form.nome} onChange={(e) => setForm(f => ({ ...f, nome: e.target.value }))} style={inputStyle} />
+    <Modal isOpen={isOpen} onClose={handleClose} title={clienteCriado ? 'Cliente Criado!' : 'Novo Cliente'}>
+      {clienteCriado ? (
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ marginBottom: '24px' }}>
+            <CheckCircle size={48} color="#3D9E6B" style={{ marginBottom: '16px' }} />
+            <h3 style={{ color: '#FFFFFF', margin: '0 0 8px', fontSize: '18px' }}>
+              {clienteCriado.nome}
+            </h3>
+            <p style={{ color: '#8A94A6', margin: 0, fontSize: '14px' }}>
+              Cliente cadastrado com sucesso!
+            </p>
+          </div>
+
+          <div style={{
+            padding: '24px', backgroundColor: '#0D1117', borderRadius: '12px',
+            border: '2px solid #E84C1E', marginBottom: '24px'
+          }}>
+            <p style={{ color: '#8A94A6', fontSize: '12px', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              Código de Acesso Gerado
+            </p>
+            <p style={{
+              color: '#E84C1E', fontSize: '32px', fontWeight: 700, margin: '0 0 12px',
+              fontFamily: 'monospace', letterSpacing: '3px'
+            }}>
+              {clienteCriado.codigo_acesso}
+            </p>
+            <p style={{ color: '#8A94A6', fontSize: '12px', margin: '0 0 16px' }}>
+              Envie este código ao cliente para que ele acesse o sistema de chamados
+            </p>
+            <button onClick={copiarCodigo} style={{
+              padding: '12px 24px', backgroundColor: 'rgba(77, 142, 245, 0.15)',
+              border: '1px solid #4D8EF5', borderRadius: '8px',
+              color: '#4D8EF5', cursor: 'pointer', display: 'inline-flex',
+              alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: 600,
+              fontFamily: "'Barlow', sans-serif"
+            }}>
+              <Copy size={16} /> Copiar Código
+            </button>
+          </div>
+
+          <button onClick={handleClose} style={{ ...btnPrimary, width: '100%' }}>
+            Fechar
+          </button>
         </div>
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ color: '#8A94A6', fontSize: '13px', display: 'block', marginBottom: '6px' }}>E-mail</label>
-          <input type="email" value={form.email} onChange={(e) => setForm(f => ({ ...f, email: e.target.value }))} style={inputStyle} />
+      ) : (
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ color: '#8A94A6', fontSize: '13px', display: 'block', marginBottom: '6px' }}>Nome *</label>
+            <input value={form.nome} onChange={(e) => setForm(f => ({ ...f, nome: e.target.value }))} style={inputStyle} placeholder="Nome completo ou razão social" />
+          </div>
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ color: '#8A94A6', fontSize: '13px', display: 'block', marginBottom: '6px' }}>E-mail</label>
+            <input type="email" value={form.email} onChange={(e) => setForm(f => ({ ...f, email: e.target.value }))} style={inputStyle} placeholder="email@exemplo.com" />
+          </div>
+          <div style={{ marginBottom: '24px' }}>
+            <label style={{ color: '#8A94A6', fontSize: '13px', display: 'block', marginBottom: '6px' }}>Telefone</label>
+            <input value={form.telefone} onChange={(e) => setForm(f => ({ ...f, telefone: e.target.value }))} style={inputStyle} placeholder="(51) 99999-9999" />
+          </div>
+          <button type="submit" disabled={salvando} style={{ ...btnPrimary, width: '100%' }}>
+            {salvando ? 'Criando...' : 'Cadastrar Cliente'}
+          </button>
+          <p style={{ color: '#8A94A6', fontSize: '12px', textAlign: 'center', margin: '12px 0 0' }}>
+            O código de acesso será gerado automaticamente
+          </p>
+        </form>
+      )}
+    </Modal>
+  );
+}
+
+function ModalDetalheCliente({ cliente, onClose, onAtualizado }) {
+  const [detalhes, setDetalhes] = useState(null);
+  const [chamados, setChamados] = useState([]);
+  const [gerandoCodigo, setGerandoCodigo] = useState(false);
+  const [copiado, setCopiado] = useState(false);
+
+  useEffect(() => {
+    if (cliente) {
+      setCopiado(false);
+      api.get(`/clientes/${cliente.id}`).then(res => setDetalhes(res.data)).catch(() => {});
+      api.get(`/chamados?cliente_id=${cliente.id}`).then(res => setChamados(res.data?.data || [])).catch(() => setChamados([]));
+    } else {
+      setDetalhes(null);
+      setChamados([]);
+    }
+  }, [cliente]);
+
+  const copiarCodigo = async () => {
+    const codigo = detalhes?.codigo_acesso || cliente?.codigo_acesso;
+    if (codigo) {
+      try {
+        await navigator.clipboard.writeText(codigo);
+        setCopiado(true);
+        toast.success('Código copiado!');
+        setTimeout(() => setCopiado(false), 3000);
+      } catch {
+        toast.error('Erro ao copiar');
+      }
+    }
+  };
+
+  const gerarNovoCodigo = async () => {
+    if (!confirm('Gerar um novo código de acesso? O código anterior será invalidado.')) return;
+    setGerandoCodigo(true);
+    try {
+      const { data } = await api.post(`/clientes/${cliente.id}/novo-codigo`);
+      setDetalhes(prev => prev ? { ...prev, codigo_acesso: data.codigo_acesso } : prev);
+      toast.success(`Novo código gerado: ${data.codigo_acesso}`);
+      onAtualizado();
+    } catch {
+      toast.error('Erro ao gerar novo código');
+    } finally {
+      setGerandoCodigo(false);
+    }
+  };
+
+  const codigoAtual = detalhes?.codigo_acesso || cliente?.codigo_acesso;
+
+  return (
+    <Modal isOpen={!!cliente} onClose={onClose} title={`Cliente: ${cliente?.nome}`} width="700px">
+      {cliente && (
+        <div>
+          {/* Código de Acesso - Destaque */}
+          <div style={{
+            padding: '20px', backgroundColor: '#0D1117', borderRadius: '12px',
+            border: '2px solid #E84C1E', marginBottom: '24px', textAlign: 'center'
+          }}>
+            <p style={{ color: '#8A94A6', fontSize: '12px', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              Código de Acesso do Cliente
+            </p>
+            <p style={{
+              color: '#E84C1E', fontSize: '28px', fontWeight: 700, margin: '0 0 16px',
+              fontFamily: 'monospace', letterSpacing: '2px'
+            }}>
+              {codigoAtual}
+            </p>
+            <p style={{ color: '#8A94A6', fontSize: '12px', margin: '0 0 16px' }}>
+              O cliente usa este código para fazer login e abrir chamados
+            </p>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <button onClick={copiarCodigo} style={{
+                padding: '10px 20px', backgroundColor: copiado ? 'rgba(61, 158, 107, 0.2)' : 'rgba(77, 142, 245, 0.15)',
+                border: '1px solid ' + (copiado ? '#3D9E6B' : '#4D8EF5'), borderRadius: '8px',
+                color: copiado ? '#3D9E6B' : '#4D8EF5', cursor: 'pointer', display: 'flex',
+                alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 600,
+                fontFamily: "'Barlow', sans-serif"
+              }}>
+                <Copy size={14} /> {copiado ? 'Copiado!' : 'Copiar Código'}
+              </button>
+              <button onClick={gerarNovoCodigo} disabled={gerandoCodigo} style={{
+                padding: '10px 20px', backgroundColor: 'rgba(201, 162, 39, 0.15)',
+                border: '1px solid #C9A227', borderRadius: '8px',
+                color: '#C9A227', cursor: 'pointer', display: 'flex',
+                alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 600,
+                opacity: gerandoCodigo ? 0.6 : 1, fontFamily: "'Barlow', sans-serif"
+              }}>
+                <RefreshCw size={14} /> {gerandoCodigo ? 'Gerando...' : 'Gerar Novo Código'}
+              </button>
+            </div>
+          </div>
+
+          {/* Dados do Cliente */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+            <div>
+              <p style={{ color: '#8A94A6', fontSize: '12px', margin: '0 0 4px' }}>Nome</p>
+              <p style={{ color: '#FFFFFF', margin: 0, fontWeight: 600 }}>{cliente.nome}</p>
+            </div>
+            <div>
+              <p style={{ color: '#8A94A6', fontSize: '12px', margin: '0 0 4px' }}>Cadastrado em</p>
+              <p style={{ color: '#FFFFFF', margin: 0 }}>{new Date(cliente.criado_em).toLocaleDateString('pt-BR')}</p>
+            </div>
+            <div>
+              <p style={{ color: '#8A94A6', fontSize: '12px', margin: '0 0 4px' }}>E-mail</p>
+              <p style={{ color: '#FFFFFF', margin: 0 }}>{cliente.email || 'Não informado'}</p>
+            </div>
+            <div>
+              <p style={{ color: '#8A94A6', fontSize: '12px', margin: '0 0 4px' }}>Telefone</p>
+              <p style={{ color: '#FFFFFF', margin: 0 }}>{cliente.telefone || 'Não informado'}</p>
+            </div>
+          </div>
+
+          {/* Impressoras do Cliente */}
+          <div style={{ marginBottom: '24px' }}>
+            <h3 style={{ color: '#FFFFFF', fontSize: '16px', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Printer size={18} color="#E84C1E" /> Impressoras ({detalhes?.impressoras?.length || 0})
+            </h3>
+            {detalhes?.impressoras?.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {detalhes.impressoras.map(imp => (
+                  <div key={imp.id} style={{
+                    padding: '12px 16px', backgroundColor: '#0D1117', borderRadius: '8px',
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                  }}>
+                    <div>
+                      <p style={{ color: '#FFFFFF', margin: 0, fontWeight: 500 }}>{imp.modelo}</p>
+                      <p style={{ color: '#8A94A6', fontSize: '12px', margin: '2px 0 0' }}>S/N: {imp.numero_serie}</p>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{
+                        padding: '3px 10px', borderRadius: '4px', fontSize: '11px',
+                        backgroundColor: imp.ativo ? 'rgba(61,158,107,0.15)' : 'rgba(138,148,166,0.15)',
+                        color: imp.ativo ? '#3D9E6B' : '#8A94A6'
+                      }}>
+                        {imp.ativo ? 'Ativa' : 'Inativa'}
+                      </span>
+                      <span style={{
+                        padding: '3px 10px', borderRadius: '4px', fontSize: '11px',
+                        backgroundColor: 'rgba(77,142,245,0.15)', color: '#4D8EF5'
+                      }}>
+                        {imp.tipo_contrato}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p style={{ color: '#8A94A6', fontSize: '13px', fontStyle: 'italic' }}>Nenhuma impressora cadastrada</p>
+            )}
+          </div>
+
+          {/* Chamados Recentes */}
+          <div>
+            <h3 style={{ color: '#FFFFFF', fontSize: '16px', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <FileText size={18} color="#E84C1E" /> Chamados Recentes ({chamados.length})
+            </h3>
+            {chamados.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {chamados.slice(0, 5).map(ch => (
+                  <div key={ch.id} style={{
+                    padding: '12px 16px', backgroundColor: '#0D1117', borderRadius: '8px',
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ color: '#FFFFFF', fontWeight: 600, fontSize: '13px' }}>#{ch.numero}</span>
+                      <StatusBadge status={ch.status} />
+                      <UrgenciaBadge urgencia={ch.urgencia} />
+                    </div>
+                    <span style={{ color: '#8A94A6', fontSize: '12px' }}>
+                      {new Date(ch.criado_em).toLocaleDateString('pt-BR')}
+                    </span>
+                  </div>
+                ))}
+                {chamados.length > 5 && (
+                  <p style={{ color: '#8A94A6', fontSize: '12px', textAlign: 'center', margin: '8px 0 0' }}>
+                    + {chamados.length - 5} chamado(s) anteriores
+                  </p>
+                )}
+              </div>
+            ) : (
+              <p style={{ color: '#8A94A6', fontSize: '13px', fontStyle: 'italic' }}>Nenhum chamado aberto</p>
+            )}
+          </div>
         </div>
-        <div style={{ marginBottom: '24px' }}>
-          <label style={{ color: '#8A94A6', fontSize: '13px', display: 'block', marginBottom: '6px' }}>Telefone</label>
-          <input value={form.telefone} onChange={(e) => setForm(f => ({ ...f, telefone: e.target.value }))} style={inputStyle} />
-        </div>
-        <button type="submit" disabled={salvando} style={{ ...btnPrimary, width: '100%' }}>
-          {salvando ? 'Criando...' : 'Criar Cliente'}
-        </button>
-      </form>
+      )}
+    </Modal>
+  );
+}
+
+function ModalEditarCliente({ cliente, onClose, onAtualizado }) {
+  const [form, setForm] = useState({ nome: '', email: '', telefone: '' });
+  const [salvando, setSalvando] = useState(false);
+
+  useEffect(() => {
+    if (cliente) {
+      setForm({
+        nome: cliente.nome || '',
+        email: cliente.email || '',
+        telefone: cliente.telefone || ''
+      });
+    }
+  }, [cliente]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.nome) { toast.error('Nome é obrigatório'); return; }
+    setSalvando(true);
+    try {
+      await api.put(`/clientes/${cliente.id}`, form);
+      toast.success('Cliente atualizado!');
+      onAtualizado();
+    } catch {
+      toast.error('Erro ao atualizar cliente');
+    } finally {
+      setSalvando(false);
+    }
+  };
+
+  return (
+    <Modal isOpen={!!cliente} onClose={onClose} title="Editar Cliente">
+      {cliente && (
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ color: '#8A94A6', fontSize: '13px', display: 'block', marginBottom: '6px' }}>Nome *</label>
+            <input value={form.nome} onChange={(e) => setForm(f => ({ ...f, nome: e.target.value }))} style={inputStyle} />
+          </div>
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ color: '#8A94A6', fontSize: '13px', display: 'block', marginBottom: '6px' }}>E-mail</label>
+            <input type="email" value={form.email} onChange={(e) => setForm(f => ({ ...f, email: e.target.value }))} style={inputStyle} />
+          </div>
+          <div style={{ marginBottom: '24px' }}>
+            <label style={{ color: '#8A94A6', fontSize: '13px', display: 'block', marginBottom: '6px' }}>Telefone</label>
+            <input value={form.telefone} onChange={(e) => setForm(f => ({ ...f, telefone: e.target.value }))} style={inputStyle} />
+          </div>
+          <button type="submit" disabled={salvando} style={{ ...btnPrimary, width: '100%' }}>
+            {salvando ? 'Salvando...' : 'Salvar Alterações'}
+          </button>
+        </form>
+      )}
     </Modal>
   );
 }
