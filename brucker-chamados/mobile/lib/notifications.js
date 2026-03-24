@@ -1,5 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from './api';
 
@@ -39,9 +40,12 @@ export async function registrarPushNotifications() {
     }
 
     // Obter o push token
-    const tokenData = await Notifications.getExpoPushTokenAsync({
-      projectId: undefined,
-    });
+    const projectId = Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId;
+    if (!projectId) {
+      console.log('Push notifications: projectId não encontrado (configure no expo.dev para produção)');
+      return null;
+    }
+    const tokenData = await Notifications.getExpoPushTokenAsync({ projectId });
     const pushToken = tokenData.data;
 
     // Enviar token para o backend (rota depende do tipo de usuário)
