@@ -49,6 +49,7 @@ export default function DashboardAdmin() {
   const [modalDetalheCliente, setModalDetalheCliente] = useState(null);
   const [modalEditarCliente, setModalEditarCliente] = useState(null);
   const [modalTecnico, setModalTecnico] = useState(false);
+  const [modalEditarTecnico, setModalEditarTecnico] = useState(null);
 
   const carregarDashboard = useCallback(async () => {
     try {
@@ -332,6 +333,15 @@ export default function DashboardAdmin() {
                       {t.ativo ? 'Ativo' : 'Inativo'}
                     </span>
                   </div>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #1E2533' }}>
+                    <button onClick={() => setModalEditarTecnico(t)} style={{
+                      padding: '6px 12px', backgroundColor: 'rgba(77, 142, 245, 0.15)', border: 'none',
+                      borderRadius: '6px', color: '#4D8EF5', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px',
+                      fontFamily: "'Barlow', sans-serif"
+                    }}>
+                      <Edit3 size={12} /> Editar
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -376,6 +386,13 @@ export default function DashboardAdmin() {
         isOpen={modalTecnico}
         onClose={() => setModalTecnico(false)}
         onCriado={() => { setModalTecnico(false); carregarTecnicos(); }}
+      />
+
+      {/* Modal Editar Técnico */}
+      <ModalEditarTecnico
+        tecnico={modalEditarTecnico}
+        onClose={() => setModalEditarTecnico(null)}
+        onAtualizado={() => { setModalEditarTecnico(null); carregarTecnicos(); }}
       />
     </div>
   );
@@ -924,6 +941,79 @@ function ModalNovoTecnico({ isOpen, onClose, onCriado }) {
           {salvando ? 'Criando...' : 'Criar Técnico'}
         </button>
       </form>
+    </Modal>
+  );
+}
+
+function ModalEditarTecnico({ tecnico, onClose, onAtualizado }) {
+  const [form, setForm] = useState({ nome: '', whatsapp: '', ativo: true });
+  const [salvando, setSalvando] = useState(false);
+
+  useEffect(() => {
+    if (tecnico) {
+      setForm({ nome: tecnico.nome || '', whatsapp: tecnico.whatsapp || '', ativo: tecnico.ativo !== false });
+    }
+  }, [tecnico]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.nome) { toast.error('Nome é obrigatório'); return; }
+    setSalvando(true);
+    try {
+      await api.put(`/tecnicos/${tecnico.id}`, form);
+      toast.success('Técnico atualizado!');
+      onAtualizado();
+    } catch {
+      toast.error('Erro ao atualizar técnico');
+    } finally {
+      setSalvando(false);
+    }
+  };
+
+  return (
+    <Modal isOpen={!!tecnico} onClose={onClose} title="Editar Técnico">
+      {tecnico && (
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ color: '#8A94A6', fontSize: '13px', display: 'block', marginBottom: '6px' }}>Nome *</label>
+            <input value={form.nome} onChange={(e) => setForm(f => ({ ...f, nome: e.target.value }))} style={inputStyle} />
+          </div>
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ color: '#8A94A6', fontSize: '13px', display: 'block', marginBottom: '6px' }}>E-mail</label>
+            <input value={tecnico.email} disabled style={{ ...inputStyle, opacity: 0.5 }} />
+          </div>
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ color: '#8A94A6', fontSize: '13px', display: 'block', marginBottom: '6px' }}>WhatsApp</label>
+            <input value={form.whatsapp} onChange={(e) => setForm(f => ({ ...f, whatsapp: e.target.value }))} placeholder="51999999999" style={inputStyle} />
+          </div>
+          <div style={{ marginBottom: '24px' }}>
+            <label style={{ color: '#8A94A6', fontSize: '13px', display: 'block', marginBottom: '6px' }}>Status</label>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button type="button" onClick={() => setForm(f => ({ ...f, ativo: true }))} style={{
+                flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid',
+                borderColor: form.ativo ? '#3D9E6B' : '#1E2533',
+                backgroundColor: form.ativo ? 'rgba(61, 158, 107, 0.15)' : 'transparent',
+                color: form.ativo ? '#3D9E6B' : '#8A94A6', cursor: 'pointer', fontSize: '14px', fontWeight: 600,
+                fontFamily: "'Barlow', sans-serif"
+              }}>
+                Ativo
+              </button>
+              <button type="button" onClick={() => setForm(f => ({ ...f, ativo: false }))} style={{
+                flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid',
+                borderColor: !form.ativo ? '#E84C1E' : '#1E2533',
+                backgroundColor: !form.ativo ? 'rgba(232, 76, 30, 0.15)' : 'transparent',
+                color: !form.ativo ? '#E84C1E' : '#8A94A6', cursor: 'pointer', fontSize: '14px', fontWeight: 600,
+                fontFamily: "'Barlow', sans-serif"
+              }}>
+                Inativo
+              </button>
+            </div>
+          </div>
+          <button type="submit" disabled={salvando} style={{ ...btnPrimary, width: '100%' }}>
+            {salvando ? 'Salvando...' : 'Salvar Alterações'}
+          </button>
+        </form>
+      )}
     </Modal>
   );
 }
