@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator
+  View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator,
+  KeyboardAvoidingView, ScrollView, Platform
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
@@ -65,60 +66,71 @@ export default function LoginScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.loginBox}>
-        <Text style={styles.title}>BRUCKER</Text>
-        <Text style={styles.titleAccent}>PRINTERS</Text>
-        <Text style={styles.subtitle}>Sistema de Chamados</Text>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        bounces={false}
+      >
+        <View style={styles.loginBox}>
+          <Text style={styles.title}>BRUCKER</Text>
+          <Text style={styles.titleAccent}>PRINTERS</Text>
+          <Text style={styles.subtitle}>Sistema de Chamados</Text>
 
-        {/* Seletor de perfil */}
-        <View style={styles.perfilSelector}>
-          {['tecnico', 'admin'].map(p => (
-            <TouchableOpacity
-              key={p}
-              style={[styles.perfilBtn, perfil === p && styles.perfilBtnAtivo]}
-              onPress={() => setPerfil(p)}
-            >
-              <Text style={[styles.perfilText, perfil === p && styles.perfilTextAtivo]}>
-                {p === 'tecnico' ? 'Técnico' : 'Admin'}
-              </Text>
-            </TouchableOpacity>
-          ))}
+          {/* Seletor de perfil */}
+          <View style={styles.perfilSelector}>
+            {['tecnico', 'admin'].map(p => (
+              <TouchableOpacity
+                key={p}
+                style={[styles.perfilBtn, perfil === p && styles.perfilBtnAtivo]}
+                onPress={() => setPerfil(p)}
+              >
+                <Text style={[styles.perfilText, perfil === p && styles.perfilTextAtivo]}>
+                  {p === 'tecnico' ? 'Técnico' : 'Admin'}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <Text style={styles.label}>E-mail</Text>
+          <TextInput
+            style={styles.input}
+            value={email}
+            onChangeText={setEmail}
+            placeholder="seu@email.com"
+            placeholderTextColor={colors.textSecondary}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+
+          <Text style={styles.label}>Senha</Text>
+          <TextInput
+            style={styles.input}
+            value={senha}
+            onChangeText={setSenha}
+            placeholder="••••••••"
+            placeholderTextColor={colors.textSecondary}
+            secureTextEntry
+          />
+
+          <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={carregando}>
+            <Text style={styles.buttonText}>{carregando ? 'Entrando...' : 'Entrar'}</Text>
+          </TouchableOpacity>
         </View>
-
-        <Text style={styles.label}>E-mail</Text>
-        <TextInput
-          style={styles.input}
-          value={email}
-          onChangeText={setEmail}
-          placeholder="seu@email.com"
-          placeholderTextColor={colors.textSecondary}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-
-        <Text style={styles.label}>Senha</Text>
-        <TextInput
-          style={styles.input}
-          value={senha}
-          onChangeText={setSenha}
-          placeholder="••••••••"
-          placeholderTextColor={colors.textSecondary}
-          secureTextEntry
-        />
-
-        <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={carregando}>
-          <Text style={styles.buttonText}>{carregando ? 'Entrando...' : 'Entrar'}</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1, backgroundColor: colors.bg,
-    justifyContent: 'center', alignItems: 'center', padding: 20
+  },
+  scrollContent: {
+    flexGrow: 1, justifyContent: 'center', alignItems: 'center', padding: 20,
   },
   loginBox: {
     backgroundColor: colors.card, borderRadius: 16,
