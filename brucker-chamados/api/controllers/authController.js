@@ -75,6 +75,92 @@ exports.loginAdmin = async (req, res) => {
   }
 };
 
+// Solicitar redefinição de senha (envia e-mail)
+exports.esqueciSenha = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'E-mail é obrigatório' });
+    }
+
+    // Verificar se é admin ou técnico
+    const { data: admin } = await supabase.from('admins').select('id').eq('email', email).single();
+    const { data: tecnico } = await supabase.from('tecnicos').select('id').eq('email', email).single();
+
+    if (!admin && !tecnico) {
+      // Retorna sucesso mesmo se não encontrar, para não expor quais e-mails existem
+      return res.json({ message: 'Se o e-mail estiver cadastrado, você receberá um link de redefinição.' });
+    }
+
+    const redirectUrl = `${process.env.FRONTEND_URL}/redefinir-senha`;
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: redirectUrl
+    });
+
+    if (error) {
+      console.error('Erro ao enviar e-mail de redefinição:', error);
+      return res.status(500).json({ error: 'Erro ao enviar e-mail de redefinição' });
+    }
+
+    res.json({ message: 'Se o e-mail estiver cadastrado, você receberá um link de redefinição.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao processar solicitação' });
+  }
+};
+
+// Alterar senha (admin ou técnico)
+exports.alterarSenha = async (req, res) => {
+  try {
+    const { senha_atual, nova_senha } = req.body;
+    if (!senha_atual || !nova_senha) {
+      return res.status(400).json({ error: 'Senha atual e nova senha são obrigatórias' });
+    }
+
+    if (nova_senha.length < 6) {
+      return res.status(400).json({ error: 'A nova senha deve ter no mínimo 6 caracteres' });
+    }
+
+    // Buscar e-mail do usuário
+    const tabela = req.usuario.tipo === 'admin' ? 'admins' : 'tecnicos';
+    const { data: usuario } = await supabase
+      .from(tabela)
+      .select('email')
+      .eq('id', req.usuario.id)
+      .single();
+
+    if (!usuario) {
+      return res.status(404).json({ error: 'Usuário não encontrado' });
+    }
+
+    // Verificar senha atual
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email: usuario.email,
+      password: senha_atual
+    });
+
+    if (authError) {
+      return res.status(401).json({ error: 'Senha atual incorreta' });
+    }
+
+    // Atualizar senha
+    const { error: updateError } = await supabase.auth.admin.updateUserById(
+      req.usuario.user_id,
+      { password: nova_senha }
+    );
+
+    if (updateError) {
+      return res.status(500).json({ error: 'Erro ao atualizar senha' });
+    }
+
+    res.json({ message: 'Senha alterada com sucesso' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao alterar senha' });
+  }
+};
+
 // Login do técnico via Supabase Auth
 exports.loginTecnico = async (req, res) => {
   try {

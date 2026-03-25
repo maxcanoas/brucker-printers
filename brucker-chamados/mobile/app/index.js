@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator,
-  KeyboardAvoidingView, ScrollView, Platform
+  KeyboardAvoidingView, ScrollView, Platform, Linking
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
@@ -14,6 +14,9 @@ export default function LoginScreen() {
   const [senha, setSenha] = useState('');
   const [carregando, setCarregando] = useState(true);
   const [perfil, setPerfil] = useState('tecnico'); // 'tecnico' ou 'admin'
+  const [modoEsqueciSenha, setModoEsqueciSenha] = useState(false);
+  const [emailRecuperacao, setEmailRecuperacao] = useState('');
+  const [enviando, setEnviando] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -57,6 +60,22 @@ export default function LoginScreen() {
     }
   };
 
+  const handleEsqueciSenha = async () => {
+    if (!emailRecuperacao) {
+      return Alert.alert('Atenção', 'Informe seu e-mail');
+    }
+    setEnviando(true);
+    try {
+      await api.post('/auth/esqueci-senha', { email: emailRecuperacao });
+      Alert.alert('Sucesso', 'Se o e-mail estiver cadastrado, você receberá um link de redefinição.');
+      setModoEsqueciSenha(false);
+    } catch {
+      Alert.alert('Erro', 'Erro ao enviar e-mail. Tente novamente.');
+    } finally {
+      setEnviando(false);
+    }
+  };
+
   if (carregando) {
     return (
       <View style={[styles.container, { justifyContent: 'center' }]}>
@@ -95,30 +114,63 @@ export default function LoginScreen() {
             ))}
           </View>
 
-          <Text style={styles.label}>E-mail</Text>
-          <TextInput
-            style={styles.input}
-            value={email}
-            onChangeText={setEmail}
-            placeholder="seu@email.com"
-            placeholderTextColor={colors.textSecondary}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
+          {!modoEsqueciSenha ? (
+            <>
+              <Text style={styles.label}>E-mail</Text>
+              <TextInput
+                style={styles.input}
+                value={email}
+                onChangeText={setEmail}
+                placeholder="seu@email.com"
+                placeholderTextColor={colors.textSecondary}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
 
-          <Text style={styles.label}>Senha</Text>
-          <TextInput
-            style={styles.input}
-            value={senha}
-            onChangeText={setSenha}
-            placeholder="••••••••"
-            placeholderTextColor={colors.textSecondary}
-            secureTextEntry
-          />
+              <Text style={styles.label}>Senha</Text>
+              <TextInput
+                style={styles.input}
+                value={senha}
+                onChangeText={setSenha}
+                placeholder="••••••••"
+                placeholderTextColor={colors.textSecondary}
+                secureTextEntry
+              />
 
-          <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={carregando}>
-            <Text style={styles.buttonText}>{carregando ? 'Entrando...' : 'Entrar'}</Text>
-          </TouchableOpacity>
+              <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={carregando}>
+                <Text style={styles.buttonText}>{carregando ? 'Entrando...' : 'Entrar'}</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={() => setModoEsqueciSenha(true)} style={styles.linkBtn}>
+                <Text style={styles.linkText}>Esqueci minha senha</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              <Text style={styles.recoverDesc}>
+                Informe seu e-mail para receber o link de redefinição de senha.
+              </Text>
+
+              <Text style={styles.label}>E-mail</Text>
+              <TextInput
+                style={styles.input}
+                value={emailRecuperacao}
+                onChangeText={setEmailRecuperacao}
+                placeholder="seu@email.com"
+                placeholderTextColor={colors.textSecondary}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+
+              <TouchableOpacity style={styles.button} onPress={handleEsqueciSenha} disabled={enviando}>
+                <Text style={styles.buttonText}>{enviando ? 'Enviando...' : 'Enviar Link'}</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={() => setModoEsqueciSenha(false)} style={styles.linkBtn}>
+                <Text style={styles.linkText}>Voltar ao login</Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -176,5 +228,14 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: colors.text, fontSize: 16, fontWeight: '600'
+  },
+  linkBtn: {
+    marginTop: 16, alignItems: 'center'
+  },
+  linkText: {
+    color: colors.textSecondary, fontSize: 13
+  },
+  recoverDesc: {
+    color: colors.textSecondary, fontSize: 14, textAlign: 'center', marginBottom: 20
   }
 });

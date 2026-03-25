@@ -5,6 +5,7 @@ import LoginCliente from './pages/cliente/LoginCliente';
 import DashboardCliente from './pages/cliente/DashboardCliente';
 import LoginAdmin from './pages/admin/LoginAdmin';
 import DashboardAdmin from './pages/admin/DashboardAdmin';
+import RedefinirSenha from './pages/RedefinirSenha';
 
 function RotaProtegida({ tipo, children }) {
   const { usuario, carregando } = useAuth();
@@ -32,6 +33,9 @@ function App() {
           <Route path="/admin/dashboard" element={
             <RotaProtegida tipo="admin"><DashboardAdmin /></RotaProtegida>
           } />
+
+          {/* Redefinir Senha */}
+          <Route path="/redefinir-senha" element={<RedefinirSenha />} />
 
           {/* Redirect */}
           <Route path="/" element={<Navigate to="/cliente" />} />
