@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import toast from 'react-hot-toast';
 import { LogIn } from 'lucide-react';
@@ -134,6 +134,21 @@ export default function LoginCliente() {
         }}>
           Não tem o código? Entre em contato com a Brucker Printers.
         </p>
+
+        <Link
+          to="/admin"
+          style={{
+            display: 'block',
+            textAlign: 'center',
+            color: '#555D6B',
+            fontSize: '12px',
+            marginTop: '16px',
+            textDecoration: 'none',
+            fontFamily: "'Barlow', sans-serif"
+          }}
+        >
+          Acesso Administrativo
+        </Link>
       </div>
     </div>
   );
