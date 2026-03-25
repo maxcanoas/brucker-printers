@@ -26,14 +26,21 @@ async function enviarEmail(para, assunto, html) {
 
 async function notificarNovoChamadoEmail(chamado, cliente) {
   try {
+    // Buscar e-mails dos admins cadastrados no banco
     const { data: admins } = await supabase
       .from('admins')
       .select('email')
       .not('email', 'is', null);
 
-    if (!admins || admins.length === 0) return;
+    const emailsAdmins = (admins || []).map(a => a.email).filter(Boolean);
 
-    const emails = admins.map(a => a.email).filter(Boolean);
+    // Adicionar e-mails fixos configurados no .env
+    const emailsFixos = process.env.NOTIFY_EMAILS
+      ? process.env.NOTIFY_EMAILS.split(',').map(e => e.trim()).filter(Boolean)
+      : [];
+
+    // Unir e remover duplicatas
+    const emails = [...new Set([...emailsAdmins, ...emailsFixos])];
     if (emails.length === 0) return;
 
     const urgenciaTexto = {
