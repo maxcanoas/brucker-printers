@@ -1,6 +1,7 @@
 const supabase = require('../services/supabase');
 const { notificarTecnico, notificarStatusChamado } = require('../services/whatsapp');
 const { notificarTecnicoPush, notificarStatusPush, notificarNovoChamado } = require('../services/notifications');
+const { notificarNovoChamadoEmail } = require('../services/email');
 
 exports.criarChamado = async (req, res) => {
   try {
@@ -59,9 +60,12 @@ exports.criarChamado = async (req, res) => {
         .select('nome')
         .eq('id', req.usuario.id)
         .single();
-      await notificarNovoChamado(data, cliente);
-    } catch (pushError) {
-      console.error('Erro ao notificar admins:', pushError);
+      await Promise.all([
+        notificarNovoChamado(data, cliente),
+        notificarNovoChamadoEmail(data, cliente),
+      ]);
+    } catch (notifError) {
+      console.error('Erro ao notificar admins:', notifError);
     }
 
     res.status(201).json(data);
