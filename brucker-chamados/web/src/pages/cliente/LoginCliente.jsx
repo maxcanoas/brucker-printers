@@ -83,7 +83,7 @@ export default function LoginCliente() {
           <input
             type="text"
             value={codigo}
-            onChange={(e) => setCodigo(e.target.value)}
+            onChange={(e) => setCodigo(e.target.value.toUpperCase())}
             placeholder="Ex: BRK-A1B2C3D4"
             style={{
               width: '100%',
