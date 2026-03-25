@@ -70,11 +70,14 @@ export default function DashboardCliente() {
     <div style={containerStyle}>
       {/* Header */}
       <header style={headerStyle}>
-        <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <img src="/logo-icon.png" alt="Brucker Printers" style={{ width: '32px', height: 'auto' }} />
+          <div>
           <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '20px', color: '#FFFFFF', margin: 0 }}>
             BRUCKER <span style={{ color: '#E84C1E' }}>PRINTERS</span>
           </h1>
           <p style={{ color: '#8A94A6', fontSize: '13px', margin: 0 }}>Olá, {usuario?.nome}</p>
+        </div>
         </div>
         <button onClick={logout} style={{
           background: 'none', border: '1px solid #1E2533', borderRadius: '8px',

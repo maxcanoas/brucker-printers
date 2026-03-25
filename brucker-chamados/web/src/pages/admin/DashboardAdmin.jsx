@@ -106,6 +106,7 @@ export default function DashboardAdmin() {
         width: '240px', backgroundColor: '#141920', borderRight: '1px solid #1E2533',
         padding: '24px 16px', display: 'flex', flexDirection: 'column'
       }}>
+        <img src="/logo-icon.png" alt="Brucker Printers" style={{ width: '48px', height: 'auto', display: 'block', margin: '0 auto 12px' }} />
         <h1 style={{
           fontFamily: "'Barlow Condensed', sans-serif", fontSize: '20px',
           color: '#FFFFFF', margin: '0 0 8px', textAlign: 'center'

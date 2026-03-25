@@ -56,6 +56,7 @@ export default function LoginCliente() {
         maxWidth: '440px'
       }}>
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <img src="/logo-icon.png" alt="Brucker Printers" style={{ width: '64px', height: 'auto', marginBottom: '16px' }} />
           <h1 style={{
             fontFamily: "'Barlow Condensed', sans-serif",
             fontSize: '28px',

@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import toast from 'react-hot-toast';
-import { LogIn, Shield } from 'lucide-react';
+import { LogIn, Shield, Eye, EyeOff } from 'lucide-react';
 
 export default function LoginAdmin() {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [carregando, setCarregando] = useState(false);
+  const [mostrarSenha, setMostrarSenha] = useState(false);
   const { loginAdmin, usuario, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -56,13 +57,7 @@ export default function LoginAdmin() {
         padding: '48px', width: '100%', maxWidth: '440px'
       }}>
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <div style={{
-            width: '56px', height: '56px', borderRadius: '14px',
-            backgroundColor: 'rgba(232, 76, 30, 0.15)', display: 'flex',
-            alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px'
-          }}>
-            <Shield size={28} color="#E84C1E" />
-          </div>
+          <img src="/logo-icon.png" alt="Brucker Printers" style={{ width: '56px', height: 'auto', margin: '0 auto 16px', display: 'block' }} />
           <h1 style={{
             fontFamily: "'Barlow Condensed', sans-serif", fontSize: '24px',
             fontWeight: 700, color: '#FFFFFF', marginBottom: '8px'
@@ -82,8 +77,16 @@ export default function LoginAdmin() {
           <label style={{ color: '#8A94A6', fontSize: '13px', display: 'block', marginBottom: '6px' }}>
             Senha
           </label>
-          <input type="password" value={senha} onChange={(e) => setSenha(e.target.value)}
-            placeholder="••••••••" style={inputStyle} />
+          <div style={{ position: 'relative' }}>
+            <input type={mostrarSenha ? 'text' : 'password'} value={senha} onChange={(e) => setSenha(e.target.value)}
+              placeholder="••••••••" style={{ ...inputStyle, paddingRight: '48px' }} />
+            <button type="button" onClick={() => setMostrarSenha(!mostrarSenha)} style={{
+              position: 'absolute', right: '12px', top: '14px', background: 'none',
+              border: 'none', cursor: 'pointer', padding: '0', display: 'flex'
+            }}>
+              {mostrarSenha ? <EyeOff size={18} color="#8A94A6" /> : <Eye size={18} color="#8A94A6" />}
+            </button>
+          </div>
 
           <button type="submit" disabled={carregando} style={{
             width: '100%', padding: '14px', backgroundColor: '#E84C1E', color: '#FFFFFF',
