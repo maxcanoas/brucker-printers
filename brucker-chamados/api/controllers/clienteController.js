@@ -133,6 +133,14 @@ exports.criarCliente = async (req, res) => {
       return res.status(400).json({ error: 'Nome é obrigatório' });
     }
 
+    if (nome.length > 200) {
+      return res.status(400).json({ error: 'Nome deve ter no máximo 200 caracteres' });
+    }
+
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: 'Formato de e-mail inválido' });
+    }
+
     const codigo_acesso = gerarCodigoAcesso();
 
     const { data, error } = await supabase

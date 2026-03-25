@@ -17,14 +17,25 @@ const app = express();
 
 // Middleware global
 app.use(helmet());
+
+const allowedOrigins = process.env.FRONTEND_URL
+  ? process.env.FRONTEND_URL.split(',').map(u => u.trim())
+  : ['http://localhost:5173'];
 app.use(cors({
-  origin: true,  // aceita qualquer origem em dev
+  origin: (origin, callback) => {
+    // Permite requests sem origin (mobile, Postman, etc)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Origem não permitida pelo CORS'));
+    }
+  },
   credentials: true
 }));
 app.use(express.json());
 app.use(morgan('dev'));
 
-// Rate limiting
+// Rate limiting geral
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
@@ -33,7 +44,20 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
+// Rate limiting mais restrito para login (proteção contra brute force)
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Muitas tentativas de login. Tente novamente em 15 minutos.' }
+});
+
 // Rotas
+app.use('/api/auth/cliente/login', loginLimiter);
+app.use('/api/auth/admin/login', loginLimiter);
+app.use('/api/auth/tecnico/login', loginLimiter);
+app.use('/api/auth/esqueci-senha', loginLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/clientes', clienteRoutes);
 app.use('/api/impressoras', impressoraRoutes);

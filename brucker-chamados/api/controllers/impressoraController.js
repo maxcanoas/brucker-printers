@@ -61,6 +61,14 @@ exports.criar = async (req, res) => {
       return res.status(400).json({ error: 'cliente_id, modelo e numero_serie são obrigatórios' });
     }
 
+    if (tipo_contrato && !['locacao', 'venda', 'manutencao'].includes(tipo_contrato)) {
+      return res.status(400).json({ error: 'Tipo de contrato inválido' });
+    }
+
+    if (numero_serie.length > 100) {
+      return res.status(400).json({ error: 'Número de série deve ter no máximo 100 caracteres' });
+    }
+
     const { data, error } = await supabase
       .from('impressoras')
       .insert({ cliente_id, modelo, numero_serie, tipo_contrato: tipo_contrato || 'locacao' })

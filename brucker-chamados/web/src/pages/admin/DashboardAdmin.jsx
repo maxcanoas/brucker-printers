@@ -9,7 +9,8 @@ import toast from 'react-hot-toast';
 import {
   LayoutDashboard, FileText, Users, Printer, UserCog, BarChart3,
   LogOut, AlertTriangle, CheckCircle, Clock, Wrench, PlusCircle,
-  Search, ChevronDown, Copy, RefreshCw, Edit3, Eye, EyeOff, Phone, Mail, Lock
+  Search, ChevronDown, Copy, RefreshCw, Edit3, Eye, EyeOff, Phone, Mail, Lock,
+  Menu, X, Loader2
 } from 'lucide-react';
 
 const cardStyle = {
@@ -39,11 +40,14 @@ const menuItems = [
 export default function DashboardAdmin() {
   const { usuario, logout } = useAuth();
   const [aba, setAba] = useState('dashboard');
+  const [sidebarAberta, setSidebarAberta] = useState(false);
   const [dashboard, setDashboard] = useState(null);
   const [chamados, setChamados] = useState([]);
   const [clientes, setClientes] = useState([]);
   const [tecnicos, setTecnicos] = useState([]);
   const [filtroStatus, setFiltroStatus] = useState('');
+  const [buscaChamado, setBuscaChamado] = useState('');
+  const [carregandoDados, setCarregandoDados] = useState(true);
   const [modalChamado, setModalChamado] = useState(null);
   const [modalCliente, setModalCliente] = useState(false);
   const [modalDetalheCliente, setModalDetalheCliente] = useState(null);
@@ -56,7 +60,9 @@ export default function DashboardAdmin() {
     try {
       const { data } = await api.get('/admin/dashboard');
       setDashboard(data);
-    } catch { /* silent */ }
+    } catch {
+      toast.error('Erro ao carregar dashboard');
+    }
   }, []);
 
   const carregarChamados = useCallback(async () => {
@@ -64,29 +70,46 @@ export default function DashboardAdmin() {
       const params = filtroStatus ? `?status=${filtroStatus}` : '';
       const { data } = await api.get(`/chamados${params}`);
       setChamados(data.data || []);
-    } catch { /* silent */ }
+    } catch {
+      toast.error('Erro ao carregar chamados');
+    }
   }, [filtroStatus]);
 
   const carregarClientes = useCallback(async () => {
     try {
       const { data } = await api.get('/clientes');
       setClientes(data);
-    } catch { /* silent */ }
+    } catch {
+      toast.error('Erro ao carregar clientes');
+    }
   }, []);
 
   const carregarTecnicos = useCallback(async () => {
     try {
       const { data } = await api.get('/tecnicos');
       setTecnicos(data);
-    } catch { /* silent */ }
+    } catch {
+      toast.error('Erro ao carregar técnicos');
+    }
   }, []);
 
   useEffect(() => {
-    carregarDashboard();
-    carregarChamados();
-    carregarClientes();
-    carregarTecnicos();
+    setCarregandoDados(true);
+    Promise.all([carregarDashboard(), carregarChamados(), carregarClientes(), carregarTecnicos()])
+      .finally(() => setCarregandoDados(false));
   }, [carregarDashboard, carregarChamados, carregarClientes, carregarTecnicos]);
+
+  const chamadosFiltrados = chamados.filter(c => {
+    if (!buscaChamado) return true;
+    const termo = buscaChamado.toLowerCase();
+    return (
+      String(c.numero).includes(termo) ||
+      c.clientes?.nome?.toLowerCase().includes(termo) ||
+      c.descricao?.toLowerCase().includes(termo) ||
+      c.tecnicos?.nome?.toLowerCase().includes(termo) ||
+      c.impressoras?.numero_serie?.toLowerCase().includes(termo)
+    );
+  });
 
   useRealtimeChamados(null, () => {
     carregarDashboard();
@@ -102,10 +125,29 @@ export default function DashboardAdmin() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#0D1117' }}>
+      {/* Botão Hamburger - Mobile */}
+      <button onClick={() => setSidebarAberta(true)} style={{
+        position: 'fixed', top: '16px', left: '16px', zIndex: 50,
+        background: '#141920', border: '1px solid #1E2533', borderRadius: '8px',
+        color: '#FFFFFF', padding: '8px', cursor: 'pointer',
+        display: 'none'
+      }} className="sidebar-toggle">
+        <Menu size={20} />
+      </button>
+
+      {/* Overlay mobile */}
+      {sidebarAberta && (
+        <div onClick={() => setSidebarAberta(false)} style={{
+          position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 40,
+          display: 'none'
+        }} className="sidebar-overlay" />
+      )}
+
       {/* Sidebar */}
-      <aside style={{
+      <aside className={`sidebar${sidebarAberta ? ' aberta' : ''}`} style={{
         width: '240px', backgroundColor: '#141920', borderRight: '1px solid #1E2533',
-        padding: '24px 16px', display: 'flex', flexDirection: 'column'
+        padding: '24px 16px', display: 'flex', flexDirection: 'column',
+        position: 'relative', zIndex: 45, flexShrink: 0
       }}>
         <img src="/logo-icon.png" alt="Brucker Printers" style={{ width: '48px', height: 'auto', display: 'block', margin: '0 auto 12px' }} />
         <h1 style={{
@@ -120,7 +162,7 @@ export default function DashboardAdmin() {
 
         <nav style={{ flex: 1 }}>
           {menuItems.map(item => (
-            <button key={item.id} onClick={() => setAba(item.id)} style={{
+            <button key={item.id} onClick={() => { setAba(item.id); setSidebarAberta(false); }} style={{
               width: '100%', padding: '12px 16px', borderRadius: '8px', border: 'none',
               backgroundColor: aba === item.id ? 'rgba(232, 76, 30, 0.15)' : 'transparent',
               color: aba === item.id ? '#E84C1E' : '#8A94A6',
@@ -153,6 +195,12 @@ export default function DashboardAdmin() {
 
       {/* Main Content */}
       <main style={{ flex: 1, padding: '32px', overflow: 'auto' }}>
+        {carregandoDados && !dashboard && (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+            <Loader2 size={32} color="#E84C1E" style={{ animation: 'spin 1s linear infinite' }} />
+          </div>
+        )}
+
         {/* Dashboard */}
         {aba === 'dashboard' && (
           <div>
@@ -201,7 +249,7 @@ export default function DashboardAdmin() {
         {/* Chamados */}
         {aba === 'chamados' && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
               <h2 style={{ color: '#FFFFFF', fontSize: '24px', margin: 0, fontFamily: "'Barlow Condensed', sans-serif" }}>
                 Chamados
               </h2>
@@ -220,8 +268,23 @@ export default function DashboardAdmin() {
               </div>
             </div>
 
+            <div style={{ position: 'relative', marginBottom: '16px' }}>
+              <Search size={16} style={{ position: 'absolute', left: '14px', top: '12px', color: '#8A94A6' }} />
+              <input
+                value={buscaChamado}
+                onChange={(e) => setBuscaChamado(e.target.value)}
+                placeholder="Buscar por número, cliente, técnico, descrição ou série..."
+                style={{ ...inputStyle, paddingLeft: '40px' }}
+              />
+            </div>
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {chamados.map(chamado => (
+              {chamadosFiltrados.length === 0 ? (
+                <div style={{ ...cardStyle, textAlign: 'center', color: '#8A94A6', padding: '48px' }}>
+                  {buscaChamado ? 'Nenhum chamado encontrado para esta busca' : 'Nenhum chamado encontrado'}
+                </div>
+              ) : null}
+              {chamadosFiltrados.map(chamado => (
                 <div key={chamado.id} style={{ ...cardStyle, cursor: 'pointer', padding: '16px 20px' }}
                   onClick={() => setModalChamado(chamado)}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
@@ -426,7 +489,7 @@ function ModalChamadoAdmin({ chamado, tecnicos, onClose, onAtualizado }) {
         setDetalhes(res.data);
         setStatus(res.data.status);
         setTecnicoId(res.data.tecnico_id || '');
-      }).catch(() => {});
+      }).catch(() => toast.error('Erro ao carregar detalhes do chamado'));
     } else {
       setDetalhes(null);
     }
@@ -677,8 +740,8 @@ function ModalDetalheCliente({ cliente, onClose, onAtualizado }) {
   useEffect(() => {
     if (cliente) {
       setCopiado(false);
-      api.get(`/clientes/${cliente.id}`).then(res => setDetalhes(res.data)).catch(() => {});
-      api.get(`/chamados?cliente_id=${cliente.id}`).then(res => setChamados(res.data?.data || [])).catch(() => setChamados([]));
+      api.get(`/clientes/${cliente.id}`).then(res => setDetalhes(res.data)).catch(() => toast.error('Erro ao carregar detalhes do cliente'));
+      api.get(`/chamados?cliente_id=${cliente.id}`).then(res => setChamados(res.data?.data || [])).catch(() => { setChamados([]); toast.error('Erro ao carregar chamados do cliente'); });
     } else {
       setDetalhes(null);
       setChamados([]);
@@ -1042,7 +1105,7 @@ function ImpressorasAdmin() {
     Promise.all([
       api.get('/impressoras').then(r => setImpressoras(r.data)),
       api.get('/clientes').then(r => setClientes(r.data))
-    ]).catch(() => {});
+    ]).catch(() => toast.error('Erro ao carregar impressoras'));
   }, []);
 
   return (

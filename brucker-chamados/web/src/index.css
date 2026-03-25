@@ -52,3 +52,33 @@ a {
 a:hover {
   text-decoration: underline;
 }
+
+/* Animação de loading */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Responsividade - Sidebar Admin */
+@media (max-width: 768px) {
+  .sidebar-toggle {
+    display: flex !important;
+  }
+
+  .sidebar {
+    position: fixed !important;
+    left: -260px;
+    top: 0;
+    bottom: 0;
+    transition: left 0.3s ease;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5);
+  }
+
+  .sidebar.aberta {
+    left: 0;
+  }
+
+  .sidebar-overlay {
+    display: block !important;
+  }
+}

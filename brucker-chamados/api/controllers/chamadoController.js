@@ -11,6 +11,18 @@ exports.criarChamado = async (req, res) => {
       return res.status(400).json({ error: 'Tipo e descrição são obrigatórios' });
     }
 
+    if (!['preventivo', 'corretivo'].includes(tipo)) {
+      return res.status(400).json({ error: 'Tipo deve ser preventivo ou corretivo' });
+    }
+
+    if (urgencia && !['normal', 'alta', 'critica'].includes(urgencia)) {
+      return res.status(400).json({ error: 'Urgência deve ser normal, alta ou critica' });
+    }
+
+    if (descricao.length > 2000) {
+      return res.status(400).json({ error: 'Descrição deve ter no máximo 2000 caracteres' });
+    }
+
     // Verificar se a impressora pertence ao cliente
     if (impressora_id) {
       const { data: imp } = await supabase
@@ -161,6 +173,13 @@ exports.atualizarChamado = async (req, res) => {
   try {
     const { status, tecnico_id, observacao } = req.body;
 
+    if (status) {
+      const statusValidos = ['aberto', 'em_atendimento', 'aguardando_peca', 'concluido', 'cancelado'];
+      if (!statusValidos.includes(status)) {
+        return res.status(400).json({ error: `Status inválido. Use: ${statusValidos.join(', ')}` });
+      }
+    }
+
     // Buscar chamado atual
     const { data: chamadoAtual, error: fetchError } = await supabase
       .from('chamados')
@@ -261,6 +280,11 @@ exports.atualizarStatus = async (req, res) => {
 
     if (!status) {
       return res.status(400).json({ error: 'Status é obrigatório' });
+    }
+
+    const statusValidos = ['aberto', 'em_atendimento', 'aguardando_peca', 'concluido', 'cancelado'];
+    if (!statusValidos.includes(status)) {
+      return res.status(400).json({ error: `Status inválido. Use: ${statusValidos.join(', ')}` });
     }
 
     const { data: chamadoAtual } = await supabase

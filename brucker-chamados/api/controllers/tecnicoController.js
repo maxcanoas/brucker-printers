@@ -22,6 +22,18 @@ exports.criar = async (req, res) => {
       return res.status(400).json({ error: 'Nome, email e senha são obrigatórios' });
     }
 
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: 'Formato de e-mail inválido' });
+    }
+
+    if (senha.length < 6) {
+      return res.status(400).json({ error: 'Senha deve ter no mínimo 6 caracteres' });
+    }
+
+    if (nome.length > 200) {
+      return res.status(400).json({ error: 'Nome deve ter no máximo 200 caracteres' });
+    }
+
     // Criar user no Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email,
