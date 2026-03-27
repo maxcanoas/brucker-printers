@@ -47,9 +47,9 @@ export default function RootLayout() {
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="home" options={{ headerShown: false }} />
         <Stack.Screen name="admin-home" options={{ headerShown: false }} />
+        <Stack.Screen name="cliente-home" options={{ headerShown: false }} />
         <Stack.Screen name="chamado/[id]" options={{ title: 'Detalhes do Chamado' }} />
         <Stack.Screen name="relatorio" options={{ title: 'Relatório de Atendimento' }} />
-        <Stack.Screen name="historico" options={{ title: 'Histórico' }} />
         <Stack.Screen name="perfil" options={{ title: 'Meu Perfil' }} />
       </Stack>
     </>

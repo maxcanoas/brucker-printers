@@ -9,10 +9,12 @@ export const colors = {
   blue: '#4D8EF5',
   yellow: '#C9A227',
   red: '#E84C1E',
+  purple: '#9B59B6',
 };
 
 export const statusColors = {
   aberto: colors.blue,
+  atribuido: colors.purple,
   em_atendimento: colors.yellow,
   aguardando_peca: colors.red,
   concluido: colors.green,
@@ -21,6 +23,7 @@ export const statusColors = {
 
 export const statusLabels = {
   aberto: 'Aberto',
+  atribuido: 'Atribuído',
   em_atendimento: 'Em Atendimento',
   aguardando_peca: 'Aguardando Peça',
   concluido: 'Concluído',

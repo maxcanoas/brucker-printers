@@ -104,4 +104,103 @@ function gerarRelatorioPDF(chamado, relatorio, cliente, tecnico) {
   });
 }
 
-module.exports = { gerarRelatorioPDF };
+const statusTexto = {
+  aberto: 'Aberto',
+  atribuido: 'Atribuído',
+  em_atendimento: 'Em Atendimento',
+  aguardando_peca: 'Aguardando Peça',
+  concluido: 'Concluído',
+  cancelado: 'Cancelado',
+};
+
+function gerarRelatorioAgregadoPDF(titulo, resumoLinhas, tabelaColunas, tabelaDados) {
+  return new Promise((resolve, reject) => {
+    try {
+      const doc = new PDFDocument({ margin: 50, size: 'A4', layout: 'landscape' });
+      const chunks = [];
+
+      doc.on('data', chunk => chunks.push(chunk));
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+
+      // Header
+      doc.fontSize(18).font('Helvetica-Bold')
+        .text('BRUCKER PRINTERS', { align: 'center' });
+      doc.fontSize(12).font('Helvetica')
+        .text(titulo, { align: 'center' });
+      doc.fontSize(9).font('Helvetica').fillColor('#8A94A6')
+        .text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, { align: 'center' });
+      doc.fillColor('#000000');
+      doc.moveDown();
+
+      doc.moveTo(50, doc.y).lineTo(742, doc.y).stroke('#E84C1E');
+      doc.moveDown();
+
+      // Resumo
+      if (resumoLinhas && resumoLinhas.length > 0) {
+        doc.fontSize(13).font('Helvetica-Bold').text('Resumo');
+        doc.moveDown(0.5);
+        doc.fontSize(10).font('Helvetica');
+        resumoLinhas.forEach(([label, valor]) => {
+          doc.font('Helvetica-Bold').text(`${label}: `, { continued: true });
+          doc.font('Helvetica').text(String(valor));
+        });
+        doc.moveDown();
+      }
+
+      // Tabela
+      if (tabelaColunas && tabelaDados && tabelaDados.length > 0) {
+        doc.fontSize(13).font('Helvetica-Bold').text('Detalhes');
+        doc.moveDown(0.5);
+
+        const startX = 50;
+        const colWidths = tabelaColunas.map(c => c.width || 80);
+        const totalWidth = colWidths.reduce((a, b) => a + b, 0);
+        let y = doc.y;
+
+        // Header da tabela
+        doc.rect(startX, y, totalWidth, 20).fill('#0D1117');
+        let x = startX;
+        doc.fontSize(8).font('Helvetica-Bold').fillColor('#FFFFFF');
+        tabelaColunas.forEach((col, i) => {
+          doc.text(col.header, x + 3, y + 5, { width: colWidths[i] - 6, align: 'left' });
+          x += colWidths[i];
+        });
+        y += 20;
+        doc.fillColor('#000000');
+
+        // Dados
+        doc.fontSize(8).font('Helvetica');
+        tabelaDados.forEach((row, rowIndex) => {
+          if (y > 520) {
+            doc.addPage();
+            y = 50;
+          }
+
+          if (rowIndex % 2 === 0) {
+            doc.rect(startX, y, totalWidth, 18).fill('#F9FAFB');
+            doc.fillColor('#000000');
+          }
+
+          x = startX;
+          tabelaColunas.forEach((col, i) => {
+            const valor = row[col.key] != null ? String(row[col.key]) : '-';
+            doc.text(valor, x + 3, y + 4, { width: colWidths[i] - 6, align: 'left' });
+            x += colWidths[i];
+          });
+          y += 18;
+        });
+      }
+
+      // Footer
+      doc.moveDown(2);
+      doc.fontSize(8).fillColor('#8A94A6')
+        .text('Brucker Printers - Venda e Locação de Impressoras', { align: 'center' });
+
+      doc.end();
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+module.exports = { gerarRelatorioPDF, gerarRelatorioAgregadoPDF, statusTexto };

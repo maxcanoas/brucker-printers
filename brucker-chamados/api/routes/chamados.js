@@ -6,6 +6,12 @@ const { autenticarCliente, autenticarAdmin, autenticarTecnico, autenticarStaff, 
 // Cliente: abrir chamado
 router.post('/', autenticarCliente, chamadoController.criarChamado);
 
+// Cliente: cancelar chamado
+router.put('/:id/cancelar', autenticarCliente, chamadoController.cancelarChamado);
+
+// Cliente: avaliar atendimento
+router.post('/:id/avaliacao', autenticarCliente, chamadoController.criarAvaliacao);
+
 // Admin: listar todos os chamados
 router.get('/', autenticarAdmin, chamadoController.listarTodos);
 router.get('/dashboard', autenticarAdmin, chamadoController.getDashboardAdmin);
@@ -16,9 +22,15 @@ router.put('/:id/atribuir', autenticarAdmin, chamadoController.atribuirTecnico);
 
 // Técnico: listar chamados atribuídos
 router.get('/meus', autenticarTecnico, chamadoController.getChamadosTecnico);
+
+// Técnico: aceitar chamado atribuído
+router.put('/:id/aceitar', autenticarTecnico, chamadoController.aceitarChamado);
+
+// Staff (admin ou técnico): atualizar status
 router.put('/:id/status', autenticarStaff, chamadoController.atualizarStatus);
 
-// Detalhes de um chamado (admin, técnico, ou cliente dono)
+// Qualquer usuário autenticado: detalhes e avaliação
 router.get('/:id', autenticar, chamadoController.getDetalhesChamado);
+router.get('/:id/avaliacao', autenticar, chamadoController.getAvaliacao);
 
 module.exports = router;

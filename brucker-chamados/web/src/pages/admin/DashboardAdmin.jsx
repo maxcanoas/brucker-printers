@@ -10,7 +10,7 @@ import {
   LayoutDashboard, FileText, Users, Printer, UserCog, BarChart3,
   LogOut, AlertTriangle, CheckCircle, Clock, Wrench, PlusCircle,
   Search, ChevronDown, Copy, RefreshCw, Edit3, Eye, EyeOff, Phone, Mail, Lock,
-  Menu, X, Loader2
+  Menu, X, Loader2, Star
 } from 'lucide-react';
 
 const cardStyle = {
@@ -118,6 +118,7 @@ export default function DashboardAdmin() {
 
   const contadores = [
     { label: 'Abertos', valor: dashboard?.abertos || 0, icon: AlertTriangle, color: '#4D8EF5' },
+    { label: 'Atribuídos', valor: dashboard?.atribuidos || 0, icon: UserCog, color: '#9B59B6' },
     { label: 'Em Atendimento', valor: dashboard?.em_atendimento || 0, icon: Wrench, color: '#C9A227' },
     { label: 'SLA Vencendo', valor: dashboard?.sla_vencendo || 0, icon: Clock, color: '#E84C1E' },
     { label: 'Concluídos Hoje', valor: dashboard?.concluidos_hoje || 0, icon: CheckCircle, color: '#3D9E6B' }
@@ -254,15 +255,15 @@ export default function DashboardAdmin() {
                 Chamados
               </h2>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                {['', 'aberto', 'em_atendimento', 'aguardando_peca', 'concluido'].map(s => (
+                {['', 'aberto', 'atribuido', 'em_atendimento', 'aguardando_peca', 'concluido'].map(s => (
                   <button key={s} onClick={() => setFiltroStatus(s)} style={{
                     padding: '8px 16px', borderRadius: '6px', border: '1px solid #1E2533',
                     backgroundColor: filtroStatus === s ? '#E84C1E' : 'transparent',
                     color: filtroStatus === s ? '#FFFFFF' : '#8A94A6',
                     cursor: 'pointer', fontSize: '12px', fontFamily: "'Barlow', sans-serif"
                   }}>
-                    {s === '' ? 'Todos' : s === 'aberto' ? 'Abertos' : s === 'em_atendimento' ? 'Em Atendimento' :
-                      s === 'aguardando_peca' ? 'Aguardando' : 'Concluídos'}
+                    {s === '' ? 'Todos' : s === 'aberto' ? 'Abertos' : s === 'atribuido' ? 'Atribuídos' :
+                      s === 'em_atendimento' ? 'Em Atendimento' : s === 'aguardando_peca' ? 'Aguardando' : 'Concluídos'}
                   </button>
                 ))}
               </div>
@@ -295,7 +296,7 @@ export default function DashboardAdmin() {
                       <span style={{ color: '#8A94A6', fontSize: '13px' }}>{chamado.clientes?.nome}</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <SlaIndicator slaVenceEm={chamado.sla_vence_em} slaPausadoEm={chamado.sla_pausado_em} status={chamado.status} />
+                      <SlaIndicator slaVenceEm={chamado.sla_vence_em} slaPausadoEm={chamado.sla_pausado_em} status={chamado.status} slaTempoRestanteMinutos={chamado.sla_tempo_restante_minutos} />
                       <span style={{ color: '#8A94A6', fontSize: '12px' }}>
                         {chamado.tecnicos?.nome || 'Sem técnico'}
                       </span>
@@ -559,6 +560,7 @@ function ModalChamadoAdmin({ chamado, tecnicos, onClose, onAtualizado }) {
                 <label style={{ color: '#8A94A6', fontSize: '13px', display: 'block', marginBottom: '6px' }}>Status</label>
                 <select value={status} onChange={(e) => setStatus(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
                   <option value="aberto">Aberto</option>
+                  <option value="atribuido">Atribuído</option>
                   <option value="em_atendimento">Em Atendimento</option>
                   <option value="aguardando_peca">Aguardando Peça</option>
                   <option value="concluido">Concluído</option>
@@ -588,6 +590,32 @@ function ModalChamadoAdmin({ chamado, tecnicos, onClose, onAtualizado }) {
               {salvando ? 'Salvando...' : 'Salvar Alterações'}
             </button>
           </div>
+
+          {/* Avaliação */}
+          {detalhes.avaliacoes?.length > 0 && (
+            <div style={{
+              marginTop: '24px', padding: '16px', backgroundColor: '#0D1117',
+              borderRadius: '12px', border: '1px solid #1E2533'
+            }}>
+              <h3 style={{ color: '#FFFFFF', fontSize: '16px', margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Star size={16} color="#C9A227" /> Avaliação do Cliente
+              </h3>
+              <div style={{ display: 'flex', gap: '4px', marginBottom: '6px' }}>
+                {[1, 2, 3, 4, 5].map(i => (
+                  <Star key={i} size={20}
+                    fill={i <= detalhes.avaliacoes[0].nota ? '#C9A227' : 'transparent'}
+                    color="#C9A227"
+                  />
+                ))}
+                <span style={{ color: '#FFFFFF', marginLeft: '8px', fontWeight: 600 }}>{detalhes.avaliacoes[0].nota}/5</span>
+              </div>
+              {detalhes.avaliacoes[0].comentario && (
+                <p style={{ color: '#8A94A6', fontSize: '13px', margin: 0, fontStyle: 'italic' }}>
+                  "{detalhes.avaliacoes[0].comentario}"
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Histórico */}
           {detalhes.chamado_atualizacoes?.length > 0 && (
@@ -1218,20 +1246,51 @@ function RelatoriosAdmin() {
   const [carregando, setCarregando] = useState(false);
 
   const gerarRelatorio = async () => {
-    if (tipo === 'periodo' && (!inicio || !fim)) {
+    if (['periodo', 'sla'].includes(tipo) && (!inicio || !fim)) {
       toast.error('Selecione o período');
       return;
     }
     setCarregando(true);
     try {
-      const params = inicio && fim ? `?inicio=${inicio}&fim=${fim}` : '';
-      const { data } = await api.get(`/admin/relatorios/${tipo}${params}`);
+      const params = new URLSearchParams();
+      if (inicio) params.set('inicio', inicio);
+      if (fim) params.set('fim', fim);
+      const query = params.toString() ? `?${params.toString()}` : '';
+      const { data } = await api.get(`/admin/relatorios/${tipo}${query}`);
       setDados(data);
     } catch {
       toast.error('Erro ao gerar relatório');
     } finally {
       setCarregando(false);
     }
+  };
+
+  const exportar = async (formato) => {
+    try {
+      const params = new URLSearchParams();
+      if (inicio) params.set('inicio', inicio);
+      if (fim) params.set('fim', fim);
+      params.set('formato', formato);
+      const response = await api.get(`/admin/relatorios/${tipo}?${params.toString()}`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `relatorio-${tipo}.${formato === 'xlsx' ? 'xlsx' : 'pdf'}`;
+      link.click();
+      window.URL.revokeObjectURL(url);
+      toast.success(`Exportado em ${formato.toUpperCase()}`);
+    } catch {
+      toast.error('Erro ao exportar');
+    }
+  };
+
+  const thStyle = { color: '#8A94A6', fontSize: '12px', textAlign: 'center', padding: '8px 12px', borderBottom: '1px solid #1E2533' };
+  const tdStyle = { color: '#FFFFFF', textAlign: 'center', padding: '10px 12px', borderBottom: '1px solid #1E2533' };
+  const exportBtnStyle = {
+    padding: '8px 16px', borderRadius: '6px', border: '1px solid #1E2533',
+    backgroundColor: 'transparent', color: '#8A94A6', cursor: 'pointer',
+    fontSize: '12px', fontFamily: "'Barlow', sans-serif",
+    display: 'inline-flex', alignItems: 'center', gap: '4px'
   };
 
   return (
@@ -1244,10 +1303,12 @@ function RelatoriosAdmin() {
         <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
           <div>
             <label style={{ color: '#8A94A6', fontSize: '13px', display: 'block', marginBottom: '6px' }}>Tipo</label>
-            <select value={tipo} onChange={(e) => setTipo(e.target.value)} style={{ ...inputStyle, width: 'auto' }}>
+            <select value={tipo} onChange={(e) => { setTipo(e.target.value); setDados(null); }} style={{ ...inputStyle, width: 'auto' }}>
               <option value="periodo">Por Período</option>
               <option value="clientes">Por Cliente</option>
               <option value="tecnicos">Por Técnico</option>
+              <option value="sla">SLA (Cumprido vs Estourado)</option>
+              <option value="pecas">Peças Utilizadas</option>
             </select>
           </div>
           <div>
@@ -1264,6 +1325,19 @@ function RelatoriosAdmin() {
         </div>
       </div>
 
+      {/* Botões de exportação */}
+      {dados && (
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+          <button onClick={() => exportar('pdf')} style={exportBtnStyle}>
+            Exportar PDF
+          </button>
+          <button onClick={() => exportar('xlsx')} style={exportBtnStyle}>
+            Exportar Excel
+          </button>
+        </div>
+      )}
+
+      {/* Relatório por Período */}
       {dados && tipo === 'periodo' && dados.resumo && (
         <div style={cardStyle}>
           <h3 style={{ color: '#FFFFFF', fontSize: '18px', marginBottom: '16px' }}>Resumo do Período</h3>
@@ -1271,6 +1345,8 @@ function RelatoriosAdmin() {
             {[
               { label: 'Total', valor: dados.resumo.total },
               { label: 'Concluídos', valor: dados.resumo.concluidos },
+              { label: 'Dentro SLA', valor: dados.resumo.dentro_sla },
+              { label: 'Fora SLA', valor: dados.resumo.fora_sla },
               { label: '% SLA', valor: `${dados.resumo.percentual_sla}%` },
               { label: 'Tempo Médio', valor: `${dados.resumo.tempo_medio}min` },
               { label: 'Preventivos', valor: dados.resumo.por_tipo?.preventivo || 0 },
@@ -1285,43 +1361,133 @@ function RelatoriosAdmin() {
         </div>
       )}
 
-      {dados && tipo !== 'periodo' && Array.isArray(dados) && (
+      {/* Relatório por Cliente/Técnico */}
+      {dados && ['clientes', 'tecnicos'].includes(tipo) && Array.isArray(dados) && (
         <div style={cardStyle}>
           <h3 style={{ color: '#FFFFFF', fontSize: '18px', marginBottom: '16px' }}>
             {tipo === 'clientes' ? 'Por Cliente' : 'Por Técnico'}
           </h3>
+          <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
-                <th style={{ color: '#8A94A6', fontSize: '12px', textAlign: 'left', padding: '8px 12px', borderBottom: '1px solid #1E2533' }}>
-                  {tipo === 'clientes' ? 'Cliente' : 'Técnico'}
-                </th>
-                <th style={{ color: '#8A94A6', fontSize: '12px', textAlign: 'center', padding: '8px 12px', borderBottom: '1px solid #1E2533' }}>Total</th>
-                <th style={{ color: '#8A94A6', fontSize: '12px', textAlign: 'center', padding: '8px 12px', borderBottom: '1px solid #1E2533' }}>Concluídos</th>
-                <th style={{ color: '#8A94A6', fontSize: '12px', textAlign: 'center', padding: '8px 12px', borderBottom: '1px solid #1E2533' }}>
-                  {tipo === 'tecnicos' ? '% SLA' : 'Dentro SLA'}
-                </th>
+                <th style={{ ...thStyle, textAlign: 'left' }}>{tipo === 'clientes' ? 'Cliente' : 'Técnico'}</th>
+                <th style={thStyle}>Total</th>
+                <th style={thStyle}>Concluídos</th>
+                <th style={thStyle}>Dentro SLA</th>
+                {tipo === 'tecnicos' && <th style={thStyle}>% SLA</th>}
+                {tipo === 'tecnicos' && <th style={thStyle}>Tempo Médio</th>}
               </tr>
             </thead>
             <tbody>
               {dados.map((item, i) => (
                 <tr key={i}>
-                  <td style={{ color: '#FFFFFF', padding: '10px 12px', borderBottom: '1px solid #1E2533' }}>
-                    {item.cliente || item.tecnico}
-                  </td>
-                  <td style={{ color: '#FFFFFF', textAlign: 'center', padding: '10px 12px', borderBottom: '1px solid #1E2533' }}>
-                    {item.total}
-                  </td>
-                  <td style={{ color: '#FFFFFF', textAlign: 'center', padding: '10px 12px', borderBottom: '1px solid #1E2533' }}>
-                    {item.concluidos}
-                  </td>
-                  <td style={{ color: '#FFFFFF', textAlign: 'center', padding: '10px 12px', borderBottom: '1px solid #1E2533' }}>
-                    {tipo === 'tecnicos' ? `${item.percentual_sla}%` : item.dentro_sla}
-                  </td>
+                  <td style={{ ...tdStyle, textAlign: 'left' }}>{item.cliente || item.tecnico}</td>
+                  <td style={tdStyle}>{item.total}</td>
+                  <td style={tdStyle}>{item.concluidos}</td>
+                  <td style={tdStyle}>{item.dentro_sla}</td>
+                  {tipo === 'tecnicos' && <td style={tdStyle}>{item.percentual_sla}%</td>}
+                  {tipo === 'tecnicos' && <td style={tdStyle}>{item.tempo_medio} min</td>}
                 </tr>
               ))}
             </tbody>
           </table>
+          </div>
+        </div>
+      )}
+
+      {/* Relatório de SLA */}
+      {dados && tipo === 'sla' && dados.resumo && (
+        <div style={cardStyle}>
+          <h3 style={{ color: '#FFFFFF', fontSize: '18px', marginBottom: '16px' }}>Relatório de SLA</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+            {[
+              { label: 'Total Concluídos', valor: dados.resumo.total_concluidos },
+              { label: 'Dentro do SLA', valor: dados.resumo.dentro_sla, color: '#3D9E6B' },
+              { label: 'Fora do SLA', valor: dados.resumo.fora_sla, color: '#E84C1E' },
+              { label: '% Cumprimento', valor: `${dados.resumo.percentual_sla}%` }
+            ].map(item => (
+              <div key={item.label} style={{ padding: '12px', backgroundColor: '#0D1117', borderRadius: '8px' }}>
+                <p style={{ color: '#8A94A6', fontSize: '12px', margin: '0 0 4px' }}>{item.label}</p>
+                <p style={{ color: item.color || '#FFFFFF', fontSize: '20px', fontWeight: 700, margin: 0 }}>{item.valor}</p>
+              </div>
+            ))}
+          </div>
+          <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr>
+                <th style={{ ...thStyle, textAlign: 'left' }}>#</th>
+                <th style={{ ...thStyle, textAlign: 'left' }}>Cliente</th>
+                <th style={{ ...thStyle, textAlign: 'left' }}>Técnico</th>
+                <th style={thStyle}>Urgência</th>
+                <th style={thStyle}>SLA</th>
+                <th style={thStyle}>Criado</th>
+                <th style={thStyle}>Concluído</th>
+              </tr>
+            </thead>
+            <tbody>
+              {dados.chamados?.map(c => (
+                <tr key={c.id}>
+                  <td style={{ ...tdStyle, textAlign: 'left' }}>#{c.numero}</td>
+                  <td style={{ ...tdStyle, textAlign: 'left' }}>{c.clientes?.nome || '-'}</td>
+                  <td style={{ ...tdStyle, textAlign: 'left' }}>{c.tecnicos?.nome || '-'}</td>
+                  <td style={tdStyle}><UrgenciaBadge urgencia={c.urgencia} /></td>
+                  <td style={tdStyle}>
+                    <span style={{
+                      padding: '4px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: 600,
+                      backgroundColor: c.sla_cumprido ? 'rgba(61,158,107,0.15)' : 'rgba(232,76,30,0.15)',
+                      color: c.sla_cumprido ? '#3D9E6B' : '#E84C1E'
+                    }}>
+                      {c.sla_cumprido ? 'Cumprido' : 'Estourado'}
+                    </span>
+                  </td>
+                  <td style={tdStyle}>{new Date(c.criado_em).toLocaleDateString('pt-BR')}</td>
+                  <td style={tdStyle}>{new Date(c.atualizado_em).toLocaleDateString('pt-BR')}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          </div>
+        </div>
+      )}
+
+      {/* Relatório de Peças */}
+      {dados && tipo === 'pecas' && Array.isArray(dados) && (
+        <div style={cardStyle}>
+          <h3 style={{ color: '#FFFFFF', fontSize: '18px', marginBottom: '16px' }}>Peças Utilizadas</h3>
+          {dados.length === 0 ? (
+            <p style={{ color: '#8A94A6', textAlign: 'center', padding: '24px' }}>
+              Nenhuma peça encontrada no período
+            </p>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr>
+                  <th style={{ ...thStyle, textAlign: 'left' }}>#</th>
+                  <th style={{ ...thStyle, textAlign: 'left' }}>Cliente</th>
+                  <th style={{ ...thStyle, textAlign: 'left' }}>Técnico</th>
+                  <th style={{ ...thStyle, textAlign: 'left' }}>Impressora</th>
+                  <th style={{ ...thStyle, textAlign: 'left' }}>Peças</th>
+                  <th style={thStyle}>Data</th>
+                </tr>
+              </thead>
+              <tbody>
+                {dados.map((item, i) => (
+                  <tr key={i}>
+                    <td style={{ ...tdStyle, textAlign: 'left' }}>#{item.numero}</td>
+                    <td style={{ ...tdStyle, textAlign: 'left' }}>{item.cliente}</td>
+                    <td style={{ ...tdStyle, textAlign: 'left' }}>{item.tecnico}</td>
+                    <td style={{ ...tdStyle, textAlign: 'left' }}>{item.impressora}</td>
+                    <td style={{ ...tdStyle, textAlign: 'left' }}>{item.pecas_utilizadas}</td>
+                    <td style={tdStyle}>{item.data}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            </div>
+          )}
         </div>
       )}
     </div>

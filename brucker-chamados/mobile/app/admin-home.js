@@ -9,6 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import api from '../lib/api';
 import { colors, statusColors, statusLabels, urgenciaColors } from '../lib/theme';
+import DatePicker from '../components/DatePicker';
 
 // ─── Bottom Tab Bar ───
 const TABS = [
@@ -100,8 +101,8 @@ function DashboardTab({ router }) {
 
   const cards = [
     { label: 'Abertos', valor: dashboard?.abertos || 0, cor: colors.blue },
+    { label: 'Atribuídos', valor: dashboard?.atribuidos || 0, cor: colors.purple },
     { label: 'Em Atendimento', valor: dashboard?.em_atendimento || 0, cor: colors.yellow },
-    { label: 'Aguard. Peça', valor: dashboard?.aguardando_peca || 0, cor: colors.red },
     { label: 'SLA Vencido', valor: dashboard?.sla_vencido || 0, cor: colors.red },
   ];
 
@@ -159,8 +160,8 @@ function ChamadosTab({ router }) {
 
   const onRefresh = async () => { setRefreshing(true); await carregar(); setRefreshing(false); };
 
-  const filtros = ['', 'aberto', 'em_atendimento', 'aguardando_peca', 'concluido'];
-  const filtroLabels = { '': 'Todos', aberto: 'Abertos', em_atendimento: 'Em Atend.', aguardando_peca: 'Aguard.', concluido: 'Concluídos' };
+  const filtros = ['', 'aberto', 'atribuido', 'em_atendimento', 'aguardando_peca', 'concluido'];
+  const filtroLabels = { '': 'Todos', aberto: 'Abertos', atribuido: 'Atribuídos', em_atendimento: 'Em Atend.', aguardando_peca: 'Aguard.', concluido: 'Concluídos' };
 
   return (
     <FlatList
@@ -415,36 +416,28 @@ function TecnicosTab() {
 // ═══════════════════════════════════════════
 function RelatoriosTab() {
   const [tipo, setTipo] = useState('periodo');
-  const [inicio, setInicio] = useState('');
-  const [fim, setFim] = useState('');
+  const [inicio, setInicio] = useState(null);
+  const [fim, setFim] = useState(null);
   const [dados, setDados] = useState(null);
   const [carregando, setCarregando] = useState(false);
 
-  // Converte DD/MM/AAAA para AAAA-MM-DD para a API
-  const converterData = (dataBR) => {
-    const partes = dataBR.replace(/\D/g, '');
-    if (partes.length !== 8) return null;
-    const dia = partes.substring(0, 2);
-    const mes = partes.substring(2, 4);
-    const ano = partes.substring(4, 8);
-    return `${ano}-${mes}-${dia}`;
+  const formatarParaAPI = (date) => {
+    if (!date) return null;
+    return date.toISOString().split('T')[0];
   };
 
   const gerarRelatorio = async () => {
-    if (tipo === 'periodo' && (!inicio || !fim)) {
-      Alert.alert('Atenção', 'Informe o período (formato: DD/MM/AAAA)');
-      return;
-    }
-    const inicioAPI = converterData(inicio);
-    const fimAPI = converterData(fim);
-    if (tipo === 'periodo' && (!inicioAPI || !fimAPI)) {
-      Alert.alert('Atenção', 'Formato de data inválido. Use DD/MM/AAAA');
+    if (['periodo', 'sla'].includes(tipo) && (!inicio || !fim)) {
+      Alert.alert('Atenção', 'Selecione o período');
       return;
     }
     setCarregando(true);
     try {
-      const params = inicioAPI && fimAPI ? `?inicio=${inicioAPI}&fim=${fimAPI}` : '';
-      const { data } = await api.get(`/admin/relatorios/${tipo}${params}`);
+      const params = new URLSearchParams();
+      if (inicio) params.append('inicio', formatarParaAPI(inicio));
+      if (fim) params.append('fim', formatarParaAPI(fim));
+      const query = params.toString() ? `?${params.toString()}` : '';
+      const { data } = await api.get(`/admin/relatorios/${tipo}${query}`);
       setDados(data);
     } catch {
       Alert.alert('Erro', 'Erro ao gerar relatório');
@@ -454,34 +447,36 @@ function RelatoriosTab() {
   };
 
   const tipos = [
-    { id: 'periodo', label: 'Por Período' },
-    { id: 'clientes', label: 'Por Cliente' },
-    { id: 'tecnicos', label: 'Por Técnico' },
+    { id: 'periodo', label: 'Período' },
+    { id: 'clientes', label: 'Clientes' },
+    { id: 'tecnicos', label: 'Técnicos' },
+    { id: 'sla', label: 'SLA' },
+    { id: 'pecas', label: 'Peças' },
   ];
 
   return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 24 }}>
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 100 }}>
       <Text style={{ color: colors.text, fontSize: 18, fontWeight: '700' }}>Relatórios</Text>
 
       {/* Tipo selector */}
-      <View style={{ flexDirection: 'row', gap: 8 }}>
-        {tipos.map(t => (
-          <TouchableOpacity
-            key={t.id}
-            style={[styles.filtroBtn, tipo === t.id && styles.filtroBtnAtivo]}
-            onPress={() => { setTipo(t.id); setDados(null); }}
-          >
-            <Text style={[styles.filtroText, tipo === t.id && styles.filtroTextAtivo]}>{t.label}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }}>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          {tipos.map(t => (
+            <TouchableOpacity
+              key={t.id}
+              style={[styles.filtroBtn, tipo === t.id && styles.filtroBtnAtivo]}
+              onPress={() => { setTipo(t.id); setDados(null); }}
+            >
+              <Text style={[styles.filtroText, tipo === t.id && styles.filtroTextAtivo]}>{t.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
 
-      {/* Date inputs */}
+      {/* Date picker nativo */}
       <View style={styles.card}>
-        <Text style={styles.formLabel}>Data Início (DD/MM/AAAA)</Text>
-        <TextInput style={styles.formInput} value={inicio} onChangeText={setInicio} placeholder="01/03/2026" placeholderTextColor={colors.textSecondary} keyboardType="numeric" maxLength={10} />
-        <Text style={styles.formLabel}>Data Fim (DD/MM/AAAA)</Text>
-        <TextInput style={styles.formInput} value={fim} onChangeText={setFim} placeholder="31/03/2026" placeholderTextColor={colors.textSecondary} keyboardType="numeric" maxLength={10} />
+        <DatePicker label="Data Início" value={inicio} onChange={setInicio} placeholder="Selecionar início" />
+        <DatePicker label="Data Fim" value={fim} onChange={setFim} placeholder="Selecionar fim" />
         <TouchableOpacity style={[styles.addBtn, { alignSelf: 'stretch', alignItems: 'center', marginTop: 8 }]} onPress={gerarRelatorio} disabled={carregando}>
           <Text style={styles.addBtnText}>{carregando ? 'Gerando...' : 'Gerar Relatório'}</Text>
         </TouchableOpacity>
@@ -495,10 +490,10 @@ function RelatoriosTab() {
             {[
               { label: 'Total', valor: dados.resumo.total },
               { label: 'Concluídos', valor: dados.resumo.concluidos },
+              { label: 'Dentro SLA', valor: dados.resumo.dentro_sla },
+              { label: 'Fora SLA', valor: dados.resumo.fora_sla },
               { label: '% SLA', valor: `${dados.resumo.percentual_sla}%` },
               { label: 'Tempo Médio', valor: `${dados.resumo.tempo_medio}min` },
-              { label: 'Preventivos', valor: dados.resumo.por_tipo?.preventivo || 0 },
-              { label: 'Corretivos', valor: dados.resumo.por_tipo?.corretivo || 0 },
             ].map(item => (
               <View key={item.label} style={{ backgroundColor: colors.bg, borderRadius: 8, padding: 12, minWidth: '45%', flex: 1 }}>
                 <Text style={{ color: colors.textSecondary, fontSize: 11 }}>{item.label}</Text>
@@ -510,7 +505,7 @@ function RelatoriosTab() {
       )}
 
       {/* Results: clientes/tecnicos */}
-      {dados && tipo !== 'periodo' && Array.isArray(dados) && (
+      {dados && ['clientes', 'tecnicos'].includes(tipo) && Array.isArray(dados) && (
         <View style={styles.card}>
           <Text style={{ color: colors.text, fontWeight: '700', fontSize: 16, marginBottom: 12 }}>
             {tipo === 'clientes' ? 'Por Cliente' : 'Por Técnico'}
@@ -539,6 +534,58 @@ function RelatoriosTab() {
           {dados.length === 0 && <Text style={{ color: colors.textSecondary, textAlign: 'center' }}>Sem dados para o período</Text>}
         </View>
       )}
+
+      {/* Results: SLA */}
+      {dados && tipo === 'sla' && dados.resumo && (
+        <View style={styles.card}>
+          <Text style={{ color: colors.text, fontWeight: '700', fontSize: 16, marginBottom: 12 }}>Relatório de SLA</Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
+            {[
+              { label: 'Total', valor: dados.resumo.total_concluidos },
+              { label: 'Cumprido', valor: dados.resumo.dentro_sla, cor: colors.green },
+              { label: 'Estourado', valor: dados.resumo.fora_sla, cor: colors.red },
+              { label: '% SLA', valor: `${dados.resumo.percentual_sla}%` },
+            ].map(item => (
+              <View key={item.label} style={{ backgroundColor: colors.bg, borderRadius: 8, padding: 12, minWidth: '45%', flex: 1 }}>
+                <Text style={{ color: colors.textSecondary, fontSize: 11 }}>{item.label}</Text>
+                <Text style={{ color: item.cor || colors.text, fontSize: 20, fontWeight: '700' }}>{item.valor}</Text>
+              </View>
+            ))}
+          </View>
+          {dados.chamados?.map(c => (
+            <View key={c.id} style={{ backgroundColor: colors.bg, borderRadius: 8, padding: 12, marginBottom: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <View>
+                <Text style={{ color: colors.text, fontWeight: '600' }}>#{c.numero}</Text>
+                <Text style={{ color: colors.textSecondary, fontSize: 11 }}>{c.clientes?.nome}</Text>
+              </View>
+              <View style={{ paddingVertical: 4, paddingHorizontal: 10, borderRadius: 8, backgroundColor: c.sla_cumprido ? colors.green + '25' : colors.red + '25' }}>
+                <Text style={{ color: c.sla_cumprido ? colors.green : colors.red, fontSize: 11, fontWeight: '600' }}>
+                  {c.sla_cumprido ? 'Cumprido' : 'Estourado'}
+                </Text>
+              </View>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {/* Results: Peças */}
+      {dados && tipo === 'pecas' && Array.isArray(dados) && (
+        <View style={styles.card}>
+          <Text style={{ color: colors.text, fontWeight: '700', fontSize: 16, marginBottom: 12 }}>Peças Utilizadas</Text>
+          {dados.length === 0 ? (
+            <Text style={{ color: colors.textSecondary, textAlign: 'center' }}>Nenhuma peça encontrada</Text>
+          ) : dados.map((item, i) => (
+            <View key={i} style={{ backgroundColor: colors.bg, borderRadius: 8, padding: 12, marginBottom: 8 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+                <Text style={{ color: colors.text, fontWeight: '600' }}>#{item.numero}</Text>
+                <Text style={{ color: colors.textSecondary, fontSize: 11 }}>{item.data}</Text>
+              </View>
+              <Text style={{ color: colors.textSecondary, fontSize: 12 }}>{item.cliente} — {item.tecnico}</Text>
+              <Text style={{ color: colors.accent, fontSize: 13, marginTop: 6 }}>{item.pecas_utilizadas}</Text>
+            </View>
+          ))}
+        </View>
+      )}
     </ScrollView>
   );
 }
@@ -550,6 +597,16 @@ function ChamadoCard({ item, onPress }) {
   const getSlaInfo = (chamado) => {
     if (!chamado.sla_vence_em || ['concluido', 'cancelado'].includes(chamado.status)) return null;
     if (chamado.sla_pausado_em) return { text: 'SLA pausado', color: colors.yellow };
+
+    const minutos = chamado.sla_tempo_restante_minutos;
+    if (minutos != null) {
+      if (minutos <= 0) return { text: 'SLA vencido', color: colors.red };
+      const h = Math.floor(minutos / 60);
+      const m = Math.floor(minutos % 60);
+      if (minutos <= 360) return { text: `${h}h ${m}m`, color: colors.yellow };
+      return { text: `${h}h restantes`, color: colors.green };
+    }
+
     const diff = new Date(chamado.sla_vence_em) - new Date();
     const horas = diff / (1000 * 60 * 60);
     if (horas <= 0) return { text: 'SLA vencido', color: colors.red };

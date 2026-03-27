@@ -8,7 +8,7 @@ import { Modal } from '../../components/Modal';
 import toast from 'react-hot-toast';
 import {
   FileText, Printer, PlusCircle, LogOut, Clock, CheckCircle,
-  AlertCircle, Wrench, LayoutDashboard
+  AlertCircle, Wrench, LayoutDashboard, Star, XCircle
 } from 'lucide-react';
 
 const containerStyle = { minHeight: '100vh', backgroundColor: '#0D1117' };
@@ -61,7 +61,7 @@ export default function DashboardCliente() {
 
   const contadores = [
     { label: 'Abertos', valor: dashboard?.abertos || 0, icon: AlertCircle, color: '#4D8EF5' },
-    { label: 'Em Atendimento', valor: dashboard?.em_atendimento || 0, icon: Wrench, color: '#C9A227' },
+    { label: 'Em Atendimento', valor: (dashboard?.atribuidos || 0) + (dashboard?.em_atendimento || 0), icon: Wrench, color: '#C9A227' },
     { label: 'Aguardando Peça', valor: dashboard?.aguardando_peca || 0, icon: Clock, color: '#E84C1E' },
     { label: 'Concluídos', valor: dashboard?.concluidos || 0, icon: CheckCircle, color: '#3D9E6B' }
   ];
@@ -167,7 +167,12 @@ export default function DashboardCliente() {
                     )}
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <SlaIndicator slaVenceEm={chamado.sla_vence_em} slaPausadoEm={chamado.sla_pausado_em} status={chamado.status} />
+                    <SlaIndicator
+                      slaVenceEm={chamado.sla_vence_em}
+                      slaPausadoEm={chamado.sla_pausado_em}
+                      status={chamado.status}
+                      slaTempoRestanteMinutos={chamado.sla_tempo_restante_minutos}
+                    />
                     <p style={{ color: '#8A94A6', fontSize: '12px', marginTop: '4px' }}>
                       {new Date(chamado.criado_em).toLocaleDateString('pt-BR')}
                     </p>
@@ -214,6 +219,7 @@ export default function DashboardCliente() {
       <ModalDetalheChamado
         chamado={modalDetalhe}
         onClose={() => setModalDetalhe(null)}
+        onAtualizado={carregarDados}
       />
     </div>
   );
@@ -300,12 +306,16 @@ function ModalAbrirChamado({ isOpen, onClose, impressoras, onCriado }) {
             <label style={{ color: '#8A94A6', fontSize: '13px', display: 'block', marginBottom: '6px' }}>Urgência</label>
             <select value={form.urgencia} onChange={(e) => setForm(f => ({ ...f, urgencia: e.target.value }))}
               style={{ ...inputStyle, cursor: 'pointer' }}>
-              <option value="normal">Normal (24h SLA)</option>
-              <option value="alta">Alta (16h SLA)</option>
-              <option value="critica">Crítica (8h SLA)</option>
+              <option value="normal">Normal</option>
+              <option value="alta">Alta</option>
+              <option value="critica">Crítica</option>
             </select>
           </div>
         </div>
+
+        <p style={{ color: '#8A94A6', fontSize: '12px', margin: '-8px 0 16px', textAlign: 'right' }}>
+          SLA: 24 horas úteis
+        </p>
 
         <div style={{ marginBottom: '24px' }}>
           <label style={{ color: '#8A94A6', fontSize: '13px', display: 'block', marginBottom: '6px' }}>
@@ -330,16 +340,59 @@ function ModalAbrirChamado({ isOpen, onClose, impressoras, onCriado }) {
   );
 }
 
-function ModalDetalheChamado({ chamado, onClose }) {
+function ModalDetalheChamado({ chamado, onClose, onAtualizado }) {
   const [detalhes, setDetalhes] = useState(null);
+  const [cancelando, setCancelando] = useState(false);
+  const [avaliacao, setAvaliacao] = useState({ nota: 0, comentario: '' });
+  const [enviandoAvaliacao, setEnviandoAvaliacao] = useState(false);
 
   useEffect(() => {
     if (chamado) {
       api.get(`/chamados/${chamado.id}`).then(res => setDetalhes(res.data)).catch(() => {});
     } else {
       setDetalhes(null);
+      setAvaliacao({ nota: 0, comentario: '' });
     }
   }, [chamado]);
+
+  const handleCancelar = async () => {
+    if (!confirm('Tem certeza que deseja cancelar este chamado?')) return;
+    setCancelando(true);
+    try {
+      await api.put(`/chamados/${chamado.id}/cancelar`);
+      toast.success('Chamado cancelado');
+      onClose();
+      onAtualizado();
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Erro ao cancelar');
+    } finally {
+      setCancelando(false);
+    }
+  };
+
+  const handleAvaliar = async () => {
+    if (avaliacao.nota < 1) {
+      toast.error('Selecione uma nota');
+      return;
+    }
+    setEnviandoAvaliacao(true);
+    try {
+      await api.post(`/chamados/${chamado.id}/avaliacao`, {
+        nota: avaliacao.nota,
+        comentario: avaliacao.comentario || null
+      });
+      toast.success('Avaliação enviada!');
+      // Recarregar detalhes para mostrar avaliação
+      const res = await api.get(`/chamados/${chamado.id}`);
+      setDetalhes(res.data);
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Erro ao enviar avaliação');
+    } finally {
+      setEnviandoAvaliacao(false);
+    }
+  };
+
+  const avaliacaoExistente = detalhes?.avaliacoes?.length > 0 ? detalhes.avaliacoes[0] : null;
 
   return (
     <Modal isOpen={!!chamado} onClose={onClose} title={`Chamado #${chamado?.numero}`} width="700px">
@@ -381,7 +434,93 @@ function ModalDetalheChamado({ chamado, onClose }) {
             <p style={{ color: '#FFFFFF', margin: 0, lineHeight: 1.6 }}>{detalhes.descricao}</p>
           </div>
 
-          <SlaIndicator slaVenceEm={detalhes.sla_vence_em} slaPausadoEm={detalhes.sla_pausado_em} status={detalhes.status} />
+          <SlaIndicator
+            slaVenceEm={detalhes.sla_vence_em}
+            slaPausadoEm={detalhes.sla_pausado_em}
+            status={detalhes.status}
+            slaTempoRestanteMinutos={detalhes.sla_tempo_restante_minutos}
+          />
+
+          {/* Botão Cancelar */}
+          {!['concluido', 'cancelado'].includes(detalhes.status) && (
+            <div style={{ marginTop: '20px' }}>
+              <button onClick={handleCancelar} disabled={cancelando} style={{
+                padding: '10px 20px', backgroundColor: 'transparent',
+                border: '1px solid #E84C1E', borderRadius: '8px',
+                color: '#E84C1E', fontSize: '14px', fontWeight: 600,
+                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
+                fontFamily: "'Barlow', sans-serif", opacity: cancelando ? 0.7 : 1
+              }}>
+                <XCircle size={16} /> {cancelando ? 'Cancelando...' : 'Cancelar Chamado'}
+              </button>
+            </div>
+          )}
+
+          {/* Avaliação — só para chamados concluídos */}
+          {detalhes.status === 'concluido' && (
+            <div style={{
+              marginTop: '24px', padding: '20px', backgroundColor: '#0D1117',
+              borderRadius: '12px', border: '1px solid #1E2533'
+            }}>
+              <h3 style={{ color: '#FFFFFF', fontSize: '16px', margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Star size={18} color="#C9A227" /> Avaliação do Atendimento
+              </h3>
+
+              {avaliacaoExistente ? (
+                <div>
+                  <div style={{ display: 'flex', gap: '4px', marginBottom: '8px' }}>
+                    {[1, 2, 3, 4, 5].map(i => (
+                      <Star key={i} size={24}
+                        fill={i <= avaliacaoExistente.nota ? '#C9A227' : 'transparent'}
+                        color="#C9A227"
+                      />
+                    ))}
+                  </div>
+                  {avaliacaoExistente.comentario && (
+                    <p style={{ color: '#8A94A6', fontSize: '14px', margin: '8px 0 0', fontStyle: 'italic' }}>
+                      "{avaliacaoExistente.comentario}"
+                    </p>
+                  )}
+                  <p style={{ color: '#3D9E6B', fontSize: '12px', marginTop: '8px' }}>Avaliação enviada</p>
+                </div>
+              ) : (
+                <div>
+                  <p style={{ color: '#8A94A6', fontSize: '13px', marginBottom: '12px' }}>
+                    Como foi o atendimento? Sua avaliação é muito importante.
+                  </p>
+                  <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                    {[1, 2, 3, 4, 5].map(i => (
+                      <button key={i} onClick={() => setAvaliacao(a => ({ ...a, nota: i }))}
+                        style={{
+                          background: 'none', border: 'none', cursor: 'pointer', padding: '4px',
+                          transform: avaliacao.nota >= i ? 'scale(1.2)' : 'scale(1)',
+                          transition: 'transform 0.15s'
+                        }}>
+                        <Star size={28}
+                          fill={i <= avaliacao.nota ? '#C9A227' : 'transparent'}
+                          color="#C9A227"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                  <textarea
+                    value={avaliacao.comentario}
+                    onChange={(e) => setAvaliacao(a => ({ ...a, comentario: e.target.value }))}
+                    placeholder="Comentário (opcional)..."
+                    rows={2}
+                    style={{ ...inputStyle, marginBottom: '12px', resize: 'vertical' }}
+                  />
+                  <button onClick={handleAvaliar} disabled={enviandoAvaliacao || avaliacao.nota < 1}
+                    style={{
+                      ...btnPrimary, opacity: (enviandoAvaliacao || avaliacao.nota < 1) ? 0.6 : 1,
+                      backgroundColor: '#3D9E6B'
+                    }}>
+                    {enviandoAvaliacao ? 'Enviando...' : 'Enviar Avaliação'}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Histórico de atualizações */}
           {detalhes.chamado_atualizacoes?.length > 0 && (

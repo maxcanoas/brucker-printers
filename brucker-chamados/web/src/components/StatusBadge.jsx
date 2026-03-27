@@ -1,5 +1,6 @@
 const statusConfig = {
   aberto: { label: 'Aberto', color: '#4D8EF5', bg: 'rgba(77, 142, 245, 0.15)' },
+  atribuido: { label: 'Atribuído', color: '#9B59B6', bg: 'rgba(155, 89, 182, 0.15)' },
   em_atendimento: { label: 'Em Atendimento', color: '#C9A227', bg: 'rgba(201, 162, 39, 0.15)' },
   aguardando_peca: { label: 'Aguardando Peça', color: '#E84C1E', bg: 'rgba(232, 76, 30, 0.15)' },
   concluido: { label: 'Concluído', color: '#3D9E6B', bg: 'rgba(61, 158, 107, 0.15)' },

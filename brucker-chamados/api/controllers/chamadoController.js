@@ -1,7 +1,8 @@
 const supabase = require('../services/supabase');
-const { notificarTecnico, notificarStatusChamado } = require('../services/whatsapp');
+const { notificarTecnico, notificarStatusChamado, notificarAdminWhatsApp, notificarClienteConcluidoWhatsApp } = require('../services/whatsapp');
 const { notificarTecnicoPush, notificarStatusPush, notificarNovoChamado } = require('../services/notifications');
-const { notificarNovoChamadoEmail } = require('../services/email');
+const { notificarNovoChamadoEmail, notificarClienteStatusEmail, notificarTecnicoAtribuidoEmail, notificarChamadoConcluidoEmail } = require('../services/email');
+const { calcularSlaVenceEm, enriquecerSla, recalcularSlaAposResumo } = require('../services/businessHours');
 
 exports.criarChamado = async (req, res) => {
   try {
@@ -37,7 +38,10 @@ exports.criarChamado = async (req, res) => {
       }
     }
 
-    const sla_horas = urgencia === 'critica' ? 8 : urgencia === 'alta' ? 16 : 24;
+    // SLA fixo em 24 horas
+    const sla_horas = 24;
+    const agora = new Date();
+    const sla_vence_em = await calcularSlaVenceEm(agora, sla_horas);
 
     const { data, error } = await supabase
       .from('chamados')
@@ -47,7 +51,8 @@ exports.criarChamado = async (req, res) => {
         tipo,
         urgencia: urgencia || 'normal',
         descricao,
-        sla_horas
+        sla_horas,
+        sla_vence_em: sla_vence_em.toISOString()
       })
       .select(`
         *,
@@ -65,7 +70,7 @@ exports.criarChamado = async (req, res) => {
       usuario_tipo: 'cliente'
     });
 
-    // Notificar admins via Push
+    // Notificar admins via Push, Email e WhatsApp
     try {
       const { data: cliente } = await supabase
         .from('clientes')
@@ -75,11 +80,13 @@ exports.criarChamado = async (req, res) => {
       await Promise.all([
         notificarNovoChamado(data, cliente),
         notificarNovoChamadoEmail(data, cliente),
+        notificarAdminWhatsApp(data, cliente, 'novo_chamado'),
       ]);
     } catch (notifError) {
       console.error('Erro ao notificar admins:', notifError);
     }
 
+    await enriquecerSla(data);
     res.status(201).json(data);
   } catch (error) {
     console.error(error);
@@ -112,6 +119,7 @@ exports.listarTodos = async (req, res) => {
     const { data, error, count } = await query;
     if (error) throw error;
 
+    await enriquecerSla(data);
     res.json({ data, total: count, page: Number(page), limit: Number(limit) });
   } catch (error) {
     res.status(500).json({ error: 'Erro ao listar chamados' });
@@ -122,7 +130,7 @@ exports.getDashboardAdmin = async (req, res) => {
   try {
     const { data: chamados, error } = await supabase
       .from('chamados')
-      .select('status, sla_vence_em, sla_pausado_em, criado_em');
+      .select('status, sla_vence_em, sla_pausado_em, sla_tempo_pausado, criado_em');
 
     if (error) throw error;
 
@@ -131,6 +139,7 @@ exports.getDashboardAdmin = async (req, res) => {
 
     const dashboard = {
       abertos: 0,
+      atribuidos: 0,
       em_atendimento: 0,
       aguardando_peca: 0,
       concluidos_hoje: 0,
@@ -139,8 +148,12 @@ exports.getDashboardAdmin = async (req, res) => {
       total_ativos: 0
     };
 
+    // Enriquecer com SLA para cálculos precisos
+    await enriquecerSla(chamados);
+
     chamados.forEach(c => {
       if (c.status === 'aberto') dashboard.abertos++;
+      if (c.status === 'atribuido') dashboard.atribuidos++;
       if (c.status === 'em_atendimento') dashboard.em_atendimento++;
       if (c.status === 'aguardando_peca') dashboard.aguardando_peca++;
 
@@ -149,13 +162,11 @@ exports.getDashboardAdmin = async (req, res) => {
         if (criadoEm >= hoje) dashboard.concluidos_hoje++;
       }
 
-      // SLA check para chamados ativos
-      if (['aberto', 'em_atendimento'].includes(c.status) && c.sla_vence_em) {
-        const slaVence = new Date(c.sla_vence_em);
-        const horasRestantes = (slaVence - agora) / (1000 * 60 * 60);
-
-        if (horasRestantes <= 0) dashboard.sla_vencido++;
-        else if (horasRestantes <= 6) dashboard.sla_vencendo++;
+      // SLA check para chamados ativos usando tempo restante calculado
+      if (['aberto', 'atribuido', 'em_atendimento'].includes(c.status) && c.sla_tempo_restante_minutos !== null) {
+        const minutosRestantes = c.sla_tempo_restante_minutos;
+        if (minutosRestantes <= 0) dashboard.sla_vencido++;
+        else if (minutosRestantes <= 360) dashboard.sla_vencendo++; // 6 horas = 360 min
       }
 
       if (!['concluido', 'cancelado'].includes(c.status)) {
@@ -174,7 +185,7 @@ exports.atualizarChamado = async (req, res) => {
     const { status, tecnico_id, observacao } = req.body;
 
     if (status) {
-      const statusValidos = ['aberto', 'em_atendimento', 'aguardando_peca', 'concluido', 'cancelado'];
+      const statusValidos = ['aberto', 'atribuido', 'em_atendimento', 'aguardando_peca', 'concluido', 'cancelado'];
       if (!statusValidos.includes(status)) {
         return res.status(400).json({ error: `Status inválido. Use: ${statusValidos.join(', ')}` });
       }
@@ -183,21 +194,40 @@ exports.atualizarChamado = async (req, res) => {
     // Buscar chamado atual
     const { data: chamadoAtual, error: fetchError } = await supabase
       .from('chamados')
-      .select('*, clientes(nome), tecnicos(nome, whatsapp)')
+      .select('*, clientes(id, nome, email, telefone), tecnicos(nome, whatsapp, push_token)')
       .eq('id', req.params.id)
       .single();
 
     if (fetchError) return res.status(404).json({ error: 'Chamado não encontrado' });
 
+    // Bloquear alterações em chamados concluídos ou cancelados
+    if (['concluido', 'cancelado'].includes(chamadoAtual.status)) {
+      return res.status(400).json({ error: `Chamados ${chamadoAtual.status === 'concluido' ? 'concluídos' : 'cancelados'} não podem ser alterados` });
+    }
+
     const updates = {};
     if (status) updates.status = status;
     if (tecnico_id) updates.tecnico_id = tecnico_id;
+
+    // Gerenciar pausa/retomada do SLA na camada de aplicação
+    if (status === 'aguardando_peca' && chamadoAtual.status !== 'aguardando_peca') {
+      updates.sla_pausado_em = new Date().toISOString();
+    }
+    if (chamadoAtual.status === 'aguardando_peca' && status && status !== 'aguardando_peca') {
+      const novoVencimento = await recalcularSlaAposResumo(chamadoAtual);
+      updates.sla_vence_em = novoVencimento.toISOString();
+      updates.sla_pausado_em = null;
+      const pausadoEm = new Date(chamadoAtual.sla_pausado_em);
+      const agora = new Date();
+      const minutosPausa = Math.floor((agora - pausadoEm) / (1000 * 60));
+      updates.sla_tempo_pausado = (chamadoAtual.sla_tempo_pausado || 0) + minutosPausa;
+    }
 
     const { data, error } = await supabase
       .from('chamados')
       .update(updates)
       .eq('id', req.params.id)
-      .select(`*, clientes(nome), impressoras(modelo, numero_serie), tecnicos(nome, whatsapp)`)
+      .select(`*, clientes(id, nome, email, telefone), impressoras(modelo, numero_serie), tecnicos(nome, whatsapp, push_token)`)
       .single();
 
     if (error) throw error;
@@ -211,8 +241,18 @@ exports.atualizarChamado = async (req, res) => {
         observacao: observacao || `Status alterado pelo admin`,
         usuario_tipo: 'admin'
       });
+
+      // Notificar cliente por email sobre mudança de status
+      try {
+        if (data.clientes) {
+          await notificarClienteStatusEmail(data.clientes, data, status);
+        }
+      } catch (notifError) {
+        console.error('Erro ao notificar cliente:', notifError);
+      }
     }
 
+    await enriquecerSla(data);
     res.json(data);
   } catch (error) {
     res.status(500).json({ error: 'Erro ao atualizar chamado' });
@@ -226,6 +266,19 @@ exports.atribuirTecnico = async (req, res) => {
       return res.status(400).json({ error: 'tecnico_id é obrigatório' });
     }
 
+    // Buscar chamado atual para verificar status
+    const { data: chamadoAtual } = await supabase
+      .from('chamados')
+      .select('status, clientes(id, nome, email, telefone)')
+      .eq('id', req.params.id)
+      .single();
+
+    if (!chamadoAtual) return res.status(404).json({ error: 'Chamado não encontrado' });
+
+    if (['concluido', 'cancelado'].includes(chamadoAtual.status)) {
+      return res.status(400).json({ error: 'Não é possível atribuir técnico a chamado concluído ou cancelado' });
+    }
+
     // Buscar técnico
     const { data: tecnico } = await supabase
       .from('tecnicos')
@@ -235,12 +288,12 @@ exports.atribuirTecnico = async (req, res) => {
 
     if (!tecnico) return res.status(404).json({ error: 'Técnico não encontrado' });
 
-    // Atualizar chamado
+    // Atualizar chamado — status vai para "atribuido" (técnico precisa aceitar)
     const { data: chamado, error } = await supabase
       .from('chamados')
-      .update({ tecnico_id, status: 'em_atendimento' })
+      .update({ tecnico_id, status: 'atribuido' })
       .eq('id', req.params.id)
-      .select(`*, clientes(nome), impressoras(modelo, numero_serie)`)
+      .select(`*, clientes(id, nome, email, telefone), impressoras(modelo, numero_serie)`)
       .single();
 
     if (error) throw error;
@@ -248,29 +301,140 @@ exports.atribuirTecnico = async (req, res) => {
     // Registrar atualização
     await supabase.from('chamado_atualizacoes').insert({
       chamado_id: chamado.id,
-      status_anterior: 'aberto',
-      status_novo: 'em_atendimento',
-      observacao: `Técnico ${tecnico.nome} atribuído`,
+      status_anterior: chamadoAtual.status,
+      status_novo: 'atribuido',
+      observacao: `Técnico ${tecnico.nome} atribuído — aguardando aceite`,
       usuario_tipo: 'admin'
     });
 
-    // Notificar técnico via WhatsApp
+    // Notificar técnico via WhatsApp, Push e Email
     try {
-      await notificarTecnico(tecnico, chamado, chamado.clientes);
-    } catch (whatsappError) {
-      console.error('Erro ao notificar técnico:', whatsappError);
+      await Promise.all([
+        notificarTecnico(tecnico, chamado, chamado.clientes),
+        notificarTecnicoPush(tecnico, chamado, chamado.clientes),
+        notificarTecnicoAtribuidoEmail(tecnico, chamado, chamado.clientes),
+      ]);
+    } catch (notifError) {
+      console.error('Erro ao notificar técnico:', notifError);
     }
 
-    // Notificar técnico via Push
+    // Notificar cliente por email
     try {
-      await notificarTecnicoPush(tecnico, chamado, chamado.clientes);
-    } catch (pushError) {
-      console.error('Erro ao enviar push notification:', pushError);
+      if (chamado.clientes) {
+        await notificarClienteStatusEmail(chamado.clientes, chamado, 'atribuido');
+      }
+    } catch (notifError) {
+      console.error('Erro ao notificar cliente:', notifError);
     }
 
+    await enriquecerSla(chamado);
     res.json(chamado);
   } catch (error) {
     res.status(500).json({ error: 'Erro ao atribuir técnico' });
+  }
+};
+
+// Técnico aceita chamado atribuído
+exports.aceitarChamado = async (req, res) => {
+  try {
+    const { data: chamado } = await supabase
+      .from('chamados')
+      .select('*, clientes(id, nome, email, telefone), tecnicos(id, nome)')
+      .eq('id', req.params.id)
+      .single();
+
+    if (!chamado) return res.status(404).json({ error: 'Chamado não encontrado' });
+
+    if (chamado.status !== 'atribuido') {
+      return res.status(400).json({ error: 'Apenas chamados com status "atribuído" podem ser aceitos' });
+    }
+
+    if (chamado.tecnico_id !== req.usuario.id) {
+      return res.status(403).json({ error: 'Este chamado não está atribuído a você' });
+    }
+
+    const { data, error } = await supabase
+      .from('chamados')
+      .update({ status: 'em_atendimento' })
+      .eq('id', req.params.id)
+      .select(`*, clientes(id, nome, email, telefone), impressoras(modelo, numero_serie), tecnicos(id, nome)`)
+      .single();
+
+    if (error) throw error;
+
+    // Registrar atualização
+    await supabase.from('chamado_atualizacoes').insert({
+      chamado_id: data.id,
+      status_anterior: 'atribuido',
+      status_novo: 'em_atendimento',
+      observacao: `Chamado aceito pelo técnico ${chamado.tecnicos?.nome || ''}`,
+      usuario_tipo: 'tecnico'
+    });
+
+    // Notificar admin via push e cliente via email
+    try {
+      await Promise.all([
+        notificarStatusPush(data, 'em_atendimento'),
+        data.clientes ? notificarClienteStatusEmail(data.clientes, data, 'em_atendimento') : Promise.resolve(),
+      ]);
+    } catch (notifError) {
+      console.error('Erro ao notificar sobre aceite:', notifError);
+    }
+
+    await enriquecerSla(data);
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao aceitar chamado' });
+  }
+};
+
+// Cliente cancela chamado
+exports.cancelarChamado = async (req, res) => {
+  try {
+    const { data: chamado } = await supabase
+      .from('chamados')
+      .select('*, clientes(id, nome, email, telefone), tecnicos(id, nome, whatsapp, push_token)')
+      .eq('id', req.params.id)
+      .single();
+
+    if (!chamado) return res.status(404).json({ error: 'Chamado não encontrado' });
+
+    if (chamado.cliente_id !== req.usuario.id) {
+      return res.status(403).json({ error: 'Acesso negado' });
+    }
+
+    if (['concluido', 'cancelado'].includes(chamado.status)) {
+      return res.status(400).json({ error: `Chamado já está ${chamado.status === 'concluido' ? 'concluído' : 'cancelado'}` });
+    }
+
+    const { data, error } = await supabase
+      .from('chamados')
+      .update({ status: 'cancelado' })
+      .eq('id', req.params.id)
+      .select(`*, clientes(id, nome, email, telefone), impressoras(modelo, numero_serie), tecnicos(id, nome)`)
+      .single();
+
+    if (error) throw error;
+
+    // Registrar atualização
+    await supabase.from('chamado_atualizacoes').insert({
+      chamado_id: data.id,
+      status_anterior: chamado.status,
+      status_novo: 'cancelado',
+      observacao: 'Chamado cancelado pelo cliente',
+      usuario_tipo: 'cliente'
+    });
+
+    // Notificar admin e técnico (se atribuído)
+    try {
+      await notificarStatusPush(data, 'cancelado');
+    } catch (notifError) {
+      console.error('Erro ao notificar sobre cancelamento:', notifError);
+    }
+
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao cancelar chamado' });
   }
 };
 
@@ -282,18 +446,23 @@ exports.atualizarStatus = async (req, res) => {
       return res.status(400).json({ error: 'Status é obrigatório' });
     }
 
-    const statusValidos = ['aberto', 'em_atendimento', 'aguardando_peca', 'concluido', 'cancelado'];
+    const statusValidos = ['aberto', 'atribuido', 'em_atendimento', 'aguardando_peca', 'concluido', 'cancelado'];
     if (!statusValidos.includes(status)) {
       return res.status(400).json({ error: `Status inválido. Use: ${statusValidos.join(', ')}` });
     }
 
     const { data: chamadoAtual } = await supabase
       .from('chamados')
-      .select('*')
+      .select('*, clientes(id, nome, email, telefone)')
       .eq('id', req.params.id)
       .single();
 
     if (!chamadoAtual) return res.status(404).json({ error: 'Chamado não encontrado' });
+
+    // Bloquear alterações em chamados concluídos ou cancelados
+    if (['concluido', 'cancelado'].includes(chamadoAtual.status)) {
+      return res.status(400).json({ error: `Chamados ${chamadoAtual.status === 'concluido' ? 'concluídos' : 'cancelados'} não podem ser alterados` });
+    }
 
     // Técnico só pode atualizar chamados atribuídos a ele
     if (req.usuario.tipo === 'tecnico' && chamadoAtual.tecnico_id !== req.usuario.id) {
@@ -313,11 +482,27 @@ exports.atualizarStatus = async (req, res) => {
       }
     }
 
+    const updates = { status };
+
+    // Gerenciar pausa/retomada do SLA
+    if (status === 'aguardando_peca' && chamadoAtual.status !== 'aguardando_peca') {
+      updates.sla_pausado_em = new Date().toISOString();
+    }
+    if (chamadoAtual.status === 'aguardando_peca' && status !== 'aguardando_peca') {
+      const novoVencimento = await recalcularSlaAposResumo(chamadoAtual);
+      updates.sla_vence_em = novoVencimento.toISOString();
+      updates.sla_pausado_em = null;
+      const pausadoEm = new Date(chamadoAtual.sla_pausado_em);
+      const agora = new Date();
+      const minutosPausa = Math.floor((agora - pausadoEm) / (1000 * 60));
+      updates.sla_tempo_pausado = (chamadoAtual.sla_tempo_pausado || 0) + minutosPausa;
+    }
+
     const { data, error } = await supabase
       .from('chamados')
-      .update({ status })
+      .update(updates)
       .eq('id', req.params.id)
-      .select(`*, clientes(nome), impressoras(modelo, numero_serie), tecnicos(nome)`)
+      .select(`*, clientes(id, nome, email, telefone), impressoras(modelo, numero_serie), tecnicos(id, nome)`)
       .single();
 
     if (error) throw error;
@@ -338,6 +523,23 @@ exports.atualizarStatus = async (req, res) => {
       console.error('Erro ao enviar push notification:', pushError);
     }
 
+    // Notificar cliente por email sobre mudança de status
+    try {
+      if (data.clientes) {
+        if (status === 'concluido') {
+          await Promise.all([
+            notificarChamadoConcluidoEmail(data.clientes, data),
+            notificarClienteConcluidoWhatsApp(data.clientes.telefone, data),
+          ]);
+        } else {
+          await notificarClienteStatusEmail(data.clientes, data, status);
+        }
+      }
+    } catch (notifError) {
+      console.error('Erro ao notificar cliente:', notifError);
+    }
+
+    await enriquecerSla(data);
     res.json(data);
   } catch (error) {
     res.status(500).json({ error: 'Erro ao atualizar status' });
@@ -362,13 +564,14 @@ exports.getChamadosTecnico = async (req, res) => {
     if (status) {
       query = query.eq('status', status);
     } else {
-      // Por padrão, mostrar apenas chamados ativos
-      query = query.in('status', ['em_atendimento', 'aguardando_peca']);
+      // Por padrão, mostrar chamados ativos (incluindo atribuídos aguardando aceite)
+      query = query.in('status', ['atribuido', 'em_atendimento', 'aguardando_peca']);
     }
 
     const { data, error } = await query;
     if (error) throw error;
 
+    await enriquecerSla(data);
     res.json(data);
   } catch (error) {
     res.status(500).json({ error: 'Erro ao buscar chamados' });
@@ -385,7 +588,8 @@ exports.getDetalhesChamado = async (req, res) => {
         impressoras (id, modelo, numero_serie, tipo_contrato),
         tecnicos (id, nome, email, whatsapp),
         chamado_atualizacoes (id, status_anterior, status_novo, observacao, usuario_tipo, criado_em),
-        relatorios_atendimento (id, descricao_servico, pecas_utilizadas, duracao_minutos, criado_em)
+        relatorios_atendimento (id, descricao_servico, pecas_utilizadas, duracao_minutos, criado_em),
+        avaliacoes (id, nota, comentario, criado_em)
       `)
       .eq('id', req.params.id)
       .single();
@@ -400,8 +604,82 @@ exports.getDetalhesChamado = async (req, res) => {
       return res.status(403).json({ error: 'Acesso negado' });
     }
 
+    await enriquecerSla(chamado);
     res.json(chamado);
   } catch (error) {
     res.status(500).json({ error: 'Erro ao buscar detalhes do chamado' });
+  }
+};
+
+// Avaliação do atendimento pelo cliente
+exports.criarAvaliacao = async (req, res) => {
+  try {
+    const { nota, comentario } = req.body;
+
+    if (!nota || nota < 1 || nota > 5) {
+      return res.status(400).json({ error: 'Nota deve ser entre 1 e 5' });
+    }
+
+    // Buscar chamado
+    const { data: chamado } = await supabase
+      .from('chamados')
+      .select('id, status, cliente_id')
+      .eq('id', req.params.id)
+      .single();
+
+    if (!chamado) return res.status(404).json({ error: 'Chamado não encontrado' });
+
+    if (chamado.cliente_id !== req.usuario.id) {
+      return res.status(403).json({ error: 'Acesso negado' });
+    }
+
+    if (chamado.status !== 'concluido') {
+      return res.status(400).json({ error: 'Apenas chamados concluídos podem ser avaliados' });
+    }
+
+    // Verificar se já existe avaliação
+    const { data: existente } = await supabase
+      .from('avaliacoes')
+      .select('id')
+      .eq('chamado_id', req.params.id)
+      .single();
+
+    if (existente) {
+      return res.status(400).json({ error: 'Este chamado já foi avaliado' });
+    }
+
+    const { data, error } = await supabase
+      .from('avaliacoes')
+      .insert({
+        chamado_id: req.params.id,
+        cliente_id: req.usuario.id,
+        nota: Math.round(nota),
+        comentario: comentario || null
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.status(201).json(data);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao criar avaliação' });
+  }
+};
+
+exports.getAvaliacao = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('avaliacoes')
+      .select('*')
+      .eq('chamado_id', req.params.id)
+      .single();
+
+    if (error) return res.status(404).json({ error: 'Avaliação não encontrada' });
+
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao buscar avaliação' });
   }
 };

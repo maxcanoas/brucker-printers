@@ -16,6 +16,8 @@ export default function ChamadoDetalhe() {
   const [userTipo, setUserTipo] = useState('tecnico');
   const [tecnicos, setTecnicos] = useState([]);
   const [mostrarTecnicos, setMostrarTecnicos] = useState(false);
+  const [avaliacao, setAvaliacao] = useState({ nota: 0, comentario: '' });
+  const [enviandoAvaliacao, setEnviandoAvaliacao] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -42,6 +44,19 @@ export default function ChamadoDetalhe() {
       setTecnicos(data.filter(t => t.ativo));
     } catch {
       console.log('Erro ao carregar técnicos');
+    }
+  };
+
+  const aceitarChamado = async () => {
+    setSalvando(true);
+    try {
+      await api.put(`/chamados/${id}/aceitar`);
+      Alert.alert('Sucesso', 'Chamado aceito!');
+      carregarChamado();
+    } catch (err) {
+      Alert.alert('Erro', err.response?.data?.error || 'Erro ao aceitar chamado');
+    } finally {
+      setSalvando(false);
     }
   };
 
@@ -77,6 +92,41 @@ export default function ChamadoDetalhe() {
     router.push({ pathname: '/relatorio', params: { chamado_id: id, numero: chamado?.numero } });
   };
 
+  const cancelarChamado = () => {
+    Alert.alert('Cancelar Chamado', 'Tem certeza que deseja cancelar este chamado?', [
+      { text: 'Não', style: 'cancel' },
+      { text: 'Sim, cancelar', style: 'destructive', onPress: async () => {
+        setSalvando(true);
+        try {
+          await api.put(`/chamados/${id}/cancelar`);
+          Alert.alert('Sucesso', 'Chamado cancelado');
+          carregarChamado();
+        } catch (err) {
+          Alert.alert('Erro', err.response?.data?.error || 'Erro ao cancelar');
+        } finally {
+          setSalvando(false);
+        }
+      }}
+    ]);
+  };
+
+  const enviarAvaliacao = async () => {
+    if (avaliacao.nota < 1) return Alert.alert('Atenção', 'Selecione uma nota');
+    setEnviandoAvaliacao(true);
+    try {
+      await api.post(`/chamados/${id}/avaliacao`, {
+        nota: avaliacao.nota,
+        comentario: avaliacao.comentario || null
+      });
+      Alert.alert('Sucesso', 'Avaliação enviada!');
+      carregarChamado();
+    } catch (err) {
+      Alert.alert('Erro', err.response?.data?.error || 'Erro ao enviar avaliação');
+    } finally {
+      setEnviandoAvaliacao(false);
+    }
+  };
+
   if (!chamado) {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
@@ -85,9 +135,21 @@ export default function ChamadoDetalhe() {
     );
   }
 
+  // Usar sla_tempo_restante_minutos calculado pelo servidor (considera horário comercial)
   const slaInfo = () => {
     if (!chamado.sla_vence_em || ['concluido', 'cancelado'].includes(chamado.status)) return null;
     if (chamado.sla_pausado_em) return { text: 'SLA pausado (aguardando peça)', color: colors.yellow };
+
+    const minutos = chamado.sla_tempo_restante_minutos;
+    if (minutos != null) {
+      if (minutos <= 0) return { text: 'SLA VENCIDO', color: colors.red };
+      const h = Math.floor(minutos / 60);
+      const m = Math.floor(minutos % 60);
+      if (minutos <= 360) return { text: `${h}h ${m}m restantes`, color: colors.yellow };
+      return { text: `${h}h restantes`, color: colors.green };
+    }
+
+    // Fallback
     const diff = new Date(chamado.sla_vence_em) - new Date();
     const horas = diff / (1000 * 60 * 60);
     if (horas <= 0) return { text: 'SLA VENCIDO', color: colors.red };
@@ -97,6 +159,8 @@ export default function ChamadoDetalhe() {
 
   const sla = slaInfo();
   const isAdmin = userTipo === 'admin';
+  const isTecnico = userTipo === 'tecnico';
+  const isCliente = userTipo === 'cliente';
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -104,9 +168,9 @@ export default function ChamadoDetalhe() {
       <View style={styles.headerCard}>
         <View style={styles.row}>
           <Text style={styles.numero}>Chamado #{chamado.numero}</Text>
-          <View style={[styles.badge, { backgroundColor: statusColors[chamado.status] + '25' }]}>
-            <Text style={[styles.badgeText, { color: statusColors[chamado.status] }]}>
-              {statusLabels[chamado.status]}
+          <View style={[styles.badge, { backgroundColor: (statusColors[chamado.status] || colors.textSecondary) + '25' }]}>
+            <Text style={[styles.badgeText, { color: statusColors[chamado.status] || colors.textSecondary }]}>
+              {statusLabels[chamado.status] || chamado.status}
             </Text>
           </View>
         </View>
@@ -138,6 +202,25 @@ export default function ChamadoDetalhe() {
         <Text style={styles.sectionTitle}>Descrição do Problema</Text>
         <Text style={styles.descricao}>{chamado.descricao}</Text>
       </View>
+
+      {/* Técnico: Aceitar chamado atribuído */}
+      {isTecnico && chamado.status === 'atribuido' && (
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Aceitar Chamado</Text>
+          <Text style={{ color: colors.textSecondary, fontSize: 13, marginBottom: 16 }}>
+            Este chamado foi atribuído a você. Aceite para iniciar o atendimento.
+          </Text>
+          <TouchableOpacity
+            style={[styles.aceitarBtn]}
+            onPress={aceitarChamado}
+            disabled={salvando}
+          >
+            <Text style={styles.aceitarBtnText}>
+              {salvando ? 'Aceitando...' : 'Aceitar Chamado'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Admin: Atribuir técnico */}
       {isAdmin && !['concluido', 'cancelado'].includes(chamado.status) && (
@@ -174,8 +257,8 @@ export default function ChamadoDetalhe() {
         </View>
       )}
 
-      {/* Ações (se não concluído/cancelado) */}
-      {!['concluido', 'cancelado'].includes(chamado.status) && (
+      {/* Ações (só quando em_atendimento ou aguardando_peca — não quando atribuido) */}
+      {['em_atendimento', 'aguardando_peca'].includes(chamado.status) && (
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Ações</Text>
 
@@ -206,7 +289,7 @@ export default function ChamadoDetalhe() {
             multiline
           />
 
-          {!isAdmin && (
+          {isTecnico && (
             <TouchableOpacity style={styles.encerrarBtn} onPress={encerrarChamado}>
               <Text style={styles.encerrarBtnText}>Encerrar e Gerar Relatório</Text>
             </TouchableOpacity>
@@ -223,9 +306,9 @@ export default function ChamadoDetalhe() {
             .map(at => (
               <View key={at.id} style={styles.historicoItem}>
                 <View style={styles.row}>
-                  <View style={[styles.badge, { backgroundColor: statusColors[at.status_novo] + '25' }]}>
-                    <Text style={[styles.badgeText, { color: statusColors[at.status_novo] }]}>
-                      {statusLabels[at.status_novo]}
+                  <View style={[styles.badge, { backgroundColor: (statusColors[at.status_novo] || colors.textSecondary) + '25' }]}>
+                    <Text style={[styles.badgeText, { color: statusColors[at.status_novo] || colors.textSecondary }]}>
+                      {statusLabels[at.status_novo] || at.status_novo}
                     </Text>
                   </View>
                   <Text style={styles.historicoData}>
@@ -249,6 +332,68 @@ export default function ChamadoDetalhe() {
               {r.duracao_minutos && <InfoRow label="Duração" value={`${r.duracao_minutos} min`} />}
             </View>
           ))}
+        </View>
+      )}
+
+      {/* Cliente: Cancelar chamado */}
+      {isCliente && !['concluido', 'cancelado'].includes(chamado.status) && (
+        <TouchableOpacity style={styles.cancelarBtn} onPress={cancelarChamado} disabled={salvando}>
+          <Text style={styles.cancelarBtnText}>{salvando ? 'Cancelando...' : 'Cancelar Chamado'}</Text>
+        </TouchableOpacity>
+      )}
+
+      {/* Cliente: Avaliação */}
+      {isCliente && chamado.status === 'concluido' && (
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Avaliação do Atendimento</Text>
+
+          {chamado.avaliacoes?.length > 0 ? (
+            <View>
+              <View style={{ flexDirection: 'row', gap: 6, marginBottom: 8 }}>
+                {[1, 2, 3, 4, 5].map(i => (
+                  <Text key={i} style={{ fontSize: 24 }}>
+                    {i <= chamado.avaliacoes[0].nota ? '⭐' : '☆'}
+                  </Text>
+                ))}
+              </View>
+              {chamado.avaliacoes[0].comentario && (
+                <Text style={{ color: colors.textSecondary, fontSize: 13, fontStyle: 'italic' }}>
+                  "{chamado.avaliacoes[0].comentario}"
+                </Text>
+              )}
+              <Text style={{ color: colors.green, fontSize: 12, marginTop: 8 }}>Avaliação enviada</Text>
+            </View>
+          ) : (
+            <View>
+              <Text style={{ color: colors.textSecondary, fontSize: 13, marginBottom: 12 }}>
+                Como foi o atendimento?
+              </Text>
+              <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
+                {[1, 2, 3, 4, 5].map(i => (
+                  <TouchableOpacity key={i} onPress={() => setAvaliacao(a => ({ ...a, nota: i }))}>
+                    <Text style={{ fontSize: 32, opacity: avaliacao.nota >= i ? 1 : 0.3 }}>⭐</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              <TextInput
+                style={styles.input}
+                value={avaliacao.comentario}
+                onChangeText={v => setAvaliacao(a => ({ ...a, comentario: v }))}
+                placeholder="Comentário (opcional)..."
+                placeholderTextColor={colors.textSecondary}
+                multiline
+              />
+              <TouchableOpacity
+                style={[styles.aceitarBtn, { marginTop: 12, opacity: (enviandoAvaliacao || avaliacao.nota < 1) ? 0.6 : 1 }]}
+                onPress={enviarAvaliacao}
+                disabled={enviandoAvaliacao || avaliacao.nota < 1}
+              >
+                <Text style={styles.aceitarBtnText}>
+                  {enviandoAvaliacao ? 'Enviando...' : 'Enviar Avaliação'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       )}
     </ScrollView>
@@ -305,6 +450,11 @@ const styles = StyleSheet.create({
   },
   statusBtnDisabled: { opacity: 0.4 },
   statusBtnText: { color: colors.text, fontSize: 13, fontWeight: '500' },
+  aceitarBtn: {
+    backgroundColor: colors.green, borderRadius: 12,
+    padding: 18, alignItems: 'center'
+  },
+  aceitarBtnText: { color: colors.text, fontSize: 16, fontWeight: '700' },
   encerrarBtn: {
     backgroundColor: colors.green, borderRadius: 8,
     padding: 16, alignItems: 'center', marginTop: 20
@@ -328,5 +478,10 @@ const styles = StyleSheet.create({
     marginBottom: 8, borderLeftWidth: 3, borderLeftColor: colors.accent
   },
   historicoData: { fontSize: 11, color: colors.textSecondary },
-  historicoObs: { fontSize: 13, color: colors.textSecondary, marginTop: 6 }
+  historicoObs: { fontSize: 13, color: colors.textSecondary, marginTop: 6 },
+  cancelarBtn: {
+    borderWidth: 1, borderColor: colors.red, borderRadius: 12,
+    padding: 16, alignItems: 'center'
+  },
+  cancelarBtnText: { color: colors.red, fontSize: 15, fontWeight: '600' },
 });

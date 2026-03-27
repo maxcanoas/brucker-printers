@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator,
-  KeyboardAvoidingView, ScrollView, Platform, Linking
+  KeyboardAvoidingView, ScrollView, Platform
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
@@ -9,11 +9,19 @@ import api from '../lib/api';
 import { colors } from '../lib/theme';
 import { registrarPushNotifications } from '../lib/notifications';
 
+const PERFIS = [
+  { id: 'cliente', label: 'Cliente' },
+  { id: 'tecnico', label: 'Técnico' },
+  { id: 'admin', label: 'Admin' },
+];
+
 export default function LoginScreen() {
+  const [carregando, setCarregando] = useState(true);
+  const [perfil, setPerfil] = useState('cliente');
+  const [codigoAcesso, setCodigoAcesso] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
-  const [carregando, setCarregando] = useState(true);
-  const [perfil, setPerfil] = useState('tecnico'); // 'tecnico' ou 'admin'
+  const [mostrarSenha, setMostrarSenha] = useState(false);
   const [modoEsqueciSenha, setModoEsqueciSenha] = useState(false);
   const [emailRecuperacao, setEmailRecuperacao] = useState('');
   const [enviando, setEnviando] = useState(false);
@@ -24,7 +32,9 @@ export default function LoginScreen() {
       if (token) {
         const tipo = await AsyncStorage.getItem('userTipo');
         await registrarPushNotifications();
-        router.replace(tipo === 'admin' ? '/admin-home' : '/home');
+        if (tipo === 'admin') router.replace('/admin-home');
+        else if (tipo === 'cliente') router.replace('/cliente-home');
+        else router.replace('/home');
       } else {
         setCarregando(false);
       }
@@ -32,29 +42,49 @@ export default function LoginScreen() {
   }, []);
 
   const handleLogin = async () => {
-    if (!email || !senha) {
-      Alert.alert('Atenção', 'Preencha email e senha');
-      return;
+    if (perfil === 'cliente') {
+      if (!codigoAcesso.trim()) {
+        return Alert.alert('Atenção', 'Informe o código de acesso');
+      }
+    } else {
+      if (!email || !senha) {
+        return Alert.alert('Atenção', 'Preencha e-mail e senha');
+      }
     }
 
     setCarregando(true);
     try {
-      const endpoint = perfil === 'admin' ? '/auth/admin/login' : '/auth/tecnico/login';
-      const { data } = await api.post(endpoint, { email, senha });
+      let data;
 
-      await AsyncStorage.setItem('token', data.token);
-      await AsyncStorage.setItem('userTipo', perfil);
-
-      if (perfil === 'admin') {
+      if (perfil === 'cliente') {
+        const res = await api.post('/auth/cliente/login', { codigo_acesso: codigoAcesso.trim() });
+        data = res.data;
+        await AsyncStorage.setItem('token', data.token);
+        await AsyncStorage.setItem('userTipo', 'cliente');
+        await AsyncStorage.setItem('cliente', JSON.stringify(data.cliente));
+        router.replace('/cliente-home');
+      } else if (perfil === 'admin') {
+        const res = await api.post('/auth/admin/login', { email, senha });
+        data = res.data;
+        await AsyncStorage.setItem('token', data.token);
+        await AsyncStorage.setItem('userTipo', 'admin');
         await AsyncStorage.setItem('admin', JSON.stringify(data.admin));
+        await registrarPushNotifications();
+        router.replace('/admin-home');
       } else {
+        const res = await api.post('/auth/tecnico/login', { email, senha });
+        data = res.data;
+        await AsyncStorage.setItem('token', data.token);
+        await AsyncStorage.setItem('userTipo', 'tecnico');
         await AsyncStorage.setItem('tecnico', JSON.stringify(data.tecnico));
+        await registrarPushNotifications();
+        router.replace('/home');
       }
-
-      await registrarPushNotifications();
-      router.replace(perfil === 'admin' ? '/admin-home' : '/home');
-    } catch {
-      Alert.alert('Erro', 'Credenciais inválidas');
+    } catch (err) {
+      const msg = perfil === 'cliente'
+        ? 'Código de acesso inválido'
+        : 'Credenciais inválidas';
+      Alert.alert('Erro', err.response?.data?.error || msg);
     } finally {
       setCarregando(false);
     }
@@ -95,20 +125,21 @@ export default function LoginScreen() {
         bounces={false}
       >
         <View style={styles.loginBox}>
+          {/* Logo */}
           <Text style={styles.title}>BRUCKER</Text>
           <Text style={styles.titleAccent}>PRINTERS</Text>
           <Text style={styles.subtitle}>Sistema de Chamados</Text>
 
-          {/* Seletor de perfil */}
+          {/* Seletor de perfil — 3 opções */}
           <View style={styles.perfilSelector}>
-            {['tecnico', 'admin'].map(p => (
+            {PERFIS.map(p => (
               <TouchableOpacity
-                key={p}
-                style={[styles.perfilBtn, perfil === p && styles.perfilBtnAtivo]}
-                onPress={() => setPerfil(p)}
+                key={p.id}
+                style={[styles.perfilBtn, perfil === p.id && styles.perfilBtnAtivo]}
+                onPress={() => { setPerfil(p.id); setModoEsqueciSenha(false); }}
               >
-                <Text style={[styles.perfilText, perfil === p && styles.perfilTextAtivo]}>
-                  {p === 'tecnico' ? 'Técnico' : 'Admin'}
+                <Text style={[styles.perfilText, perfil === p.id && styles.perfilTextAtivo]}>
+                  {p.label}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -116,34 +147,67 @@ export default function LoginScreen() {
 
           {!modoEsqueciSenha ? (
             <>
-              <Text style={styles.label}>E-mail</Text>
-              <TextInput
-                style={styles.input}
-                value={email}
-                onChangeText={setEmail}
-                placeholder="seu@email.com"
-                placeholderTextColor={colors.textSecondary}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
+              {/* Login de cliente = código de acesso */}
+              {perfil === 'cliente' ? (
+                <>
+                  <Text style={styles.label}>Código de Acesso</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={codigoAcesso}
+                    onChangeText={setCodigoAcesso}
+                    placeholder="BRKXXXXXXXX"
+                    placeholderTextColor={colors.textSecondary}
+                    autoCapitalize="characters"
+                  />
+                  <Text style={styles.hint}>
+                    Informe o código fornecido pela Brucker Printers
+                  </Text>
+                </>
+              ) : (
+                <>
+                  {/* Login de admin/técnico = email + senha */}
+                  <Text style={styles.label}>E-mail</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={email}
+                    onChangeText={setEmail}
+                    placeholder="seu@email.com"
+                    placeholderTextColor={colors.textSecondary}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
 
-              <Text style={styles.label}>Senha</Text>
-              <TextInput
-                style={styles.input}
-                value={senha}
-                onChangeText={setSenha}
-                placeholder="••••••••"
-                placeholderTextColor={colors.textSecondary}
-                secureTextEntry
-              />
+                  <Text style={styles.label}>Senha</Text>
+                  <View style={{ position: 'relative' }}>
+                    <TextInput
+                      style={[styles.input, { paddingRight: 50 }]}
+                      value={senha}
+                      onChangeText={setSenha}
+                      placeholder="••••••••"
+                      placeholderTextColor={colors.textSecondary}
+                      secureTextEntry={!mostrarSenha}
+                    />
+                    <TouchableOpacity
+                      onPress={() => setMostrarSenha(!mostrarSenha)}
+                      style={styles.eyeBtn}
+                    >
+                      <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
+                        {mostrarSenha ? '🙈' : '👁️'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              )}
 
               <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={carregando}>
                 <Text style={styles.buttonText}>{carregando ? 'Entrando...' : 'Entrar'}</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity onPress={() => setModoEsqueciSenha(true)} style={styles.linkBtn}>
-                <Text style={styles.linkText}>Esqueci minha senha</Text>
-              </TouchableOpacity>
+              {perfil !== 'cliente' && (
+                <TouchableOpacity onPress={() => setModoEsqueciSenha(true)} style={styles.linkBtn}>
+                  <Text style={styles.linkText}>Esqueci minha senha</Text>
+                </TouchableOpacity>
+              )}
             </>
           ) : (
             <>
@@ -187,7 +251,7 @@ const styles = StyleSheet.create({
   loginBox: {
     backgroundColor: colors.card, borderRadius: 16,
     borderWidth: 1, borderColor: colors.border,
-    padding: 40, width: '100%', maxWidth: 400
+    padding: 32, width: '100%', maxWidth: 400
   },
   title: {
     fontSize: 28, fontWeight: '700', color: colors.text, textAlign: 'center'
@@ -202,7 +266,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', gap: 8, marginBottom: 24
   },
   perfilBtn: {
-    flex: 1, paddingVertical: 10, borderRadius: 8,
+    flex: 1, paddingVertical: 12, borderRadius: 10,
     backgroundColor: colors.bg, borderWidth: 1, borderColor: colors.border,
     alignItems: 'center'
   },
@@ -213,21 +277,27 @@ const styles = StyleSheet.create({
     color: colors.textSecondary, fontSize: 14, fontWeight: '500'
   },
   perfilTextAtivo: {
-    color: colors.text, fontWeight: '600'
+    color: colors.text, fontWeight: '700'
   },
   label: {
     fontSize: 13, color: colors.textSecondary, marginBottom: 6
+  },
+  hint: {
+    fontSize: 12, color: colors.textSecondary, marginTop: -8, marginBottom: 16, fontStyle: 'italic'
   },
   input: {
     backgroundColor: colors.bg, borderWidth: 1, borderColor: colors.border,
     borderRadius: 8, padding: 14, color: colors.text, fontSize: 15, marginBottom: 16
   },
+  eyeBtn: {
+    position: 'absolute', right: 14, top: 14
+  },
   button: {
-    backgroundColor: colors.accent, borderRadius: 8,
+    backgroundColor: colors.accent, borderRadius: 10,
     padding: 16, alignItems: 'center', marginTop: 8
   },
   buttonText: {
-    color: colors.text, fontSize: 16, fontWeight: '600'
+    color: colors.text, fontSize: 16, fontWeight: '700'
   },
   linkBtn: {
     marginTop: 16, alignItems: 'center'

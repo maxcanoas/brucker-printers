@@ -1,5 +1,8 @@
 const supabase = require('../services/supabase');
 const { gerarRelatorioPDF } = require('../services/pdf');
+const { notificarRelatorioEmail } = require('../services/email');
+const { notificarStatusPush } = require('../services/notifications');
+const { notificarClienteConcluidoWhatsApp } = require('../services/whatsapp');
 
 exports.criar = async (req, res) => {
   try {
@@ -57,6 +60,25 @@ exports.criar = async (req, res) => {
       observacao: 'Chamado encerrado com relatório de atendimento',
       usuario_tipo: 'tecnico'
     });
+
+    // Buscar dados completos para notificações
+    try {
+      const { data: chamadoCompleto } = await supabase
+        .from('chamados')
+        .select('*, clientes(id, nome, email, telefone)')
+        .eq('id', chamado_id)
+        .single();
+
+      if (chamadoCompleto?.clientes) {
+        await Promise.all([
+          notificarRelatorioEmail(chamadoCompleto.clientes, chamadoCompleto),
+          notificarStatusPush(chamadoCompleto, 'concluido'),
+          notificarClienteConcluidoWhatsApp(chamadoCompleto.clientes.telefone, chamadoCompleto),
+        ]);
+      }
+    } catch (notifError) {
+      console.error('Erro ao notificar sobre relatório:', notifError);
+    }
 
     res.status(201).json(data);
   } catch (error) {

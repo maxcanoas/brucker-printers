@@ -71,6 +71,7 @@ async function notificarTecnicoPush(tecnico, chamado, cliente) {
 async function notificarStatusPush(chamado, novoStatus) {
   const statusTexto = {
     aberto: 'Aberto',
+    atribuido: 'Atribuído',
     em_atendimento: 'Em Atendimento',
     aguardando_peca: 'Aguardando Peça',
     concluido: 'Concluído',

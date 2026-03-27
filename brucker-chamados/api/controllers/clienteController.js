@@ -1,8 +1,9 @@
 const crypto = require('crypto');
 const supabase = require('../services/supabase');
+const { enriquecerSla } = require('../services/businessHours');
 
 function gerarCodigoAcesso() {
-  return 'BRK-' + crypto.randomBytes(4).toString('hex').toUpperCase();
+  return 'BRK' + crypto.randomBytes(4).toString('hex').toUpperCase();
 }
 
 exports.getPerfilCliente = async (req, res) => {
@@ -41,6 +42,7 @@ exports.getMeusChamados = async (req, res) => {
     const { data, error } = await query;
     if (error) throw error;
 
+    await enriquecerSla(data);
     res.json(data);
   } catch (error) {
     res.status(500).json({ error: 'Erro ao buscar chamados' });
@@ -74,6 +76,7 @@ exports.getDashboard = async (req, res) => {
 
     const contadores = {
       abertos: 0,
+      atribuidos: 0,
       em_atendimento: 0,
       aguardando_peca: 0,
       concluidos: 0,
@@ -82,6 +85,7 @@ exports.getDashboard = async (req, res) => {
 
     chamados.forEach(c => {
       if (c.status === 'aberto') contadores.abertos++;
+      else if (c.status === 'atribuido') contadores.atribuidos++;
       else if (c.status === 'em_atendimento') contadores.em_atendimento++;
       else if (c.status === 'aguardando_peca') contadores.aguardando_peca++;
       else if (c.status === 'concluido') contadores.concluidos++;
