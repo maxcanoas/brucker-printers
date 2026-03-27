@@ -4,6 +4,9 @@ import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from './api';
 
+// Detecta se está rodando no Expo Go (push remoto não funciona no Expo Go SDK 53+)
+const isExpoGo = !Constants.expoConfig?.extra?.eas?.projectId && !Constants.easConfig?.projectId;
+
 // Configurar como as notificações aparecem quando o app está aberto
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -14,6 +17,13 @@ Notifications.setNotificationHandler({
 });
 
 export async function registrarPushNotifications() {
+  // Push notifications remotas não funcionam no Expo Go (SDK 53+)
+  // Para testar push, use um development build: npx expo run:android
+  if (isExpoGo) {
+    console.log('Push notifications: ignorando no Expo Go (use development build para testar push)');
+    return null;
+  }
+
   try {
     // Verificar permissões
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
