@@ -470,3 +470,48 @@
                 padding: 1.5rem 1rem;
             }
         }
+
+        /* Acessibilidade: respeitar preferência de movimento reduzido */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
+
+        /* Estilos de impressão */
+        @media print {
+            .header,
+            .nav,
+            .menu-toggle,
+            .btn-header,
+            .whatsapp-float,
+            .footer {
+                display: none !important;
+            }
+
+            body {
+                background: white;
+                color: black;
+                font-size: 12pt;
+            }
+
+            img {
+                max-width: 100%;
+                page-break-inside: avoid;
+            }
+
+            .printer-section {
+                page-break-inside: avoid;
+            }
+
+            a[href]::after {
+                content: " (" attr(href) ")";
+                font-size: 0.8em;
+                color: #666;
+            }
+        }

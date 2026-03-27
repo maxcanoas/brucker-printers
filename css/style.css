@@ -1185,3 +1185,58 @@ img {
         width: 80px;
     }
 }
+
+/* Acessibilidade: respeitar preferência de movimento reduzido */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* Estilos de impressão */
+@media print {
+    .header,
+    .nav,
+    .menu-toggle,
+    .btn-header,
+    .btn-primary,
+    .btn-secondary,
+    .carousel-btn,
+    .carousel-indicators,
+    .clients-carousel,
+    .whatsapp-float,
+    .footer {
+        display: none !important;
+    }
+
+    body {
+        background: white;
+        color: black;
+        font-size: 12pt;
+    }
+
+    .hero {
+        page-break-after: always;
+    }
+
+    img {
+        max-width: 100%;
+        page-break-inside: avoid;
+    }
+
+    .solution-card,
+    .differential-card {
+        page-break-inside: avoid;
+    }
+
+    a[href]::after {
+        content: " (" attr(href) ")";
+        font-size: 0.8em;
+        color: #666;
+    }
+}
