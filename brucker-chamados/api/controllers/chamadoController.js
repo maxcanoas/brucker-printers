@@ -70,21 +70,20 @@ exports.criarChamado = async (req, res) => {
       usuario_tipo: 'cliente'
     });
 
-    // Notificar admins via Push, Email e WhatsApp
-    try {
-      const { data: cliente } = await supabase
-        .from('clientes')
-        .select('nome')
-        .eq('id', req.usuario.id)
-        .single();
-      await Promise.all([
-        notificarNovoChamado(data, cliente),
-        notificarNovoChamadoEmail(data, cliente),
-        notificarAdminWhatsApp(data, cliente, 'novo_chamado'),
-      ]);
-    } catch (notifError) {
-      console.error('Erro ao notificar admins:', notifError);
-    }
+    // Notificar admins via Push, Email e WhatsApp (fire-and-forget)
+    supabase
+      .from('clientes')
+      .select('nome')
+      .eq('id', req.usuario.id)
+      .single()
+      .then(({ data: cliente }) => {
+        Promise.all([
+          notificarNovoChamado(data, cliente),
+          notificarNovoChamadoEmail(data, cliente),
+          notificarAdminWhatsApp(data, cliente, 'novo_chamado'),
+        ]).catch(e => console.error('Erro ao notificar admins:', e));
+      })
+      .catch(e => console.error('Erro ao buscar cliente para notificação:', e));
 
     await enriquecerSla(data);
     res.status(201).json(data);
@@ -242,13 +241,10 @@ exports.atualizarChamado = async (req, res) => {
         usuario_tipo: 'admin'
       });
 
-      // Notificar cliente por email sobre mudança de status
-      try {
-        if (data.clientes) {
-          await notificarClienteStatusEmail(data.clientes, data, status);
-        }
-      } catch (notifError) {
-        console.error('Erro ao notificar cliente:', notifError);
+      // Notificar cliente por email sobre mudança de status (fire-and-forget)
+      if (data.clientes) {
+        notificarClienteStatusEmail(data.clientes, data, status)
+          .catch(e => console.error('Erro ao notificar cliente:', e));
       }
     }
 
@@ -307,24 +303,17 @@ exports.atribuirTecnico = async (req, res) => {
       usuario_tipo: 'admin'
     });
 
-    // Notificar técnico via WhatsApp, Push e Email
-    try {
-      await Promise.all([
-        notificarTecnico(tecnico, chamado, chamado.clientes),
-        notificarTecnicoPush(tecnico, chamado, chamado.clientes),
-        notificarTecnicoAtribuidoEmail(tecnico, chamado, chamado.clientes),
-      ]);
-    } catch (notifError) {
-      console.error('Erro ao notificar técnico:', notifError);
-    }
+    // Notificar técnico via WhatsApp, Push e Email (fire-and-forget)
+    Promise.all([
+      notificarTecnico(tecnico, chamado, chamado.clientes),
+      notificarTecnicoPush(tecnico, chamado, chamado.clientes),
+      notificarTecnicoAtribuidoEmail(tecnico, chamado, chamado.clientes),
+    ]).catch(e => console.error('Erro ao notificar técnico:', e));
 
-    // Notificar cliente por email
-    try {
-      if (chamado.clientes) {
-        await notificarClienteStatusEmail(chamado.clientes, chamado, 'atribuido');
-      }
-    } catch (notifError) {
-      console.error('Erro ao notificar cliente:', notifError);
+    // Notificar cliente por email (fire-and-forget)
+    if (chamado.clientes) {
+      notificarClienteStatusEmail(chamado.clientes, chamado, 'atribuido')
+        .catch(e => console.error('Erro ao notificar cliente:', e));
     }
 
     await enriquecerSla(chamado);
@@ -371,15 +360,11 @@ exports.aceitarChamado = async (req, res) => {
       usuario_tipo: 'tecnico'
     });
 
-    // Notificar admin via push e cliente via email
-    try {
-      await Promise.all([
-        notificarStatusPush(data, 'em_atendimento'),
-        data.clientes ? notificarClienteStatusEmail(data.clientes, data, 'em_atendimento') : Promise.resolve(),
-      ]);
-    } catch (notifError) {
-      console.error('Erro ao notificar sobre aceite:', notifError);
-    }
+    // Notificar admin via push e cliente via email (fire-and-forget)
+    Promise.all([
+      notificarStatusPush(data, 'em_atendimento'),
+      data.clientes ? notificarClienteStatusEmail(data.clientes, data, 'em_atendimento') : Promise.resolve(),
+    ]).catch(e => console.error('Erro ao notificar sobre aceite:', e));
 
     await enriquecerSla(data);
     res.json(data);
@@ -425,12 +410,9 @@ exports.cancelarChamado = async (req, res) => {
       usuario_tipo: 'cliente'
     });
 
-    // Notificar admin e técnico (se atribuído)
-    try {
-      await notificarStatusPush(data, 'cancelado');
-    } catch (notifError) {
-      console.error('Erro ao notificar sobre cancelamento:', notifError);
-    }
+    // Notificar admin e técnico (fire-and-forget)
+    notificarStatusPush(data, 'cancelado')
+      .catch(e => console.error('Erro ao notificar sobre cancelamento:', e));
 
     res.json(data);
   } catch (error) {
@@ -516,27 +498,21 @@ exports.atualizarStatus = async (req, res) => {
       usuario_tipo: req.usuario.tipo
     });
 
-    // Notificar via Push
-    try {
-      await notificarStatusPush(data, status);
-    } catch (pushError) {
-      console.error('Erro ao enviar push notification:', pushError);
-    }
+    // Notificar via Push (fire-and-forget)
+    notificarStatusPush(data, status)
+      .catch(e => console.error('Erro ao enviar push notification:', e));
 
-    // Notificar cliente por email sobre mudança de status
-    try {
-      if (data.clientes) {
-        if (status === 'concluido') {
-          await Promise.all([
-            notificarChamadoConcluidoEmail(data.clientes, data),
-            notificarClienteConcluidoWhatsApp(data.clientes.telefone, data),
-          ]);
-        } else {
-          await notificarClienteStatusEmail(data.clientes, data, status);
-        }
+    // Notificar cliente por email sobre mudança de status (fire-and-forget)
+    if (data.clientes) {
+      if (status === 'concluido') {
+        Promise.all([
+          notificarChamadoConcluidoEmail(data.clientes, data),
+          notificarClienteConcluidoWhatsApp(data.clientes.telefone, data),
+        ]).catch(e => console.error('Erro ao notificar cliente:', e));
+      } else {
+        notificarClienteStatusEmail(data.clientes, data, status)
+          .catch(e => console.error('Erro ao notificar cliente:', e));
       }
-    } catch (notifError) {
-      console.error('Erro ao notificar cliente:', notifError);
     }
 
     await enriquecerSla(data);
@@ -681,5 +657,47 @@ exports.getAvaliacao = async (req, res) => {
     res.json(data);
   } catch (error) {
     res.status(500).json({ error: 'Erro ao buscar avaliação' });
+  }
+};
+
+exports.listarAvaliacoes = async (req, res) => {
+  try {
+    const { nota, tecnico_id, cliente_id, inicio, fim, page = 1, limit = 20 } = req.query;
+    const offset = (page - 1) * limit;
+
+    let query = supabase
+      .from('avaliacoes')
+      .select(`
+        id, nota, comentario, criado_em,
+        clientes (id, nome),
+        chamados (id, numero, tecnico_id, tecnicos (id, nome))
+      `, { count: 'exact' })
+      .order('criado_em', { ascending: false })
+      .range(offset, offset + Number(limit) - 1);
+
+    if (nota) query = query.eq('nota', Number(nota));
+    if (cliente_id) query = query.eq('cliente_id', cliente_id);
+    if (inicio) query = query.gte('criado_em', inicio);
+    if (fim) query = query.lte('criado_em', fim + 'T23:59:59');
+
+    const { data, error, count } = await query;
+    if (error) throw error;
+
+    let filtered = data;
+    if (tecnico_id) {
+      filtered = data.filter(a => a.chamados?.tecnico_id === tecnico_id);
+    }
+
+    const allNotas = filtered.map(a => a.nota);
+    const stats = {
+      total: count || 0,
+      media: allNotas.length ? (allNotas.reduce((s, n) => s + n, 0) / allNotas.length).toFixed(1) : '0',
+      distribuicao: [1, 2, 3, 4, 5].map(n => ({ nota: n, count: allNotas.filter(x => x === n).length }))
+    };
+
+    res.json({ data: filtered, stats, total: count, page: Number(page), limit: Number(limit) });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao listar avaliações' });
   }
 };

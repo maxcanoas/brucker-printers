@@ -1,0 +1,277 @@
+===============================================================
+  BRUCKER PRINTERS - SISTEMA DE CHAMADOS
+  PASSO A PASSO PARA TESTES
+===============================================================
+
+
+---------------------------------------------------------------
+1. PRE-REQUISITOS
+---------------------------------------------------------------
+
+- Node.js instalado (v18+)
+- Conta no Supabase com projeto criado
+- Expo Go instalado no celular (para teste mobile)
+- Banco de dados configurado (migration rodada no Supabase)
+
+Se ainda nao rodou a migration:
+  - Acesse o Supabase > SQL Editor
+  - Copie o conteudo de: brucker-chamados/api/database/migration.sql
+  - Execute no SQL Editor
+
+
+===============================================================
+2. CONFIGURAR VARIAVEIS DE AMBIENTE
+===============================================================
+
+---------------------------------------------------------------
+2.1. API (Backend)
+---------------------------------------------------------------
+
+Criar o arquivo: brucker-chamados/api/.env
+
+Conteudo:
+
+  PORT=3001
+  JWT_SECRET=uma_chave_secreta_qualquer
+  SUPABASE_URL=https://SEU-PROJETO.supabase.co
+  SUPABASE_SERVICE_KEY=sua_service_role_key_aqui
+
+Onde encontrar as chaves do Supabase:
+  - Acesse: https://supabase.com > seu projeto
+  - Va em: Settings > API
+  - Copie a "URL" e a "service_role key" (nao a anon key)
+
+---------------------------------------------------------------
+2.2. WEB (Frontend)
+---------------------------------------------------------------
+
+Criar o arquivo: brucker-chamados/web/.env
+
+Conteudo:
+
+  VITE_API_URL=http://localhost:3001/api
+  VITE_SUPABASE_URL=https://SEU-PROJETO.supabase.co
+  VITE_SUPABASE_ANON_KEY=sua_anon_key_aqui
+
+A "anon key" tambem esta em Settings > API no Supabase.
+
+---------------------------------------------------------------
+2.3. MOBILE (App)
+---------------------------------------------------------------
+
+Criar o arquivo: brucker-chamados/mobile/.env
+
+Conteudo:
+
+  EXPO_PUBLIC_API_URL=http://SEU_IP_LOCAL:3001/api
+
+IMPORTANTE: No celular, "localhost" nao funciona.
+Voce precisa usar o IP da sua maquina na rede Wi-Fi.
+
+Como descobrir seu IP:
+  - Abra o terminal e rode: ipconfig
+  - Procure por "Endereco IPv4" na conexao Wi-Fi
+  - Exemplo: 192.168.1.100
+
+Entao ficaria: EXPO_PUBLIC_API_URL=http://192.168.1.100:3001/api
+
+
+===============================================================
+3. INICIAR A API (BACKEND)
+===============================================================
+
+Abra um terminal e rode:
+
+  cd brucker-chamados/api
+  npm install        (so precisa na primeira vez)
+  npm run dev
+
+Deve aparecer: "API rodando em 0.0.0.0:3001"
+
+Para confirmar que esta funcionando, acesse no navegador:
+  http://localhost:3001/api/health
+
+Deve retornar: {"status":"ok","timestamp":"..."}
+
+
+===============================================================
+4. INICIAR O WEB (FRONTEND)
+===============================================================
+
+Abra OUTRO terminal e rode:
+
+  cd brucker-chamados/web
+  npm install        (so precisa na primeira vez)
+  npm run dev
+
+Deve aparecer algo como: Local: http://localhost:5173/
+
+Acesse no navegador: http://localhost:5173
+
+
+===============================================================
+5. INICIAR O MOBILE (APP NO CELULAR)
+===============================================================
+
+Abra OUTRO terminal e rode:
+
+  cd brucker-chamados/mobile
+  npm install        (so precisa na primeira vez)
+  npx expo start
+
+Vai aparecer um QR Code no terminal.
+
+Para testar no celular:
+  1. Celular e computador devem estar na MESMA rede Wi-Fi
+  2. Abra o app "Expo Go" no celular
+  3. Escaneie o QR Code que apareceu no terminal
+  4. O app vai carregar no celular
+
+Se der erro de conexao com a API:
+  - Verifique se o IP no .env do mobile esta correto
+  - Verifique se a API esta rodando (passo 3)
+  - Tente acessar http://SEU_IP:3001/api/health pelo navegador do celular
+
+
+===============================================================
+6. CRIAR DADOS PARA TESTE
+===============================================================
+
+---------------------------------------------------------------
+6.1. Criar um cliente (para testar login do cliente)
+---------------------------------------------------------------
+
+Opcao A - Pelo SQL Editor do Supabase:
+
+  INSERT INTO clientes (nome, email, telefone, codigo_acesso)
+  VALUES ('Empresa Teste', 'teste@email.com', '11999999999', 'BRK-TESTE123');
+
+Opcao B - Pelo terminal (com a API rodando):
+
+  curl -X POST http://localhost:3001/api/clientes ^
+    -H "Content-Type: application/json" ^
+    -H "Authorization: Bearer SEU_TOKEN_ADMIN" ^
+    -d "{\"nome\": \"Empresa Teste\", \"email\": \"teste@email.com\"}"
+
+O codigo de acesso sera gerado automaticamente (ex: BRK-A1B2C3D4).
+
+---------------------------------------------------------------
+6.2. Criar um admin (para testar painel admin)
+---------------------------------------------------------------
+
+1. No Supabase, va em Authentication > Users > Add User
+2. Crie um usuario com email e senha
+3. Copie o "User UID" gerado
+4. No SQL Editor, rode:
+
+  INSERT INTO admins (user_id, nome, email)
+  VALUES ('USER_UID_AQUI', 'Seu Nome', 'seu@email.com');
+
+---------------------------------------------------------------
+6.3. Criar um tecnico (para testar app mobile)
+---------------------------------------------------------------
+
+1. No Supabase, va em Authentication > Users > Add User
+2. Crie um usuario com email e senha
+3. Copie o "User UID" gerado
+4. No SQL Editor, rode:
+
+  INSERT INTO tecnicos (user_id, nome, email, whatsapp, ativo)
+  VALUES ('USER_UID_AQUI', 'Tecnico Teste', 'tecnico@email.com', '11999999999', true);
+
+---------------------------------------------------------------
+6.4. Cadastrar uma impressora (para abrir chamados)
+---------------------------------------------------------------
+
+No SQL Editor do Supabase:
+
+  INSERT INTO impressoras (cliente_id, modelo, numero_serie, tipo_contrato)
+  VALUES ('ID_DO_CLIENTE', 'HP LaserJet Pro', 'SN-001234', 'locacao');
+
+Substitua ID_DO_CLIENTE pelo UUID do cliente criado no passo 6.1.
+Para descobrir, rode: SELECT id, nome FROM clientes;
+
+
+===============================================================
+7. TESTAR O SISTEMA
+===============================================================
+
+---------------------------------------------------------------
+7.1. Login como cliente (Web)
+---------------------------------------------------------------
+
+  - Acesse: http://localhost:5173
+  - Informe o codigo de acesso: BRK-TESTE123
+  - Voce vera o dashboard com chamados e impressoras
+
+---------------------------------------------------------------
+7.2. Login como admin (Web)
+---------------------------------------------------------------
+
+  - Acesse: http://localhost:5173/admin
+  - Informe email e senha do admin criado no passo 6.2
+  - Voce tera acesso ao painel administrativo
+
+---------------------------------------------------------------
+7.3. Login como tecnico (Mobile)
+---------------------------------------------------------------
+
+  - Abra o app no celular via Expo Go
+  - Informe email e senha do tecnico criado no passo 6.3
+  - Voce tera acesso a area do tecnico
+
+---------------------------------------------------------------
+7.4. Testar abertura de chamado
+---------------------------------------------------------------
+
+  - Logue como cliente (passo 7.1)
+  - Clique em "Abrir Chamado"
+  - Selecione a impressora pelo numero de serie
+  - Preencha tipo, urgencia e descricao
+  - Envie o chamado
+  - O chamado deve aparecer na lista do cliente e no painel admin
+
+
+===============================================================
+8. RESUMO DOS TERMINAIS NECESSARIOS
+===============================================================
+
+Terminal 1 (API):      cd brucker-chamados/api    -> npm run dev
+Terminal 2 (Web):      cd brucker-chamados/web    -> npm run dev
+Terminal 3 (Mobile):   cd brucker-chamados/mobile -> npx expo start
+
+Todos os tres devem estar rodando ao mesmo tempo.
+
+
+===============================================================
+9. PORTAS UTILIZADAS
+===============================================================
+
+API:      http://localhost:3001
+Web:      http://localhost:5173
+Mobile:   Expo DevTools (porta 8081)
+
+
+===============================================================
+10. PROBLEMAS COMUNS
+===============================================================
+
+"Codigo de acesso invalido"
+  -> Verifique se o cliente existe no banco com SELECT * FROM clientes;
+
+"Network Error" no mobile
+  -> Verifique se o IP no .env esta correto
+  -> Celular e PC devem estar na mesma rede Wi-Fi
+  -> Verifique se o firewall nao esta bloqueando a porta 3001
+
+"Credenciais invalidas" no login admin/tecnico
+  -> Verifique se o usuario existe no Supabase Auth
+  -> Verifique se o registro existe na tabela admins/tecnicos
+
+API nao inicia
+  -> Verifique se o arquivo .env existe em brucker-chamados/api/
+  -> Verifique se as chaves do Supabase estao corretas
+
+Web nao conecta na API
+  -> Verifique se a API esta rodando na porta 3001
+  -> Verifique o arquivo .env em brucker-chamados/web/

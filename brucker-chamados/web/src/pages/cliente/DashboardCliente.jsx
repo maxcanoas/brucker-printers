@@ -5,6 +5,7 @@ import api from '../../lib/api';
 import { StatusBadge, UrgenciaBadge } from '../../components/StatusBadge';
 import { SlaIndicator } from '../../components/SlaIndicator';
 import { Modal } from '../../components/Modal';
+import { LoadingButton } from '../../components/LoadingButton';
 import toast from 'react-hot-toast';
 import {
   FileText, Printer, PlusCircle, LogOut, Clock, CheckCircle,
@@ -330,11 +331,11 @@ function ModalAbrirChamado({ isOpen, onClose, impressoras, onCriado }) {
           />
         </div>
 
-        <button type="submit" disabled={carregando} style={{
-          ...btnPrimary, width: '100%', opacity: carregando ? 0.7 : 1
+        <LoadingButton type="submit" loading={carregando} loadingText="Abrindo..." style={{
+          ...btnPrimary, width: '100%'
         }}>
-          {carregando ? 'Abrindo...' : 'Abrir Chamado'}
-        </button>
+          Abrir Chamado
+        </LoadingButton>
       </form>
     </Modal>
   );
@@ -444,15 +445,14 @@ function ModalDetalheChamado({ chamado, onClose, onAtualizado }) {
           {/* Botão Cancelar */}
           {!['concluido', 'cancelado'].includes(detalhes.status) && (
             <div style={{ marginTop: '20px' }}>
-              <button onClick={handleCancelar} disabled={cancelando} style={{
+              <LoadingButton onClick={handleCancelar} loading={cancelando} loadingText="Cancelando..." style={{
                 padding: '10px 20px', backgroundColor: 'transparent',
                 border: '1px solid #E84C1E', borderRadius: '8px',
                 color: '#E84C1E', fontSize: '14px', fontWeight: 600,
-                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
-                fontFamily: "'Barlow', sans-serif", opacity: cancelando ? 0.7 : 1
+                cursor: 'pointer', fontFamily: "'Barlow', sans-serif"
               }}>
-                <XCircle size={16} /> {cancelando ? 'Cancelando...' : 'Cancelar Chamado'}
-              </button>
+                <XCircle size={16} /> Cancelar Chamado
+              </LoadingButton>
             </div>
           )}
 
@@ -510,13 +510,15 @@ function ModalDetalheChamado({ chamado, onClose, onAtualizado }) {
                     rows={2}
                     style={{ ...inputStyle, marginBottom: '12px', resize: 'vertical' }}
                   />
-                  <button onClick={handleAvaliar} disabled={enviandoAvaliacao || avaliacao.nota < 1}
+                  <LoadingButton onClick={handleAvaliar} loading={enviandoAvaliacao}
+                    disabled={enviandoAvaliacao || avaliacao.nota < 1}
+                    loadingText="Enviando..."
                     style={{
-                      ...btnPrimary, opacity: (enviandoAvaliacao || avaliacao.nota < 1) ? 0.6 : 1,
+                      ...btnPrimary, opacity: avaliacao.nota < 1 ? 0.6 : 1,
                       backgroundColor: '#3D9E6B'
                     }}>
-                    {enviandoAvaliacao ? 'Enviando...' : 'Enviar Avaliação'}
-                  </button>
+                    Enviar Avaliação
+                  </LoadingButton>
                 </div>
               )}
             </div>

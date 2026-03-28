@@ -1,6 +1,6 @@
-import { X } from 'lucide-react';
+import { X, Loader2 } from 'lucide-react';
 
-export function Modal({ isOpen, onClose, title, children, width = '600px' }) {
+export function Modal({ isOpen, onClose, title, children, width = '600px', loading = false }) {
   if (!isOpen) return null;
 
   return (
@@ -17,8 +17,19 @@ export function Modal({ isOpen, onClose, title, children, width = '600px' }) {
         width: '100%',
         maxWidth: width,
         maxHeight: '90vh',
-        overflow: 'auto'
+        overflow: 'auto',
+        position: 'relative'
       }} onClick={e => e.stopPropagation()}>
+        {loading && (
+          <div style={{
+            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(13, 17, 23, 0.7)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            borderRadius: '12px', zIndex: 10
+          }}>
+            <Loader2 size={32} color="#E84C1E" style={{ animation: 'spin 1s linear infinite' }} />
+          </div>
+        )}
         <div style={{
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           padding: '20px 24px',
