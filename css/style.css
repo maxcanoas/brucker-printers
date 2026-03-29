@@ -157,15 +157,18 @@ img {
     box-shadow: 0 4px 12px rgba(190, 22, 34, 0.3);
 }
 
-.btn-chamado {
-    background: transparent;
-    color: var(--secondary-red);
-    border: 2px solid var(--secondary-red);
+.nav-link--subtle {
+    color: var(--gray-500);
+    font-size: 0.85rem;
+    font-weight: var(--font-weight-normal, 400);
 }
 
-.btn-chamado:hover {
-    background: var(--secondary-red);
-    color: var(--white);
+.nav-link--subtle:hover {
+    color: var(--secondary-red);
+}
+
+.nav-link--subtle::after {
+    display: none;
 }
 
 .menu-toggle {
@@ -957,6 +960,21 @@ img {
 .social-link:hover {
     background: var(--secondary-orange);
     transform: translateY(-2px);
+}
+
+.footer-links {
+    margin: var(--spacing-sm) 0;
+}
+
+.footer-links a {
+    color: rgba(255, 255, 255, 0.5);
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: color var(--transition-fast);
+}
+
+.footer-links a:hover {
+    color: var(--white);
 }
 
 .footer-bottom {
