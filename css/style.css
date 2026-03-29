@@ -531,15 +531,15 @@ img {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: var(--spacing-md);
+    margin: 0 auto var(--spacing-md);
     color: var(--white);
-    font-size: 2rem;
 }
 
 .solution-card h3 {
     font-size: 1.5rem;
     margin-bottom: var(--spacing-md);
     color: var(--gray-900);
+    text-align: center;
 }
 
 .solution-card p {
@@ -600,7 +600,7 @@ img {
     align-items: center;
     justify-content: center;
     margin: 0 auto var(--spacing-md);
-    font-size: 1.8rem;
+    color: var(--secondary-orange);
 }
 
 .advantage-item h4 {
@@ -841,7 +841,6 @@ img {
     align-items: center;
     justify-content: center;
     color: var(--white);
-    font-size: 1.2rem;
     flex-shrink: 0;
 }
 
