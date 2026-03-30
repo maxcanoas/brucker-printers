@@ -1,8 +1,9 @@
 import { Loader2 } from 'lucide-react';
 
-export function LoadingButton({ loading, loadingText, children, style, ...props }) {
+export function LoadingButton({ loading, loadingText, children, style, className = '', ...props }) {
   return (
     <button
+      className={`btn-primary ${className}`}
       disabled={loading}
       style={{
         ...style,

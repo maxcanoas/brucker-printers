@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { View, Text, TouchableOpacity, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { Feather } from '@expo/vector-icons';
 import { colors } from '../lib/theme';
 
 export default function DatePicker({ label, value, onChange, placeholder }) {
@@ -42,7 +43,7 @@ export default function DatePicker({ label, value, onChange, placeholder }) {
         }}>
           {value ? formatDate(value) : (placeholder || 'Selecionar data')}
         </Text>
-        <Text style={{ fontSize: 16 }}>📅</Text>
+        <Feather name="calendar" size={18} color={colors.textSecondary} />
       </TouchableOpacity>
 
       {show && (

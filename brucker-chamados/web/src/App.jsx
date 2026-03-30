@@ -46,12 +46,22 @@ function App() {
       <Toaster
         position="top-right"
         toastOptions={{
+          duration: 3000,
           style: {
             background: '#141920',
             color: '#FFFFFF',
             border: '1px solid #1E2533',
-            fontFamily: "'Barlow', sans-serif"
-          }
+            fontFamily: "'Barlow', sans-serif",
+            fontSize: '14px',
+            borderRadius: '10px',
+            padding: '12px 16px',
+          },
+          success: {
+            iconTheme: { primary: '#3D9E6B', secondary: '#141920' },
+          },
+          error: {
+            iconTheme: { primary: '#E84C1E', secondary: '#141920' },
+          },
         }}
       />
     </AuthProvider>

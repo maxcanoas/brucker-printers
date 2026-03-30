@@ -16,9 +16,9 @@ api.interceptors.request.use(async (config) => {
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.response?.status === 401) {
-      await AsyncStorage.removeItem('token');
-      await AsyncStorage.removeItem('tecnico');
+    const isAuthRoute = error.config?.url?.includes('/auth/');
+    if (error.response?.status === 401 && !isAuthRoute) {
+      await AsyncStorage.multiRemove(['token', 'tecnico', 'admin', 'cliente', 'userTipo']);
     }
     return Promise.reject(error);
   }

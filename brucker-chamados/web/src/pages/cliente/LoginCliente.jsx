@@ -104,6 +104,7 @@ export default function LoginCliente() {
           <button
             type="submit"
             disabled={carregando}
+            className="btn-primary"
             style={{
               width: '100%',
               padding: '14px',

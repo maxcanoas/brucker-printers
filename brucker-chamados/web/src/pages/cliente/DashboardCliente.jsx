@@ -80,7 +80,7 @@ export default function DashboardCliente() {
           <p style={{ color: '#8A94A6', fontSize: '13px', margin: 0 }}>Olá, {usuario?.nome}</p>
         </div>
         </div>
-        <button onClick={logout} style={{
+        <button className="btn-secondary" onClick={logout} style={{
           background: 'none', border: '1px solid #1E2533', borderRadius: '8px',
           color: '#8A94A6', padding: '8px 16px', cursor: 'pointer',
           display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px'
@@ -107,7 +107,7 @@ export default function DashboardCliente() {
               <tab.icon size={16} /> {tab.label}
             </button>
           ))}
-          <button onClick={() => setModalAbrir(true)} style={{
+          <button className="btn-primary" onClick={() => setModalAbrir(true)} style={{
             ...btnPrimary, marginLeft: 'auto',
             display: 'flex', alignItems: 'center', gap: '6px'
           }}>
@@ -146,7 +146,7 @@ export default function DashboardCliente() {
                 Nenhum chamado encontrado
               </div>
             ) : chamados.map(chamado => (
-              <div key={chamado.id} style={{ ...cardStyle, cursor: 'pointer' }}
+              <div key={chamado.id} className="card-interactive" style={{ ...cardStyle, cursor: 'pointer' }}
                 onClick={() => setModalDetalhe(chamado)}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
                   <div>

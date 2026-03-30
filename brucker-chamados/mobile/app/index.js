@@ -1,18 +1,19 @@
 import { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator,
-  KeyboardAvoidingView, ScrollView, Platform
+  KeyboardAvoidingView, ScrollView, Platform, Image
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
+import { Feather } from '@expo/vector-icons';
 import api from '../lib/api';
 import { colors } from '../lib/theme';
 import { registrarPushNotifications } from '../lib/notifications';
 
 const PERFIS = [
-  { id: 'cliente', label: 'Cliente' },
-  { id: 'tecnico', label: 'Técnico' },
-  { id: 'admin', label: 'Admin' },
+  { id: 'cliente', label: 'Cliente', icon: 'user' },
+  { id: 'tecnico', label: 'Técnico', icon: 'tool' },
+  { id: 'admin', label: 'Admin', icon: 'shield' },
 ];
 
 export default function LoginScreen() {
@@ -126,6 +127,11 @@ export default function LoginScreen() {
       >
         <View style={styles.loginBox}>
           {/* Logo */}
+          <Image
+            source={require('../assets/logo-icon.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
           <Text style={styles.title}>BRUCKER</Text>
           <Text style={styles.titleAccent}>PRINTERS</Text>
           <Text style={styles.subtitle}>Sistema de Chamados</Text>
@@ -138,6 +144,12 @@ export default function LoginScreen() {
                 style={[styles.perfilBtn, perfil === p.id && styles.perfilBtnAtivo]}
                 onPress={() => { setPerfil(p.id); setModoEsqueciSenha(false); }}
               >
+                <Feather
+                  name={p.icon}
+                  size={14}
+                  color={perfil === p.id ? colors.text : colors.textSecondary}
+                  style={{ marginBottom: 2 }}
+                />
                 <Text style={[styles.perfilText, perfil === p.id && styles.perfilTextAtivo]}>
                   {p.label}
                 </Text>
@@ -191,9 +203,11 @@ export default function LoginScreen() {
                       onPress={() => setMostrarSenha(!mostrarSenha)}
                       style={styles.eyeBtn}
                     >
-                      <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
-                        {mostrarSenha ? '🙈' : '👁️'}
-                      </Text>
+                      <Feather
+                        name={mostrarSenha ? 'eye-off' : 'eye'}
+                        size={18}
+                        color={colors.textSecondary}
+                      />
                     </TouchableOpacity>
                   </View>
                 </>
@@ -253,6 +267,9 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: colors.border,
     padding: 32, width: '100%', maxWidth: 400
   },
+  logo: {
+    width: 56, height: 56, alignSelf: 'center', marginBottom: 16
+  },
   title: {
     fontSize: 28, fontWeight: '700', color: colors.text, textAlign: 'center'
   },
@@ -266,9 +283,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row', gap: 8, marginBottom: 24
   },
   perfilBtn: {
-    flex: 1, paddingVertical: 12, borderRadius: 10,
+    flex: 1, paddingVertical: 10, borderRadius: 10,
     backgroundColor: colors.bg, borderWidth: 1, borderColor: colors.border,
-    alignItems: 'center'
+    alignItems: 'center', gap: 2
   },
   perfilBtnAtivo: {
     backgroundColor: colors.accent, borderColor: colors.accent

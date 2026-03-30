@@ -7,12 +7,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import api from '../lib/api';
+import { Feather } from '@expo/vector-icons';
 import { colors, statusColors, statusLabels, urgenciaColors } from '../lib/theme';
+import { getSlaInfo } from '../lib/sla';
+import EmptyState from '../components/EmptyState';
 
 const TABS = [
-  { id: 'chamados', label: 'Chamados', icon: '📋' },
-  { id: 'impressoras', label: 'Impressoras', icon: '🖨️' },
-  { id: 'abrir', label: 'Abrir', icon: '➕' },
+  { id: 'chamados', label: 'Chamados', icon: 'file-text' },
+  { id: 'impressoras', label: 'Impressoras', icon: 'printer' },
+  { id: 'abrir', label: 'Abrir', icon: 'plus-circle' },
 ];
 
 export default function ClienteHomeScreen() {
@@ -63,20 +66,6 @@ export default function ClienteHomeScreen() {
     } else {
       setAba(tabId);
     }
-  };
-
-  const getSlaInfo = (chamado) => {
-    if (!chamado.sla_vence_em || ['concluido', 'cancelado'].includes(chamado.status)) return null;
-    if (chamado.sla_pausado_em) return { text: 'SLA pausado', color: colors.yellow };
-    const minutos = chamado.sla_tempo_restante_minutos;
-    if (minutos != null) {
-      if (minutos <= 0) return { text: 'SLA vencido', color: colors.red };
-      const h = Math.floor(minutos / 60);
-      const m = Math.floor(minutos % 60);
-      if (minutos <= 360) return { text: `${h}h ${m}m`, color: colors.yellow };
-      return { text: `${h}h restantes`, color: colors.green };
-    }
-    return null;
   };
 
   // Contadores rápidos
@@ -162,12 +151,13 @@ export default function ClienteHomeScreen() {
             );
           }}
           ListEmptyComponent={
-            <View style={styles.empty}>
-              <Text style={styles.emptyText}>Nenhum chamado encontrado</Text>
-              <TouchableOpacity onPress={() => setModalAbrir(true)} style={styles.emptyBtn}>
-                <Text style={styles.emptyBtnText}>Abrir primeiro chamado</Text>
-              </TouchableOpacity>
-            </View>
+            <EmptyState
+              icon="file-text"
+              title="Nenhum chamado encontrado"
+              subtitle="Abra seu primeiro chamado de suporte"
+              actionLabel="Abrir Chamado"
+              onAction={() => setModalAbrir(true)}
+            />
           }
         />
       )}
@@ -175,9 +165,10 @@ export default function ClienteHomeScreen() {
       {aba === 'impressoras' && (
         <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 100 }}>
           {impressoras.length === 0 ? (
-            <View style={styles.empty}>
-              <Text style={styles.emptyText}>Nenhuma impressora cadastrada</Text>
-            </View>
+            <EmptyState
+              icon="printer"
+              title="Nenhuma impressora cadastrada"
+            />
           ) : impressoras.map(imp => (
             <View key={imp.id} style={styles.card}>
               <Text style={{ color: colors.text, fontWeight: '700', fontSize: 16 }}>{imp.modelo}</Text>
@@ -205,7 +196,11 @@ export default function ClienteHomeScreen() {
             ]}
             onPress={() => handleTabPress(tab.id)}
           >
-            <Text style={{ fontSize: tab.id === 'abrir' ? 20 : 18 }}>{tab.icon}</Text>
+            <Feather
+              name={tab.icon}
+              size={tab.id === 'abrir' ? 22 : 20}
+              color={tab.id === 'abrir' ? colors.accent : (aba === tab.id ? colors.accent : colors.textSecondary)}
+            />
             <Text style={[
               styles.tabLabel,
               tab.id === 'abrir' ? styles.tabLabelAbrir : (aba === tab.id && styles.tabLabelAtivo)

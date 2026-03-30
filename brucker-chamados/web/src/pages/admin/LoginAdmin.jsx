@@ -109,7 +109,7 @@ export default function LoginAdmin() {
                 </button>
               </div>
 
-              <button type="submit" disabled={carregando} style={{
+              <button type="submit" disabled={carregando} className="btn-primary" style={{
                 width: '100%', padding: '14px', backgroundColor: '#E84C1E', color: '#FFFFFF',
                 border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: 600,
                 cursor: carregando ? 'not-allowed' : 'pointer', opacity: carregando ? 0.7 : 1,
@@ -141,7 +141,7 @@ export default function LoginAdmin() {
               <input type="email" value={emailRecuperacao} onChange={(e) => setEmailRecuperacao(e.target.value)}
                 placeholder="seu-email@exemplo.com" required style={inputStyle} />
 
-              <button type="submit" disabled={enviando} style={{
+              <button type="submit" disabled={enviando} className="btn-primary" style={{
                 width: '100%', padding: '14px', backgroundColor: '#E84C1E', color: '#FFFFFF',
                 border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: 600,
                 cursor: enviando ? 'not-allowed' : 'pointer', opacity: enviando ? 0.7 : 1,

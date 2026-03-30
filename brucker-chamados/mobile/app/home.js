@@ -5,7 +5,10 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import api from '../lib/api';
-import { colors, statusColors, statusLabels, urgenciaColors } from '../lib/theme';
+import { colors } from '../lib/theme';
+import { getSlaInfo } from '../lib/sla';
+import { StatusBadge, UrgenciaBadge } from '../components/StatusBadge';
+import EmptyState from '../components/EmptyState';
 
 export default function HomeScreen() {
   const [chamados, setChamados] = useState([]);
@@ -43,28 +46,6 @@ export default function HomeScreen() {
     router.replace('/');
   };
 
-  const getSlaInfo = (chamado) => {
-    if (!chamado.sla_vence_em || ['concluido', 'cancelado'].includes(chamado.status)) return null;
-    if (chamado.sla_pausado_em) return { text: 'SLA pausado', color: colors.yellow };
-
-    // Usar tempo restante calculado pelo servidor (considera horário comercial)
-    const minutos = chamado.sla_tempo_restante_minutos;
-    if (minutos != null) {
-      if (minutos <= 0) return { text: 'SLA vencido', color: colors.red };
-      const h = Math.floor(minutos / 60);
-      const m = Math.floor(minutos % 60);
-      if (minutos <= 360) return { text: `${h}h ${m}m`, color: colors.yellow };
-      return { text: `${h}h restantes`, color: colors.green };
-    }
-
-    // Fallback
-    const diff = new Date(chamado.sla_vence_em) - new Date();
-    const horas = diff / (1000 * 60 * 60);
-    if (horas <= 0) return { text: 'SLA vencido', color: colors.red };
-    if (horas <= 6) return { text: `${Math.floor(horas)}h ${Math.floor((horas % 1) * 60)}m`, color: colors.yellow };
-    return { text: `${Math.floor(horas)}h restantes`, color: colors.green };
-  };
-
   const renderChamado = ({ item }) => {
     const sla = getSlaInfo(item);
     return (
@@ -74,22 +55,14 @@ export default function HomeScreen() {
       >
         <View style={styles.cardHeader}>
           <Text style={styles.numero}>#{item.numero}</Text>
-          <View style={[styles.badge, { backgroundColor: statusColors[item.status] + '25' }]}>
-            <Text style={[styles.badgeText, { color: statusColors[item.status] }]}>
-              {statusLabels[item.status]}
-            </Text>
-          </View>
+          <StatusBadge status={item.status} />
         </View>
 
         <Text style={styles.descricao} numberOfLines={2}>{item.descricao}</Text>
 
         <View style={styles.cardFooter}>
           <Text style={styles.cliente}>{item.clientes?.nome}</Text>
-          <View style={[styles.urgenciaBadge, { backgroundColor: urgenciaColors[item.urgencia] + '25' }]}>
-            <Text style={[styles.badgeText, { color: urgenciaColors[item.urgencia], fontSize: 11 }]}>
-              {item.urgencia}
-            </Text>
-          </View>
+          <UrgenciaBadge urgencia={item.urgencia} />
         </View>
 
         {item.impressoras && (
@@ -146,9 +119,11 @@ export default function HomeScreen() {
         contentContainerStyle={styles.lista}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />}
         ListEmptyComponent={
-          <View style={styles.empty}>
-            <Text style={styles.emptyText}>Nenhum chamado encontrado</Text>
-          </View>
+          <EmptyState
+            icon="file-text"
+            title="Nenhum chamado encontrado"
+            subtitle="Seus chamados atribuídos aparecerão aqui"
+          />
         }
       />
     </View>

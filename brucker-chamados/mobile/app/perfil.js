@@ -3,6 +3,7 @@ import {
   View, Text, ScrollView, StyleSheet, ActivityIndicator,
   TouchableOpacity, TextInput, Alert, Modal as RNModal
 } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import api from '../lib/api';
 import { colors } from '../lib/theme';
 
@@ -31,8 +32,16 @@ export default function PerfilScreen() {
       {/* Perfil */}
       <View style={styles.card}>
         <Text style={styles.nome}>{perfil.nome}</Text>
-        <Text style={styles.info}>{perfil.email}</Text>
-        {perfil.whatsapp && <Text style={styles.info}>{perfil.whatsapp}</Text>}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+          <Feather name="mail" size={13} color={colors.textSecondary} />
+          <Text style={styles.info}>{perfil.email}</Text>
+        </View>
+        {perfil.whatsapp && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+            <Feather name="phone" size={13} color={colors.textSecondary} />
+            <Text style={styles.info}>{perfil.whatsapp}</Text>
+          </View>
+        )}
         <TouchableOpacity onPress={() => setModalSenha(true)} style={styles.btnSenha}>
           <Text style={styles.btnSenhaText}>Alterar Senha</Text>
         </TouchableOpacity>

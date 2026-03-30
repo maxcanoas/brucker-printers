@@ -8,17 +8,18 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import api from '../lib/api';
+import { Feather } from '@expo/vector-icons';
 import { colors, statusColors, statusLabels, urgenciaColors } from '../lib/theme';
 import DatePicker from '../components/DatePicker';
 
 // ─── Bottom Tab Bar ───
 const TABS = [
-  { id: 'dashboard', label: 'Dashboard', icon: '📊' },
-  { id: 'chamados', label: 'Chamados', icon: '📋' },
-  { id: 'clientes', label: 'Clientes', icon: '👥' },
-  { id: 'impressoras', label: 'Impressoras', icon: '🖨️' },
-  { id: 'tecnicos', label: 'Técnicos', icon: '🔧' },
-  { id: 'relatorios', label: 'Relatórios', icon: '📈' },
+  { id: 'dashboard', label: 'Dashboard', icon: 'bar-chart-2' },
+  { id: 'chamados', label: 'Chamados', icon: 'file-text' },
+  { id: 'clientes', label: 'Clientes', icon: 'users' },
+  { id: 'impressoras', label: 'Impressoras', icon: 'printer' },
+  { id: 'tecnicos', label: 'Técnicos', icon: 'tool' },
+  { id: 'relatorios', label: 'Relatórios', icon: 'trending-up' },
 ];
 
 export default function AdminHomeScreen() {
@@ -65,7 +66,7 @@ export default function AdminHomeScreen() {
             style={[styles.tabBtn, aba === tab.id && styles.tabBtnAtivo]}
             onPress={() => setAba(tab.id)}
           >
-            <Text style={{ fontSize: 16 }}>{tab.icon}</Text>
+            <Feather name={tab.icon} size={20} color={aba === tab.id ? colors.accent : colors.textSecondary} />
             <Text style={[styles.tabLabel, aba === tab.id && styles.tabLabelAtivo]}>
               {tab.label}
             </Text>
@@ -124,7 +125,7 @@ function DashboardTab({ router }) {
           {(dashboard?.sla_vencido || 0) > 0 && (
             <View style={[styles.card, { borderColor: colors.red, borderWidth: 1, marginHorizontal: 16, marginBottom: 12 }]}>
               <Text style={{ color: colors.red, fontWeight: '700', fontSize: 14 }}>
-                ⚠️ {dashboard.sla_vencido} chamado(s) com SLA vencido!
+                <Feather name="alert-triangle" size={14} color={colors.red} />{' '}{dashboard.sla_vencido} chamado(s) com SLA vencido!
               </Text>
             </View>
           )}
@@ -230,8 +231,8 @@ function ClientesTab() {
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <View style={{ flex: 1 }}>
                 <Text style={{ color: colors.text, fontWeight: '600', fontSize: 15, marginBottom: 4 }}>{item.nome}</Text>
-                {item.email && <Text style={{ color: colors.textSecondary, fontSize: 12 }}>✉ {item.email}</Text>}
-                {item.telefone && <Text style={{ color: colors.textSecondary, fontSize: 12 }}>☎ {item.telefone}</Text>}
+                {item.email && <Text style={{ color: colors.textSecondary, fontSize: 12 }}><Feather name="mail" size={11} color={colors.textSecondary} /> {item.email}</Text>}
+                {item.telefone && <Text style={{ color: colors.textSecondary, fontSize: 12 }}><Feather name="phone" size={11} color={colors.textSecondary} /> {item.telefone}</Text>}
               </View>
               <View style={{ backgroundColor: colors.bg, padding: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.border }}>
                 <Text style={{ color: colors.textSecondary, fontSize: 9, textAlign: 'center' }}>CÓDIGO</Text>
@@ -307,7 +308,7 @@ function ImpressorasTab() {
         renderItem={({ item }) => (
           <View style={[styles.card, { marginHorizontal: 16, marginBottom: 10 }]}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <Text style={{ fontSize: 24 }}>🖨️</Text>
+              <Feather name="printer" size={24} color={colors.accent} />
               <View style={{ flex: 1 }}>
                 <Text style={{ color: colors.text, fontWeight: '600', fontSize: 15 }}>{item.modelo}</Text>
                 <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>S/N: {item.numero_serie}</Text>
@@ -382,8 +383,8 @@ function TecnicosTab() {
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
               <View style={{ flex: 1 }}>
                 <Text style={{ color: colors.text, fontWeight: '600', fontSize: 15 }}>{item.nome}</Text>
-                <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>✉ {item.email}</Text>
-                {item.whatsapp && <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>☎ {item.whatsapp}</Text>}
+                <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}><Feather name="mail" size={11} color={colors.textSecondary} /> {item.email}</Text>
+                {item.whatsapp && <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}><Feather name="phone" size={11} color={colors.textSecondary} /> {item.whatsapp}</Text>}
               </View>
               <View style={{
                 paddingVertical: 4, paddingHorizontal: 12, borderRadius: 20,
@@ -698,7 +699,7 @@ function ModalNovoCliente({ visible, onClose, onCriado }) {
 
           {clienteCriado ? (
             <View style={{ alignItems: 'center' }}>
-              <Text style={{ color: colors.green, fontSize: 40, marginBottom: 12 }}>✓</Text>
+              <Feather name="check-circle" size={40} color={colors.green} style={{ marginBottom: 12 }} />
               <Text style={{ color: colors.text, fontSize: 18, fontWeight: '700', marginBottom: 4 }}>{clienteCriado.nome}</Text>
               <Text style={{ color: colors.textSecondary, fontSize: 13, marginBottom: 20 }}>Cliente cadastrado com sucesso!</Text>
 
@@ -711,7 +712,7 @@ function ModalNovoCliente({ visible, onClose, onCriado }) {
                   Envie este código ao cliente para que ele acesse o sistema
                 </Text>
                 <TouchableOpacity style={{ backgroundColor: 'rgba(77,142,245,0.15)', borderWidth: 1, borderColor: colors.blue, borderRadius: 8, paddingVertical: 10, paddingHorizontal: 20 }} onPress={copiarCodigo}>
-                  <Text style={{ color: colors.blue, fontWeight: '600', fontSize: 14 }}>📋 Copiar Código</Text>
+                  <Text style={{ color: colors.blue, fontWeight: '600', fontSize: 14 }}><Feather name="copy" size={14} color={colors.blue} /> Copiar Código</Text>
                 </TouchableOpacity>
               </View>
 
@@ -858,10 +859,10 @@ function ModalDetalheCliente({ cliente, onClose, onAtualizado }) {
               </Text>
               <View style={{ flexDirection: 'row', gap: 10 }}>
                 <TouchableOpacity style={{ backgroundColor: 'rgba(77,142,245,0.15)', borderRadius: 8, paddingVertical: 8, paddingHorizontal: 14 }} onPress={copiarCodigo}>
-                  <Text style={{ color: colors.blue, fontWeight: '600', fontSize: 12 }}>📋 Copiar</Text>
+                  <Text style={{ color: colors.blue, fontWeight: '600', fontSize: 12 }}><Feather name="copy" size={12} color={colors.blue} /> Copiar</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={{ backgroundColor: 'rgba(201,162,39,0.15)', borderRadius: 8, paddingVertical: 8, paddingHorizontal: 14 }} onPress={gerarNovoCodigo} disabled={gerandoCodigo}>
-                  <Text style={{ color: colors.yellow, fontWeight: '600', fontSize: 12 }}>{gerandoCodigo ? 'Gerando...' : '🔄 Novo Código'}</Text>
+                  <Text style={{ color: colors.yellow, fontWeight: '600', fontSize: 12 }}>{gerandoCodigo ? 'Gerando...' : <><Feather name="refresh-cw" size={12} color={colors.yellow} /> Novo Código</>}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -875,7 +876,7 @@ function ModalDetalheCliente({ cliente, onClose, onAtualizado }) {
 
             {/* Impressoras */}
             <Text style={{ color: colors.text, fontWeight: '700', fontSize: 15, marginBottom: 8 }}>
-              🖨️ Impressoras ({detalhes?.impressoras?.length || 0})
+              <Feather name="printer" size={14} color={colors.text} /> Impressoras ({detalhes?.impressoras?.length || 0})
             </Text>
             {detalhes?.impressoras?.length > 0 ? detalhes.impressoras.map(imp => (
               <View key={imp.id} style={{ backgroundColor: colors.bg, borderRadius: 8, padding: 12, marginBottom: 6, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -898,7 +899,7 @@ function ModalDetalheCliente({ cliente, onClose, onAtualizado }) {
 
             {/* Chamados */}
             <Text style={{ color: colors.text, fontWeight: '700', fontSize: 15, marginTop: 12, marginBottom: 8 }}>
-              📋 Chamados Recentes ({chamados.length})
+              <Feather name="file-text" size={14} color={colors.text} /> Chamados Recentes ({chamados.length})
             </Text>
             {chamados.length > 0 ? chamados.slice(0, 5).map(ch => (
               <View key={ch.id} style={{ backgroundColor: colors.bg, borderRadius: 8, padding: 10, marginBottom: 6, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>

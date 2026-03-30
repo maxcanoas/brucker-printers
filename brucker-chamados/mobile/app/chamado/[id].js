@@ -6,6 +6,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../../lib/api';
 import { colors, statusColors, statusLabels, urgenciaColors } from '../../lib/theme';
+import { getSlaInfo } from '../../lib/sla';
+import StarRating from '../../components/StarRating';
 
 export default function ChamadoDetalhe() {
   const { id } = useLocalSearchParams();
@@ -135,29 +137,7 @@ export default function ChamadoDetalhe() {
     );
   }
 
-  // Usar sla_tempo_restante_minutos calculado pelo servidor (considera horário comercial)
-  const slaInfo = () => {
-    if (!chamado.sla_vence_em || ['concluido', 'cancelado'].includes(chamado.status)) return null;
-    if (chamado.sla_pausado_em) return { text: 'SLA pausado (aguardando peça)', color: colors.yellow };
-
-    const minutos = chamado.sla_tempo_restante_minutos;
-    if (minutos != null) {
-      if (minutos <= 0) return { text: 'SLA VENCIDO', color: colors.red };
-      const h = Math.floor(minutos / 60);
-      const m = Math.floor(minutos % 60);
-      if (minutos <= 360) return { text: `${h}h ${m}m restantes`, color: colors.yellow };
-      return { text: `${h}h restantes`, color: colors.green };
-    }
-
-    // Fallback
-    const diff = new Date(chamado.sla_vence_em) - new Date();
-    const horas = diff / (1000 * 60 * 60);
-    if (horas <= 0) return { text: 'SLA VENCIDO', color: colors.red };
-    if (horas <= 6) return { text: `${Math.floor(horas)}h ${Math.floor((horas % 1) * 60)}m restantes`, color: colors.yellow };
-    return { text: `${Math.floor(horas)}h restantes`, color: colors.green };
-  };
-
-  const sla = slaInfo();
+  const sla = getSlaInfo(chamado);
   const isAdmin = userTipo === 'admin';
   const isTecnico = userTipo === 'tecnico';
   const isCliente = userTipo === 'cliente';
@@ -349,12 +329,8 @@ export default function ChamadoDetalhe() {
 
           {chamado.avaliacoes?.length > 0 ? (
             <View>
-              <View style={{ flexDirection: 'row', gap: 6, marginBottom: 8 }}>
-                {[1, 2, 3, 4, 5].map(i => (
-                  <Text key={i} style={{ fontSize: 24 }}>
-                    {i <= chamado.avaliacoes[0].nota ? '⭐' : '☆'}
-                  </Text>
-                ))}
+              <View style={{ marginBottom: 8 }}>
+                <StarRating rating={chamado.avaliacoes[0].nota} size={24} />
               </View>
               {chamado.avaliacoes[0].comentario && (
                 <Text style={{ color: colors.textSecondary, fontSize: 13, fontStyle: 'italic' }}>
@@ -368,12 +344,13 @@ export default function ChamadoDetalhe() {
               <Text style={{ color: colors.textSecondary, fontSize: 13, marginBottom: 12 }}>
                 Como foi o atendimento?
               </Text>
-              <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
-                {[1, 2, 3, 4, 5].map(i => (
-                  <TouchableOpacity key={i} onPress={() => setAvaliacao(a => ({ ...a, nota: i }))}>
-                    <Text style={{ fontSize: 32, opacity: avaliacao.nota >= i ? 1 : 0.3 }}>⭐</Text>
-                  </TouchableOpacity>
-                ))}
+              <View style={{ marginBottom: 16 }}>
+                <StarRating
+                  rating={avaliacao.nota}
+                  onRate={(nota) => setAvaliacao(a => ({ ...a, nota }))}
+                  size={32}
+                  gap={8}
+                />
               </View>
               <TextInput
                 style={styles.input}
