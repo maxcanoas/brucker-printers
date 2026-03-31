@@ -195,3 +195,19 @@ exports.gerarNovoCodigo = async (req, res) => {
     res.status(500).json({ error: 'Erro ao gerar novo código' });
   }
 };
+
+exports.desativar = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('clientes')
+      .delete()
+      .eq('id', req.params.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json({ message: 'Cliente excluído', data });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao excluir cliente' });
+  }
+};

@@ -1,4 +1,14 @@
-import { PlusCircle, Mail, Phone, Edit3, Eye } from 'lucide-react';
+import { PlusCircle, Mail, Phone, Edit3, Eye, Trash2 } from 'lucide-react';
+import api from '../../../lib/api';
+import toast from 'react-hot-toast';
+
+function formatarTelefone(valor) {
+  if (!valor) return '';
+  const nums = valor.replace(/\D/g, '').slice(0, 11);
+  if (nums.length <= 2) return `(${nums}`;
+  if (nums.length <= 7) return `(${nums.slice(0, 2)}) ${nums.slice(2)}`;
+  return `(${nums.slice(0, 2)}) ${nums.slice(2, 7)}-${nums.slice(7)}`;
+}
 
 const cardStyle = {
   backgroundColor: '#141920', borderRadius: '12px', border: '1px solid #1E2533', padding: '24px'
@@ -9,7 +19,18 @@ const btnPrimary = {
   cursor: 'pointer', fontFamily: "'Barlow', sans-serif"
 };
 
-export default function ClientesTab({ clientes, setModalCliente, setModalEditarCliente, setModalDetalheCliente }) {
+export default function ClientesTab({ clientes, setModalCliente, setModalEditarCliente, setModalDetalheCliente, onExcluido }) {
+  const excluirCliente = async (e, cliente) => {
+    e.stopPropagation();
+    if (!confirm(`Excluir o cliente "${cliente.nome}"? Esta ação não pode ser desfeita.`)) return;
+    try {
+      await api.delete(`/clientes/${cliente.id}`);
+      toast.success('Cliente excluído!');
+      onExcluido();
+    } catch {
+      toast.error('Erro ao excluir cliente');
+    }
+  };
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
@@ -36,7 +57,7 @@ export default function ClientesTab({ clientes, setModalCliente, setModalEditarC
                 {c.telefone && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <Phone size={12} color="#8A94A6" />
-                    <p style={{ color: '#8A94A6', fontSize: '13px', margin: 0 }}>{c.telefone}</p>
+                    <p style={{ color: '#8A94A6', fontSize: '13px', margin: 0 }}>{formatarTelefone(c.telefone)}</p>
                   </div>
                 )}
               </div>
@@ -66,6 +87,12 @@ export default function ClientesTab({ clientes, setModalCliente, setModalEditarC
                   borderRadius: '6px', color: '#E84C1E', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px'
                 }}>
                   <Eye size={12} /> Detalhes
+                </button>
+                <button onClick={(e) => excluirCliente(e, c)} className="btn-secondary" style={{
+                  padding: '6px 10px', backgroundColor: 'rgba(232, 76, 30, 0.15)', border: 'none',
+                  borderRadius: '6px', color: '#E84C1E', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px'
+                }}>
+                  <Trash2 size={12} /> Excluir
                 </button>
               </div>
             </div>

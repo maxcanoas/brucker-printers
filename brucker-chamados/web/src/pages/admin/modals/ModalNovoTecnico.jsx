@@ -4,6 +4,14 @@ import { LoadingButton } from '../../../components/LoadingButton';
 import api from '../../../lib/api';
 import toast from 'react-hot-toast';
 
+function formatarTelefone(valor) {
+  if (!valor) return '';
+  const nums = valor.replace(/\D/g, '').slice(0, 11);
+  if (nums.length <= 2) return `(${nums}`;
+  if (nums.length <= 7) return `(${nums.slice(0, 2)}) ${nums.slice(2)}`;
+  return `(${nums.slice(0, 2)}) ${nums.slice(2, 7)}-${nums.slice(7)}`;
+}
+
 const inputStyle = {
   width: '100%', padding: '12px 14px', backgroundColor: '#0D1117',
   border: '1px solid #1E2533', borderRadius: '8px', color: '#FFFFFF',
@@ -52,7 +60,7 @@ export default function ModalNovoTecnico({ isOpen, onClose, onCriado }) {
         </div>
         <div style={{ marginBottom: '16px' }}>
           <label style={{ color: '#8A94A6', fontSize: '13px', display: 'block', marginBottom: '6px' }}>WhatsApp</label>
-          <input value={form.whatsapp} onChange={(e) => setForm(f => ({ ...f, whatsapp: e.target.value }))} placeholder="51999999999" style={inputStyle} />
+          <input value={formatarTelefone(form.whatsapp)} onChange={(e) => setForm(f => ({ ...f, whatsapp: e.target.value.replace(/\D/g, '').slice(0, 11) }))} placeholder="(51) 99999-9999" style={inputStyle} />
         </div>
         <div style={{ marginBottom: '24px' }}>
           <label style={{ color: '#8A94A6', fontSize: '13px', display: 'block', marginBottom: '6px' }}>Senha *</label>

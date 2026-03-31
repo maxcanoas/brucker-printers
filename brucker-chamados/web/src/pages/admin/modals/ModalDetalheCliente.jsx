@@ -5,6 +5,14 @@ import api from '../../../lib/api';
 import toast from 'react-hot-toast';
 import { Printer, FileText, Copy, RefreshCw } from 'lucide-react';
 
+function formatarTelefone(valor) {
+  if (!valor) return '';
+  const nums = valor.replace(/\D/g, '').slice(0, 11);
+  if (nums.length <= 2) return `(${nums}`;
+  if (nums.length <= 7) return `(${nums.slice(0, 2)}) ${nums.slice(2)}`;
+  return `(${nums.slice(0, 2)}) ${nums.slice(2, 7)}-${nums.slice(7)}`;
+}
+
 export default function ModalDetalheCliente({ cliente, onClose, onAtualizado }) {
   const [detalhes, setDetalhes] = useState(null);
   const [chamados, setChamados] = useState([]);
@@ -112,7 +120,7 @@ export default function ModalDetalheCliente({ cliente, onClose, onAtualizado }) 
             </div>
             <div>
               <p style={{ color: '#8A94A6', fontSize: '12px', margin: '0 0 4px' }}>Telefone</p>
-              <p style={{ color: '#FFFFFF', margin: 0 }}>{cliente.telefone || 'Não informado'}</p>
+              <p style={{ color: '#FFFFFF', margin: 0 }}>{cliente.telefone ? formatarTelefone(cliente.telefone) : 'Não informado'}</p>
             </div>
           </div>
 

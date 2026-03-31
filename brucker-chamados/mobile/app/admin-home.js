@@ -12,6 +12,14 @@ import { Feather } from '@expo/vector-icons';
 import { colors, statusColors, statusLabels, urgenciaColors } from '../lib/theme';
 import DatePicker from '../components/DatePicker';
 
+function formatarTelefone(valor) {
+  if (!valor) return '';
+  const nums = valor.replace(/\D/g, '').slice(0, 11);
+  if (nums.length <= 2) return `(${nums}`;
+  if (nums.length <= 7) return `(${nums.slice(0, 2)}) ${nums.slice(2)}`;
+  return `(${nums.slice(0, 2)}) ${nums.slice(2, 7)}-${nums.slice(7)}`;
+}
+
 // ─── Bottom Tab Bar ───
 const TABS = [
   { id: 'dashboard', label: 'Dashboard', icon: 'bar-chart-2' },
@@ -19,6 +27,7 @@ const TABS = [
   { id: 'clientes', label: 'Clientes', icon: 'users' },
   { id: 'impressoras', label: 'Impressoras', icon: 'printer' },
   { id: 'tecnicos', label: 'Técnicos', icon: 'tool' },
+  { id: 'avaliacoes', label: 'Aval.', icon: 'star' },
   { id: 'relatorios', label: 'Relatórios', icon: 'trending-up' },
 ];
 
@@ -56,6 +65,7 @@ export default function AdminHomeScreen() {
       {aba === 'clientes' && <ClientesTab />}
       {aba === 'impressoras' && <ImpressorasTab />}
       {aba === 'tecnicos' && <TecnicosTab />}
+      {aba === 'avaliacoes' && <AvaliacoesTab />}
       {aba === 'relatorios' && <RelatoriosTab />}
 
       {/* Bottom Tabs */}
@@ -212,6 +222,21 @@ function ClientesTab() {
 
   const onRefresh = async () => { setRefreshing(true); await carregar(); setRefreshing(false); };
 
+  const excluirCliente = (item) => {
+    Alert.alert('Confirmar', `Excluir o cliente "${item.nome}"? Esta ação não pode ser desfeita.`, [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Excluir', style: 'destructive', onPress: async () => {
+        try {
+          await api.delete(`/clientes/${item.id}`);
+          Alert.alert('Sucesso', 'Cliente excluído!');
+          carregar();
+        } catch {
+          Alert.alert('Erro', 'Erro ao excluir cliente');
+        }
+      }},
+    ]);
+  };
+
   return (
     <View style={{ flex: 1 }}>
       <FlatList
@@ -232,7 +257,7 @@ function ClientesTab() {
               <View style={{ flex: 1 }}>
                 <Text style={{ color: colors.text, fontWeight: '600', fontSize: 15, marginBottom: 4 }}>{item.nome}</Text>
                 {item.email && <Text style={{ color: colors.textSecondary, fontSize: 12 }}><Feather name="mail" size={11} color={colors.textSecondary} /> {item.email}</Text>}
-                {item.telefone && <Text style={{ color: colors.textSecondary, fontSize: 12 }}><Feather name="phone" size={11} color={colors.textSecondary} /> {item.telefone}</Text>}
+                {item.telefone && <Text style={{ color: colors.textSecondary, fontSize: 12 }}><Feather name="phone" size={11} color={colors.textSecondary} /> {formatarTelefone(item.telefone)}</Text>}
               </View>
               <View style={{ backgroundColor: colors.bg, padding: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.border }}>
                 <Text style={{ color: colors.textSecondary, fontSize: 9, textAlign: 'center' }}>CÓDIGO</Text>
@@ -251,6 +276,9 @@ function ClientesTab() {
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => setModalDetalhe(item)}>
                   <Text style={{ color: colors.accent, fontSize: 12, fontWeight: '600' }}>Detalhes</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => excluirCliente(item)}>
+                  <Text style={{ color: colors.red, fontSize: 12, fontWeight: '600' }}>Excluir</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -290,6 +318,21 @@ function ImpressorasTab() {
   useEffect(() => { carregar(); }, []);
 
   const onRefresh = async () => { setRefreshing(true); await carregar(); setRefreshing(false); };
+
+  const excluirImpressora = (item) => {
+    Alert.alert('Confirmar', `Excluir a impressora "${item.modelo}" (S/N: ${item.numero_serie})?`, [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Excluir', style: 'destructive', onPress: async () => {
+        try {
+          await api.delete(`/impressoras/${item.id}`);
+          Alert.alert('Sucesso', 'Impressora excluída!');
+          carregar();
+        } catch {
+          Alert.alert('Erro', 'Erro ao excluir impressora');
+        }
+      }},
+    ]);
+  };
 
   return (
     <View style={{ flex: 1 }}>
@@ -333,6 +376,11 @@ function ImpressorasTab() {
                 </View>
               </View>
             </View>
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.border }}>
+              <TouchableOpacity onPress={() => excluirImpressora(item)}>
+                <Text style={{ color: colors.red, fontSize: 12, fontWeight: '600' }}>Excluir</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
         ListEmptyComponent={<EmptyState text="Nenhuma impressora cadastrada" />}
@@ -364,6 +412,21 @@ function TecnicosTab() {
 
   const onRefresh = async () => { setRefreshing(true); await carregar(); setRefreshing(false); };
 
+  const excluirTecnico = (item) => {
+    Alert.alert('Confirmar', `Excluir o técnico "${item.nome}"?`, [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Excluir', style: 'destructive', onPress: async () => {
+        try {
+          await api.delete(`/tecnicos/${item.id}`);
+          Alert.alert('Sucesso', 'Técnico excluído!');
+          carregar();
+        } catch {
+          Alert.alert('Erro', 'Erro ao excluir técnico');
+        }
+      }},
+    ]);
+  };
+
   return (
     <View style={{ flex: 1 }}>
       <FlatList
@@ -384,7 +447,7 @@ function TecnicosTab() {
               <View style={{ flex: 1 }}>
                 <Text style={{ color: colors.text, fontWeight: '600', fontSize: 15 }}>{item.nome}</Text>
                 <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}><Feather name="mail" size={11} color={colors.textSecondary} /> {item.email}</Text>
-                {item.whatsapp && <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}><Feather name="phone" size={11} color={colors.textSecondary} /> {item.whatsapp}</Text>}
+                {item.whatsapp && <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}><Feather name="phone" size={11} color={colors.textSecondary} /> {formatarTelefone(item.whatsapp)}</Text>}
               </View>
               <View style={{
                 paddingVertical: 4, paddingHorizontal: 12, borderRadius: 20,
@@ -398,6 +461,9 @@ function TecnicosTab() {
             <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.border, gap: 8 }}>
               <TouchableOpacity onPress={() => setModalEditar(item)}>
                 <Text style={{ color: colors.blue, fontSize: 12, fontWeight: '600' }}>Editar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => excluirTecnico(item)}>
+                <Text style={{ color: colors.red, fontSize: 12, fontWeight: '600' }}>Excluir</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -592,6 +658,245 @@ function RelatoriosTab() {
 }
 
 // ═══════════════════════════════════════════
+// TAB: AVALIAÇÕES
+// ═══════════════════════════════════════════
+function AvaliacoesTab() {
+  const [avaliacoes, setAvaliacoes] = useState([]);
+  const [stats, setStats] = useState({ total: 0, media: '0', distribuicao: [] });
+  const [tecnicos, setTecnicos] = useState([]);
+  const [filtros, setFiltros] = useState({ nota: '', tecnico_id: '', inicio: null, fim: null });
+  const [pagina, setPagina] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [carregando, setCarregando] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [filtrosVisiveis, setFiltrosVisiveis] = useState(false);
+  const limite = 20;
+
+  const buscar = useCallback(async (pag = 1) => {
+    setCarregando(true);
+    try {
+      const params = new URLSearchParams();
+      params.set('page', pag);
+      params.set('limit', limite);
+      if (filtros.nota) params.set('nota', filtros.nota);
+      if (filtros.tecnico_id) params.set('tecnico_id', filtros.tecnico_id);
+      if (filtros.inicio) params.set('inicio', filtros.inicio.toISOString().split('T')[0]);
+      if (filtros.fim) params.set('fim', filtros.fim.toISOString().split('T')[0]);
+      const { data } = await api.get(`/admin/avaliacoes?${params.toString()}`);
+      setAvaliacoes(data.data);
+      setStats(data.stats);
+      setTotal(data.total || 0);
+      setPagina(pag);
+    } catch {
+      Alert.alert('Erro', 'Erro ao buscar avaliações');
+    } finally {
+      setCarregando(false);
+    }
+  }, [filtros]);
+
+  useEffect(() => {
+    buscar();
+    api.get('/tecnicos').then(({ data }) => setTecnicos(data)).catch(() => {});
+  }, []);
+
+  const onRefresh = async () => { setRefreshing(true); await buscar(1); setRefreshing(false); };
+
+  const totalPaginas = Math.ceil(total / limite);
+
+  const renderEstrelas = (nota) => (
+    <View style={{ flexDirection: 'row', gap: 2 }}>
+      {[1, 2, 3, 4, 5].map(n => (
+        <Feather key={n} name="star" size={14} color={n <= nota ? colors.yellow : colors.border} />
+      ))}
+    </View>
+  );
+
+  return (
+    <ScrollView
+      style={{ flex: 1 }}
+      contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 100 }}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />}
+    >
+      <Text style={{ color: colors.text, fontSize: 18, fontWeight: '700' }}>Avaliações</Text>
+
+      {/* Cards de resumo */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }}>
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          {/* Nota Média */}
+          <View style={[styles.card, { minWidth: 140 }]}>
+            <Text style={{ color: colors.textSecondary, fontSize: 11, marginBottom: 6 }}>Nota Média</Text>
+            <Text style={{ color: colors.yellow, fontSize: 28, fontWeight: '700' }}>{stats.media}</Text>
+            {renderEstrelas(Math.round(Number(stats.media)))}
+          </View>
+
+          {/* Total */}
+          <View style={[styles.card, { minWidth: 120 }]}>
+            <Text style={{ color: colors.textSecondary, fontSize: 11, marginBottom: 6 }}>Total</Text>
+            <Text style={{ color: colors.text, fontSize: 28, fontWeight: '700' }}>{stats.total}</Text>
+          </View>
+
+          {/* Distribuição */}
+          <View style={[styles.card, { minWidth: 180 }]}>
+            <Text style={{ color: colors.textSecondary, fontSize: 11, marginBottom: 6 }}>Distribuição</Text>
+            {[5, 4, 3, 2, 1].map(n => {
+              const item = stats.distribuicao?.find(d => d.nota === n) || { count: 0 };
+              const pct = stats.total > 0 ? (item.count / stats.total) * 100 : 0;
+              return (
+                <View key={n} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 2 }}>
+                  <Text style={{ color: colors.textSecondary, fontSize: 10, width: 12 }}>{n}</Text>
+                  <Feather name="star" size={8} color={colors.yellow} />
+                  <View style={{ flex: 1, height: 6, backgroundColor: colors.bg, borderRadius: 3, overflow: 'hidden' }}>
+                    <View style={{ width: `${pct}%`, height: '100%', backgroundColor: colors.yellow, borderRadius: 3 }} />
+                  </View>
+                  <Text style={{ color: colors.textSecondary, fontSize: 10, width: 20, textAlign: 'right' }}>{item.count}</Text>
+                </View>
+              );
+            })}
+          </View>
+        </View>
+      </ScrollView>
+
+      {/* Filtros toggle */}
+      <TouchableOpacity
+        style={[styles.card, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}
+        onPress={() => setFiltrosVisiveis(v => !v)}
+      >
+        <Text style={{ color: colors.text, fontWeight: '600', fontSize: 14 }}>Filtros</Text>
+        <Feather name={filtrosVisiveis ? 'chevron-up' : 'chevron-down'} size={18} color={colors.textSecondary} />
+      </TouchableOpacity>
+
+      {filtrosVisiveis && (
+        <View style={[styles.card, { gap: 12 }]}>
+          {/* Filtro por nota */}
+          <View>
+            <Text style={styles.formLabel}>Nota</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }}>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <TouchableOpacity
+                  style={[styles.filtroBtn, !filtros.nota && styles.filtroBtnAtivo]}
+                  onPress={() => setFiltros(f => ({ ...f, nota: '' }))}
+                >
+                  <Text style={[styles.filtroText, !filtros.nota && styles.filtroTextAtivo]}>Todas</Text>
+                </TouchableOpacity>
+                {[5, 4, 3, 2, 1].map(n => (
+                  <TouchableOpacity
+                    key={n}
+                    style={[styles.filtroBtn, filtros.nota === String(n) && styles.filtroBtnAtivo]}
+                    onPress={() => setFiltros(f => ({ ...f, nota: String(n) }))}
+                  >
+                    <Text style={[styles.filtroText, filtros.nota === String(n) && styles.filtroTextAtivo]}>{n} ★</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
+          </View>
+
+          {/* Filtro por técnico */}
+          <View>
+            <Text style={styles.formLabel}>Técnico</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }}>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <TouchableOpacity
+                  style={[styles.filtroBtn, !filtros.tecnico_id && styles.filtroBtnAtivo]}
+                  onPress={() => setFiltros(f => ({ ...f, tecnico_id: '' }))}
+                >
+                  <Text style={[styles.filtroText, !filtros.tecnico_id && styles.filtroTextAtivo]}>Todos</Text>
+                </TouchableOpacity>
+                {tecnicos.map(t => (
+                  <TouchableOpacity
+                    key={t.id}
+                    style={[styles.filtroBtn, filtros.tecnico_id === t.id && styles.filtroBtnAtivo]}
+                    onPress={() => setFiltros(f => ({ ...f, tecnico_id: t.id }))}
+                  >
+                    <Text style={[styles.filtroText, filtros.tecnico_id === t.id && styles.filtroTextAtivo]}>{t.nome}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
+          </View>
+
+          {/* Filtro por data */}
+          <DatePicker label="Data Início" value={filtros.inicio} onChange={v => setFiltros(f => ({ ...f, inicio: v }))} placeholder="Selecionar início" />
+          <DatePicker label="Data Fim" value={filtros.fim} onChange={v => setFiltros(f => ({ ...f, fim: v }))} placeholder="Selecionar fim" />
+
+          <TouchableOpacity style={[styles.addBtn, { alignSelf: 'stretch', alignItems: 'center', marginTop: 4 }]} onPress={() => buscar(1)}>
+            <Text style={styles.addBtnText}>{carregando ? 'Buscando...' : 'Buscar'}</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Lista de avaliações */}
+      {carregando && avaliacoes.length === 0 ? (
+        <ActivityIndicator size="large" color={colors.accent} style={{ marginTop: 32 }} />
+      ) : avaliacoes.length === 0 ? (
+        <View style={[styles.card, { alignItems: 'center', paddingVertical: 40 }]}>
+          <Feather name="star" size={32} color={colors.border} />
+          <Text style={{ color: colors.textSecondary, marginTop: 12 }}>Nenhuma avaliação encontrada</Text>
+        </View>
+      ) : (
+        <>
+          {avaliacoes.map(a => (
+            <View key={a.id} style={[styles.card, { gap: 8 }]}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={{ color: colors.accent, fontWeight: '700', fontSize: 14 }}>
+                  #{a.chamados?.numero || '—'}
+                </Text>
+                <Text style={{ color: colors.textSecondary, fontSize: 11 }}>
+                  {new Date(a.criado_em).toLocaleDateString('pt-BR')}
+                </Text>
+              </View>
+
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                {renderEstrelas(a.nota)}
+                <Text style={{ color: colors.textSecondary, fontSize: 12 }}>{a.nota}/5</Text>
+              </View>
+
+              <View style={{ flexDirection: 'row', gap: 16 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: colors.textSecondary, fontSize: 10 }}>Cliente</Text>
+                  <Text style={{ color: colors.text, fontSize: 13 }}>{a.clientes?.nome || '—'}</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: colors.textSecondary, fontSize: 10 }}>Técnico</Text>
+                  <Text style={{ color: colors.text, fontSize: 13 }}>{a.chamados?.tecnicos?.nome || '—'}</Text>
+                </View>
+              </View>
+
+              {a.comentario ? (
+                <View style={{ backgroundColor: colors.bg, borderRadius: 8, padding: 10, marginTop: 4 }}>
+                  <Text style={{ color: colors.textSecondary, fontSize: 12 }}>{a.comentario}</Text>
+                </View>
+              ) : null}
+            </View>
+          ))}
+
+          {/* Paginação */}
+          {totalPaginas > 1 && (
+            <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 16 }}>
+              <TouchableOpacity
+                style={[styles.filtroBtn, pagina <= 1 && { opacity: 0.4 }]}
+                onPress={() => pagina > 1 && buscar(pagina - 1)}
+                disabled={pagina <= 1}
+              >
+                <Text style={styles.filtroText}>Anterior</Text>
+              </TouchableOpacity>
+              <Text style={{ color: colors.textSecondary, fontSize: 13 }}>{pagina} / {totalPaginas}</Text>
+              <TouchableOpacity
+                style={[styles.filtroBtn, pagina >= totalPaginas && { opacity: 0.4 }]}
+                onPress={() => pagina < totalPaginas && buscar(pagina + 1)}
+                disabled={pagina >= totalPaginas}
+              >
+                <Text style={styles.filtroText}>Próxima</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </>
+      )}
+    </ScrollView>
+  );
+}
+
+// ═══════════════════════════════════════════
 // SHARED: Chamado Card
 // ═══════════════════════════════════════════
 function ChamadoCard({ item, onPress }) {
@@ -727,7 +1032,7 @@ function ModalNovoCliente({ visible, onClose, onCriado }) {
               <Text style={styles.formLabel}>E-mail</Text>
               <TextInput style={styles.formInput} value={form.email} onChangeText={v => setForm(f => ({ ...f, email: v }))} placeholder="email@exemplo.com" placeholderTextColor={colors.textSecondary} keyboardType="email-address" autoCapitalize="none" />
               <Text style={styles.formLabel}>Telefone</Text>
-              <TextInput style={styles.formInput} value={form.telefone} onChangeText={v => setForm(f => ({ ...f, telefone: v }))} placeholder="(51) 99999-9999" placeholderTextColor={colors.textSecondary} keyboardType="phone-pad" />
+              <TextInput style={styles.formInput} value={formatarTelefone(form.telefone)} onChangeText={v => setForm(f => ({ ...f, telefone: v.replace(/\D/g, '').slice(0, 11) }))} placeholder="(51) 99999-9999" placeholderTextColor={colors.textSecondary} keyboardType="phone-pad" />
 
               <TouchableOpacity style={[styles.addBtn, { alignItems: 'center', marginTop: 8 }]} onPress={handleSubmit} disabled={salvando}>
                 <Text style={styles.addBtnText}>{salvando ? 'Criando...' : 'Cadastrar Cliente'}</Text>
@@ -781,7 +1086,7 @@ function ModalEditarCliente({ cliente, onClose, onAtualizado }) {
           <Text style={styles.formLabel}>E-mail</Text>
           <TextInput style={styles.formInput} value={form.email} onChangeText={v => setForm(f => ({ ...f, email: v }))} keyboardType="email-address" autoCapitalize="none" />
           <Text style={styles.formLabel}>Telefone</Text>
-          <TextInput style={styles.formInput} value={form.telefone} onChangeText={v => setForm(f => ({ ...f, telefone: v }))} keyboardType="phone-pad" />
+          <TextInput style={styles.formInput} value={formatarTelefone(form.telefone)} onChangeText={v => setForm(f => ({ ...f, telefone: v.replace(/\D/g, '').slice(0, 11) }))} keyboardType="phone-pad" placeholder="(51) 99999-9999" placeholderTextColor={colors.textSecondary} />
 
           <TouchableOpacity style={[styles.addBtn, { alignItems: 'center', marginTop: 8 }]} onPress={handleSubmit} disabled={salvando}>
             <Text style={styles.addBtnText}>{salvando ? 'Salvando...' : 'Salvar Alterações'}</Text>
@@ -870,7 +1175,7 @@ function ModalDetalheCliente({ cliente, onClose, onAtualizado }) {
             {/* Dados */}
             <View style={{ marginBottom: 20 }}>
               <InfoRow label="E-mail" value={cliente?.email || 'Não informado'} />
-              <InfoRow label="Telefone" value={cliente?.telefone || 'Não informado'} />
+              <InfoRow label="Telefone" value={cliente?.telefone ? formatarTelefone(cliente.telefone) : 'Não informado'} />
               <InfoRow label="Cadastrado em" value={cliente ? new Date(cliente.criado_em).toLocaleDateString('pt-BR') : ''} />
             </View>
 
@@ -1047,7 +1352,7 @@ function ModalNovoTecnico({ visible, onClose, onCriado }) {
           <Text style={styles.formLabel}>Senha *</Text>
           <TextInput style={styles.formInput} value={form.senha} onChangeText={v => setForm(f => ({ ...f, senha: v }))} placeholder="Mínimo 6 caracteres" placeholderTextColor={colors.textSecondary} secureTextEntry />
           <Text style={styles.formLabel}>WhatsApp</Text>
-          <TextInput style={styles.formInput} value={form.whatsapp} onChangeText={v => setForm(f => ({ ...f, whatsapp: v }))} placeholder="(51) 99999-9999" placeholderTextColor={colors.textSecondary} keyboardType="phone-pad" />
+          <TextInput style={styles.formInput} value={formatarTelefone(form.whatsapp)} onChangeText={v => setForm(f => ({ ...f, whatsapp: v.replace(/\D/g, '').slice(0, 11) }))} placeholder="(51) 99999-9999" placeholderTextColor={colors.textSecondary} keyboardType="phone-pad" />
 
           <TouchableOpacity style={[styles.addBtn, { alignItems: 'center', marginTop: 8 }]} onPress={handleSubmit} disabled={salvando}>
             <Text style={styles.addBtnText}>{salvando ? 'Criando...' : 'Cadastrar Técnico'}</Text>
@@ -1098,7 +1403,7 @@ function ModalEditarTecnico({ tecnico, onClose, onAtualizado }) {
           <Text style={styles.formLabel}>E-mail</Text>
           <TextInput style={[styles.formInput, { color: colors.textSecondary }]} value={tecnico?.email || ''} editable={false} />
           <Text style={styles.formLabel}>WhatsApp</Text>
-          <TextInput style={styles.formInput} value={form.whatsapp} onChangeText={v => setForm(f => ({ ...f, whatsapp: v }))} placeholder="(51) 99999-9999" placeholderTextColor={colors.textSecondary} keyboardType="phone-pad" />
+          <TextInput style={styles.formInput} value={formatarTelefone(form.whatsapp)} onChangeText={v => setForm(f => ({ ...f, whatsapp: v.replace(/\D/g, '').slice(0, 11) }))} placeholder="(51) 99999-9999" placeholderTextColor={colors.textSecondary} keyboardType="phone-pad" />
           <Text style={styles.formLabel}>Status</Text>
           <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
             <TouchableOpacity

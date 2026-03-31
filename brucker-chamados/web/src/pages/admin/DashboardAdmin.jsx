@@ -211,6 +211,7 @@ export default function DashboardAdmin() {
             setModalCliente={setModalCliente}
             setModalEditarCliente={setModalEditarCliente}
             setModalDetalheCliente={setModalDetalheCliente}
+            onExcluido={carregarClientes}
           />
         )}
 
@@ -221,6 +222,7 @@ export default function DashboardAdmin() {
             tecnicos={tecnicos}
             setModalTecnico={setModalTecnico}
             setModalEditarTecnico={setModalEditarTecnico}
+            onExcluido={carregarTecnicos}
           />
         )}
 

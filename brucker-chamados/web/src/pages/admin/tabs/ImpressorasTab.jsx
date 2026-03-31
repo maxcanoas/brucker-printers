@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../../../lib/api';
 import toast from 'react-hot-toast';
-import { Printer, PlusCircle } from 'lucide-react';
+import { Printer, PlusCircle, Trash2 } from 'lucide-react';
 import ModalNovaImpressora from '../modals/ModalNovaImpressora';
 
 const cardStyle = {
@@ -17,6 +17,17 @@ export default function ImpressorasTab() {
   const [impressoras, setImpressoras] = useState([]);
   const [clientes, setClientes] = useState([]);
   const [modalNova, setModalNova] = useState(false);
+
+  const excluirImpressora = async (imp) => {
+    if (!confirm(`Excluir a impressora "${imp.modelo}" (S/N: ${imp.numero_serie})?`)) return;
+    try {
+      await api.delete(`/impressoras/${imp.id}`);
+      toast.success('Impressora excluída!');
+      api.get('/impressoras').then(r => setImpressoras(r.data));
+    } catch {
+      toast.error('Erro ao excluir impressora');
+    }
+  };
 
   useEffect(() => {
     Promise.all([
@@ -46,13 +57,22 @@ export default function ImpressorasTab() {
             <p style={{ color: '#8A94A6', fontSize: '12px', margin: '4px 0' }}>
               Cliente: {imp.clientes?.nome || 'N/A'}
             </p>
-            <span style={{
-              padding: '3px 8px', borderRadius: '4px', fontSize: '11px',
-              backgroundColor: imp.ativo ? 'rgba(61,158,107,0.15)' : 'rgba(138,148,166,0.15)',
-              color: imp.ativo ? '#3D9E6B' : '#8A94A6'
-            }}>
-              {imp.ativo ? 'Ativa' : 'Inativa'}
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #1E2533' }}>
+              <span style={{
+                padding: '3px 8px', borderRadius: '4px', fontSize: '11px',
+                backgroundColor: imp.ativo ? 'rgba(61,158,107,0.15)' : 'rgba(138,148,166,0.15)',
+                color: imp.ativo ? '#3D9E6B' : '#8A94A6'
+              }}>
+                {imp.ativo ? 'Ativa' : 'Inativa'}
+              </span>
+              <button onClick={() => excluirImpressora(imp)} className="btn-secondary" style={{
+                padding: '6px 10px', backgroundColor: 'rgba(232, 76, 30, 0.15)', border: 'none',
+                borderRadius: '6px', color: '#E84C1E', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px',
+                fontFamily: "'Barlow', sans-serif"
+              }}>
+                <Trash2 size={12} /> Excluir
+              </button>
+            </div>
           </div>
         ))}
       </div>

@@ -5,6 +5,14 @@ import api from '../../../lib/api';
 import toast from 'react-hot-toast';
 import { CheckCircle, Copy } from 'lucide-react';
 
+function formatarTelefone(valor) {
+  if (!valor) return '';
+  const nums = valor.replace(/\D/g, '').slice(0, 11);
+  if (nums.length <= 2) return `(${nums}`;
+  if (nums.length <= 7) return `(${nums.slice(0, 2)}) ${nums.slice(2)}`;
+  return `(${nums.slice(0, 2)}) ${nums.slice(2, 7)}-${nums.slice(7)}`;
+}
+
 const inputStyle = {
   width: '100%', padding: '12px 14px', backgroundColor: '#0D1117',
   border: '1px solid #1E2533', borderRadius: '8px', color: '#FFFFFF',
@@ -115,7 +123,7 @@ export default function ModalNovoCliente({ isOpen, onClose, onCriado }) {
           </div>
           <div style={{ marginBottom: '24px' }}>
             <label style={{ color: '#8A94A6', fontSize: '13px', display: 'block', marginBottom: '6px' }}>Telefone</label>
-            <input value={form.telefone} onChange={(e) => setForm(f => ({ ...f, telefone: e.target.value }))} style={inputStyle} placeholder="(51) 99999-9999" />
+            <input value={formatarTelefone(form.telefone)} onChange={(e) => setForm(f => ({ ...f, telefone: e.target.value.replace(/\D/g, '').slice(0, 11) }))} style={inputStyle} placeholder="(51) 99999-9999" />
           </div>
           <LoadingButton type="submit" loading={salvando} loadingText="Criando..." className="btn-primary" style={{ ...btnPrimary, width: '100%' }}>
             Cadastrar Cliente

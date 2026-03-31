@@ -15,5 +15,6 @@ router.get('/:id', autenticarAdmin, clienteController.getCliente);
 router.post('/', autenticarAdmin, clienteController.criarCliente);
 router.put('/:id', autenticarAdmin, clienteController.atualizarCliente);
 router.post('/:id/novo-codigo', autenticarAdmin, clienteController.gerarNovoCodigo);
+router.delete('/:id', autenticarAdmin, clienteController.desativar);
 
 module.exports = router;
