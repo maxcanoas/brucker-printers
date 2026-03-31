@@ -572,6 +572,12 @@ exports.getDetalhesChamado = async (req, res) => {
 
     if (error) return res.status(404).json({ error: 'Chamado não encontrado' });
 
+    // Normalizar avaliacoes: Supabase retorna objeto (não array) para relações 1-para-1
+    // devido à constraint UNIQUE(chamado_id). Envolver em array para compatibilidade.
+    if (chamado.avaliacoes && !Array.isArray(chamado.avaliacoes)) {
+      chamado.avaliacoes = [chamado.avaliacoes];
+    }
+
     // Verificar permissão
     if (req.usuario.tipo === 'cliente' && chamado.cliente_id !== req.usuario.id) {
       return res.status(403).json({ error: 'Acesso negado' });

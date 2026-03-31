@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, Alert, ActivityIndicator
+  View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, Alert, ActivityIndicator, KeyboardAvoidingView, Platform
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -21,6 +21,7 @@ export default function ChamadoDetalhe() {
   const [avaliacao, setAvaliacao] = useState({ nota: 0, comentario: '' });
   const [enviandoAvaliacao, setEnviandoAvaliacao] = useState(false);
   const router = useRouter();
+  const scrollRef = useRef(null);
 
   useEffect(() => {
     carregarChamado();
@@ -143,7 +144,16 @@ export default function ChamadoDetalhe() {
   const isCliente = userTipo === 'cliente';
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+    <ScrollView
+      ref={scrollRef}
+      style={{ flex: 1 }}
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
+    >
       {/* Header info */}
       <View style={styles.headerCard}>
         <View style={styles.row}>
@@ -359,6 +369,7 @@ export default function ChamadoDetalhe() {
                 placeholder="Comentário (opcional)..."
                 placeholderTextColor={colors.textSecondary}
                 multiline
+                onFocus={() => setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 300)}
               />
               <TouchableOpacity
                 style={[styles.aceitarBtn, { marginTop: 12, opacity: (enviandoAvaliacao || avaliacao.nota < 1) ? 0.6 : 1 }]}
@@ -374,6 +385,7 @@ export default function ChamadoDetalhe() {
         </View>
       )}
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
