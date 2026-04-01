@@ -26,6 +26,7 @@ export default function LoginAdmin() {
         logout();
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSubmit = async (e) => {
