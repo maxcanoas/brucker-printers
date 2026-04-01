@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { useTheme } from '../contexts/ThemeContext';
 import toast from 'react-hot-toast';
-import { Eye, EyeOff, Lock } from 'lucide-react';
+import { Eye, EyeOff, Lock, Sun, Moon } from 'lucide-react';
 
 export default function RedefinirSenha() {
   const [novaSenha, setNovaSenha] = useState('');
@@ -12,6 +13,7 @@ export default function RedefinirSenha() {
   const [salvando, setSalvando] = useState(false);
   const [sessaoValida, setSessaoValida] = useState(false);
   const [verificando, setVerificando] = useState(true);
+  const { theme, themeMode, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -22,7 +24,6 @@ export default function RedefinirSenha() {
       setVerificando(false);
     });
 
-    // Fallback: check if there's already a session from the URL tokens
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setSessaoValida(true);
@@ -58,19 +59,38 @@ export default function RedefinirSenha() {
   };
 
   const inputStyle = {
-    width: '100%', padding: '14px 16px', paddingRight: '48px', backgroundColor: '#0D1117',
-    border: '1px solid #1E2533', borderRadius: '8px', color: '#FFFFFF',
+    width: '100%', padding: '14px 16px', paddingRight: '48px', backgroundColor: theme.inputBg,
+    border: `1px solid ${theme.border}`, borderRadius: '8px', color: theme.text,
     fontSize: '15px', outline: 'none', boxSizing: 'border-box',
     fontFamily: "'Barlow', sans-serif"
   };
 
+  const themeBtn = (
+    <button
+      onClick={toggleTheme}
+      style={{
+        position: 'absolute', top: '20px', right: '20px',
+        background: 'none', border: `1px solid ${theme.border}`,
+        borderRadius: '8px', padding: '8px',
+        cursor: 'pointer', display: 'flex',
+        alignItems: 'center', justifyContent: 'center',
+        color: theme.textSecondary
+      }}
+      title={themeMode === 'dark' ? 'Tema claro' : 'Tema escuro'}
+    >
+      {themeMode === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+    </button>
+  );
+
   if (verificando) {
     return (
       <div style={{
-        minHeight: '100vh', backgroundColor: '#0D1117',
-        display: 'flex', alignItems: 'center', justifyContent: 'center'
+        minHeight: '100vh', backgroundColor: theme.bg,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        position: 'relative'
       }}>
-        <p style={{ color: '#8A94A6', fontSize: '16px', fontFamily: "'Barlow', sans-serif" }}>Verificando...</p>
+        {themeBtn}
+        <p style={{ color: theme.textSecondary, fontSize: '16px', fontFamily: "'Barlow', sans-serif" }}>Verificando...</p>
       </div>
     );
   }
@@ -78,17 +98,19 @@ export default function RedefinirSenha() {
   if (!sessaoValida) {
     return (
       <div style={{
-        minHeight: '100vh', backgroundColor: '#0D1117',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px'
+        minHeight: '100vh', backgroundColor: theme.bg,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px',
+        position: 'relative'
       }}>
+        {themeBtn}
         <div style={{
-          backgroundColor: '#141920', borderRadius: '16px', border: '1px solid #1E2533',
+          backgroundColor: theme.card, borderRadius: '16px', border: `1px solid ${theme.border}`,
           padding: '48px', width: '100%', maxWidth: '440px', textAlign: 'center'
         }}>
-          <p style={{ color: '#E84C1E', fontSize: '16px', marginBottom: '16px', fontFamily: "'Barlow', sans-serif" }}>
+          <p style={{ color: theme.accent, fontSize: '16px', marginBottom: '16px', fontFamily: "'Barlow', sans-serif" }}>
             Link inválido ou expirado.
           </p>
-          <p style={{ color: '#8A94A6', fontSize: '14px', fontFamily: "'Barlow', sans-serif" }}>
+          <p style={{ color: theme.textSecondary, fontSize: '14px', fontFamily: "'Barlow', sans-serif" }}>
             Solicite um novo link de redefinição de senha.
           </p>
         </div>
@@ -98,26 +120,28 @@ export default function RedefinirSenha() {
 
   return (
     <div style={{
-      minHeight: '100vh', backgroundColor: '#0D1117',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px'
+      minHeight: '100vh', backgroundColor: theme.bg,
+      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px',
+      position: 'relative'
     }}>
+      {themeBtn}
       <div style={{
-        backgroundColor: '#141920', borderRadius: '16px', border: '1px solid #1E2533',
+        backgroundColor: theme.card, borderRadius: '16px', border: `1px solid ${theme.border}`,
         padding: '48px', width: '100%', maxWidth: '440px'
       }}>
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <img src="/logo-icon.png" alt="Brucker Printers" style={{ width: '56px', height: 'auto', margin: '0 auto 16px', display: 'block' }} />
           <h1 style={{
             fontFamily: "'Barlow Condensed', sans-serif", fontSize: '24px',
-            fontWeight: 700, color: '#FFFFFF', marginBottom: '8px'
+            fontWeight: 700, color: theme.text, marginBottom: '8px'
           }}>
             Redefinir Senha
           </h1>
-          <p style={{ color: '#8A94A6', fontSize: '14px' }}>Digite sua nova senha abaixo.</p>
+          <p style={{ color: theme.textSecondary, fontSize: '14px' }}>Digite sua nova senha abaixo.</p>
         </div>
 
         <form onSubmit={handleSubmit}>
-          <label style={{ color: '#8A94A6', fontSize: '13px', display: 'block', marginBottom: '6px' }}>
+          <label style={{ color: theme.textSecondary, fontSize: '13px', display: 'block', marginBottom: '6px' }}>
             Nova Senha
           </label>
           <div style={{ position: 'relative', marginBottom: '16px' }}>
@@ -128,11 +152,11 @@ export default function RedefinirSenha() {
               position: 'absolute', right: '12px', top: '14px', background: 'none',
               border: 'none', cursor: 'pointer', padding: 0, display: 'flex'
             }}>
-              {mostrarNova ? <EyeOff size={18} color="#8A94A6" /> : <Eye size={18} color="#8A94A6" />}
+              {mostrarNova ? <EyeOff size={18} color={theme.textSecondary} /> : <Eye size={18} color={theme.textSecondary} />}
             </button>
           </div>
 
-          <label style={{ color: '#8A94A6', fontSize: '13px', display: 'block', marginBottom: '6px' }}>
+          <label style={{ color: theme.textSecondary, fontSize: '13px', display: 'block', marginBottom: '6px' }}>
             Confirmar Nova Senha
           </label>
           <div style={{ position: 'relative', marginBottom: '24px' }}>
@@ -143,12 +167,12 @@ export default function RedefinirSenha() {
               position: 'absolute', right: '12px', top: '14px', background: 'none',
               border: 'none', cursor: 'pointer', padding: 0, display: 'flex'
             }}>
-              {mostrarConfirmar ? <EyeOff size={18} color="#8A94A6" /> : <Eye size={18} color="#8A94A6" />}
+              {mostrarConfirmar ? <EyeOff size={18} color={theme.textSecondary} /> : <Eye size={18} color={theme.textSecondary} />}
             </button>
           </div>
 
           <button type="submit" disabled={salvando} style={{
-            width: '100%', padding: '14px', backgroundColor: '#E84C1E', color: '#FFFFFF',
+            width: '100%', padding: '14px', backgroundColor: theme.accent, color: '#FFFFFF',
             border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: 600,
             cursor: salvando ? 'not-allowed' : 'pointer', opacity: salvando ? 0.7 : 1,
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',

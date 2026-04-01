@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl,
   Alert, TextInput, Modal, ScrollView, ActivityIndicator
@@ -8,7 +8,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import api from '../lib/api';
 import { Feather } from '@expo/vector-icons';
-import { colors, statusColors, statusLabels, urgenciaColors } from '../lib/theme';
+import { useTheme } from '../contexts/ThemeContext';
+import { statusColors, statusLabels, urgenciaColors } from '../lib/theme';
 import { getSlaInfo } from '../lib/sla';
 import EmptyState from '../components/EmptyState';
 
@@ -19,6 +20,7 @@ const TABS = [
 ];
 
 export default function ClienteHomeScreen() {
+  const { colors } = useTheme();
   const [aba, setAba] = useState('chamados');
   const [cliente, setCliente] = useState(null);
   const [chamados, setChamados] = useState([]);
@@ -27,6 +29,7 @@ export default function ClienteHomeScreen() {
   const [modalAbrir, setModalAbrir] = useState(false);
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const carregar = useCallback(async () => {
     try {
@@ -222,6 +225,8 @@ export default function ClienteHomeScreen() {
 }
 
 function ModalAbrirChamado({ visible, onClose, onCriado }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [form, setForm] = useState({
     numero_serie: '', impressora_id: '', modelo: '',
     tipo: 'corretivo', urgencia: 'normal', descricao: ''
@@ -351,7 +356,7 @@ function ModalAbrirChamado({ visible, onClose, onCriado }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   header: {
     backgroundColor: colors.card, padding: 20, paddingTop: 60,

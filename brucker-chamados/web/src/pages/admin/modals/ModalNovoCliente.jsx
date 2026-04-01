@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Modal } from '../../../components/Modal';
 import { LoadingButton } from '../../../components/LoadingButton';
+import { useTheme } from '../../../contexts/ThemeContext';
 import api from '../../../lib/api';
 import toast from 'react-hot-toast';
 import { CheckCircle, Copy } from 'lucide-react';
@@ -13,22 +14,23 @@ function formatarTelefone(valor) {
   return `(${nums.slice(0, 2)}) ${nums.slice(2, 7)}-${nums.slice(7)}`;
 }
 
-const inputStyle = {
-  width: '100%', padding: '12px 14px', backgroundColor: '#0D1117',
-  border: '1px solid #1E2533', borderRadius: '8px', color: '#FFFFFF',
-  fontSize: '14px', outline: 'none', boxSizing: 'border-box',
-  fontFamily: "'Barlow', sans-serif"
-};
-const btnPrimary = {
-  padding: '10px 20px', backgroundColor: '#E84C1E', color: '#FFFFFF',
-  border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600,
-  cursor: 'pointer', fontFamily: "'Barlow', sans-serif"
-};
-
 export default function ModalNovoCliente({ isOpen, onClose, onCriado }) {
+  const { theme } = useTheme();
   const [form, setForm] = useState({ nome: '', email: '', telefone: '' });
   const [salvando, setSalvando] = useState(false);
   const [clienteCriado, setClienteCriado] = useState(null);
+
+  const inputStyle = {
+    width: '100%', padding: '12px 14px', backgroundColor: theme.bg,
+    border: `1px solid ${theme.border}`, borderRadius: '8px', color: theme.text,
+    fontSize: '14px', outline: 'none', boxSizing: 'border-box',
+    fontFamily: "'Barlow', sans-serif"
+  };
+  const btnPrimary = {
+    padding: '10px 20px', backgroundColor: theme.accent, color: '#FFFFFF',
+    border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600,
+    cursor: 'pointer', fontFamily: "'Barlow', sans-serif"
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -72,28 +74,28 @@ export default function ModalNovoCliente({ isOpen, onClose, onCriado }) {
         <div style={{ textAlign: 'center' }}>
           <div style={{ marginBottom: '24px' }}>
             <CheckCircle size={48} color="#3D9E6B" style={{ marginBottom: '16px' }} />
-            <h3 style={{ color: '#FFFFFF', margin: '0 0 8px', fontSize: '18px' }}>
+            <h3 style={{ color: theme.text, margin: '0 0 8px', fontSize: '18px' }}>
               {clienteCriado.nome}
             </h3>
-            <p style={{ color: '#8A94A6', margin: 0, fontSize: '14px' }}>
+            <p style={{ color: theme.textSecondary, margin: 0, fontSize: '14px' }}>
               Cliente cadastrado com sucesso!
             </p>
           </div>
 
           <div style={{
-            padding: '24px', backgroundColor: '#0D1117', borderRadius: '12px',
-            border: '2px solid #E84C1E', marginBottom: '24px'
+            padding: '24px', backgroundColor: theme.bg, borderRadius: '12px',
+            border: `2px solid ${theme.accent}`, marginBottom: '24px'
           }}>
-            <p style={{ color: '#8A94A6', fontSize: '12px', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+            <p style={{ color: theme.textSecondary, fontSize: '12px', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
               Código de Acesso Gerado
             </p>
             <p style={{
-              color: '#E84C1E', fontSize: '32px', fontWeight: 700, margin: '0 0 12px',
+              color: theme.accent, fontSize: '32px', fontWeight: 700, margin: '0 0 12px',
               fontFamily: 'monospace', letterSpacing: '3px'
             }}>
               {clienteCriado.codigo_acesso}
             </p>
-            <p style={{ color: '#8A94A6', fontSize: '12px', margin: '0 0 16px' }}>
+            <p style={{ color: theme.textSecondary, fontSize: '12px', margin: '0 0 16px' }}>
               Envie este código ao cliente para que ele acesse o sistema de chamados
             </p>
             <button onClick={copiarCodigo} className="btn-secondary" style={{
@@ -114,21 +116,21 @@ export default function ModalNovoCliente({ isOpen, onClose, onCriado }) {
       ) : (
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ color: '#8A94A6', fontSize: '13px', display: 'block', marginBottom: '6px' }}>Nome *</label>
+            <label style={{ color: theme.textSecondary, fontSize: '13px', display: 'block', marginBottom: '6px' }}>Nome *</label>
             <input value={form.nome} onChange={(e) => setForm(f => ({ ...f, nome: e.target.value }))} style={inputStyle} placeholder="Nome completo ou razão social" />
           </div>
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ color: '#8A94A6', fontSize: '13px', display: 'block', marginBottom: '6px' }}>E-mail</label>
+            <label style={{ color: theme.textSecondary, fontSize: '13px', display: 'block', marginBottom: '6px' }}>E-mail</label>
             <input type="email" value={form.email} onChange={(e) => setForm(f => ({ ...f, email: e.target.value }))} style={inputStyle} placeholder="email@exemplo.com" />
           </div>
           <div style={{ marginBottom: '24px' }}>
-            <label style={{ color: '#8A94A6', fontSize: '13px', display: 'block', marginBottom: '6px' }}>Telefone</label>
+            <label style={{ color: theme.textSecondary, fontSize: '13px', display: 'block', marginBottom: '6px' }}>Telefone</label>
             <input value={formatarTelefone(form.telefone)} onChange={(e) => setForm(f => ({ ...f, telefone: e.target.value.replace(/\D/g, '').slice(0, 11) }))} style={inputStyle} placeholder="(51) 99999-9999" />
           </div>
           <LoadingButton type="submit" loading={salvando} loadingText="Criando..." className="btn-primary" style={{ ...btnPrimary, width: '100%' }}>
             Cadastrar Cliente
           </LoadingButton>
-          <p style={{ color: '#8A94A6', fontSize: '12px', textAlign: 'center', margin: '12px 0 0' }}>
+          <p style={{ color: theme.textSecondary, fontSize: '12px', textAlign: 'center', margin: '12px 0 0' }}>
             O código de acesso será gerado automaticamente
           </p>
         </form>

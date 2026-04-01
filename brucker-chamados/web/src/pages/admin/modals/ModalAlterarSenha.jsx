@@ -1,28 +1,30 @@
 import { useState } from 'react';
 import { Modal } from '../../../components/Modal';
 import { LoadingButton } from '../../../components/LoadingButton';
+import { useTheme } from '../../../contexts/ThemeContext';
 import api from '../../../lib/api';
 import toast from 'react-hot-toast';
 import { Eye, EyeOff } from 'lucide-react';
 
-const inputStyle = {
-  width: '100%', padding: '12px 14px', backgroundColor: '#0D1117',
-  border: '1px solid #1E2533', borderRadius: '8px', color: '#FFFFFF',
-  fontSize: '14px', outline: 'none', boxSizing: 'border-box',
-  fontFamily: "'Barlow', sans-serif"
-};
-const btnPrimary = {
-  padding: '10px 20px', backgroundColor: '#E84C1E', color: '#FFFFFF',
-  border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600,
-  cursor: 'pointer', fontFamily: "'Barlow', sans-serif"
-};
-
 export default function ModalAlterarSenha({ isOpen, onClose }) {
+  const { theme } = useTheme();
   const [senhaAtual, setSenhaAtual] = useState('');
   const [novaSenha, setNovaSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
   const [salvando, setSalvando] = useState(false);
   const [mostrar, setMostrar] = useState({ atual: false, nova: false, confirmar: false });
+
+  const inputStyle = {
+    width: '100%', padding: '12px 14px', backgroundColor: theme.bg,
+    border: `1px solid ${theme.border}`, borderRadius: '8px', color: theme.text,
+    fontSize: '14px', outline: 'none', boxSizing: 'border-box',
+    fontFamily: "'Barlow', sans-serif"
+  };
+  const btnPrimary = {
+    padding: '10px 20px', backgroundColor: theme.accent, color: '#FFFFFF',
+    border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600,
+    cursor: 'pointer', fontFamily: "'Barlow', sans-serif"
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -50,28 +52,28 @@ export default function ModalAlterarSenha({ isOpen, onClose }) {
       position: 'absolute', right: '12px', top: '12px', background: 'none',
       border: 'none', cursor: 'pointer', padding: 0, display: 'flex'
     }}>
-      {mostrar[field] ? <EyeOff size={18} color="#8A94A6" /> : <Eye size={18} color="#8A94A6" />}
+      {mostrar[field] ? <EyeOff size={18} color={theme.textSecondary} /> : <Eye size={18} color={theme.textSecondary} />}
     </button>
   );
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Alterar Senha">
       <form onSubmit={handleSubmit}>
-        <label style={{ color: '#8A94A6', fontSize: '13px', display: 'block', marginBottom: '6px' }}>Senha Atual</label>
+        <label style={{ color: theme.textSecondary, fontSize: '13px', display: 'block', marginBottom: '6px' }}>Senha Atual</label>
         <div style={{ position: 'relative', marginBottom: '16px' }}>
           <input type={mostrar.atual ? 'text' : 'password'} value={senhaAtual} onChange={e => setSenhaAtual(e.target.value)}
             required style={{ ...inputStyle, paddingRight: '48px' }} />
           {toggleIcon('atual')}
         </div>
 
-        <label style={{ color: '#8A94A6', fontSize: '13px', display: 'block', marginBottom: '6px' }}>Nova Senha</label>
+        <label style={{ color: theme.textSecondary, fontSize: '13px', display: 'block', marginBottom: '6px' }}>Nova Senha</label>
         <div style={{ position: 'relative', marginBottom: '16px' }}>
           <input type={mostrar.nova ? 'text' : 'password'} value={novaSenha} onChange={e => setNovaSenha(e.target.value)}
             required style={{ ...inputStyle, paddingRight: '48px' }} />
           {toggleIcon('nova')}
         </div>
 
-        <label style={{ color: '#8A94A6', fontSize: '13px', display: 'block', marginBottom: '6px' }}>Confirmar Nova Senha</label>
+        <label style={{ color: theme.textSecondary, fontSize: '13px', display: 'block', marginBottom: '6px' }}>Confirmar Nova Senha</label>
         <div style={{ position: 'relative', marginBottom: '24px' }}>
           <input type={mostrar.confirmar ? 'text' : 'password'} value={confirmarSenha} onChange={e => setConfirmarSenha(e.target.value)}
             required style={{ ...inputStyle, paddingRight: '48px' }} />

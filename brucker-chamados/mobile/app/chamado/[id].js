@@ -1,15 +1,17 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, Alert, ActivityIndicator, KeyboardAvoidingView, Platform
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../../lib/api';
-import { colors, statusColors, statusLabels, urgenciaColors } from '../../lib/theme';
+import { useTheme } from '../../contexts/ThemeContext';
+import { statusColors, statusLabels, urgenciaColors } from '../../lib/theme';
 import { getSlaInfo } from '../../lib/sla';
 import StarRating from '../../components/StarRating';
 
 export default function ChamadoDetalhe() {
+  const { colors } = useTheme();
   const { id } = useLocalSearchParams();
   const [chamado, setChamado] = useState(null);
   const [novoStatus, setNovoStatus] = useState('');
@@ -22,6 +24,7 @@ export default function ChamadoDetalhe() {
   const [enviandoAvaliacao, setEnviandoAvaliacao] = useState(false);
   const router = useRouter();
   const scrollRef = useRef(null);
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   useEffect(() => {
     carregarChamado();
@@ -390,6 +393,8 @@ export default function ChamadoDetalhe() {
 }
 
 function InfoRow({ label, value, valueColor }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   return (
     <View style={styles.infoRow}>
       <Text style={styles.infoLabel}>{label}</Text>
@@ -398,7 +403,7 @@ function InfoRow({ label, value, valueColor }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: 16, gap: 16, paddingBottom: 40 },
   headerCard: {

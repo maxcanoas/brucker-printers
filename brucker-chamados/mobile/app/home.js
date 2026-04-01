@@ -1,21 +1,23 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl, Alert
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import api from '../lib/api';
-import { colors } from '../lib/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import { getSlaInfo } from '../lib/sla';
 import { StatusBadge, UrgenciaBadge } from '../components/StatusBadge';
 import EmptyState from '../components/EmptyState';
 
 export default function HomeScreen() {
+  const { colors } = useTheme();
   const [chamados, setChamados] = useState([]);
   const [tecnico, setTecnico] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [filtro, setFiltro] = useState('ativos');
   const router = useRouter();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const carregarDados = useCallback(async () => {
     try {
@@ -130,7 +132,7 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   header: {
     backgroundColor: colors.card, padding: 20, paddingTop: 60,

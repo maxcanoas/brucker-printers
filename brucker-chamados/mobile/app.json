@@ -4,7 +4,7 @@
     "slug": "brucker-chamados",
     "version": "1.0.0",
     "orientation": "portrait",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "automatic",
     "splash": {
       "backgroundColor": "#0D1117"
     },

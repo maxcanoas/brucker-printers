@@ -3,28 +3,30 @@ import { UrgenciaBadge } from '../../../components/StatusBadge';
 import { LoadingButton } from '../../../components/LoadingButton';
 import api from '../../../lib/api';
 import toast from 'react-hot-toast';
-
-const cardStyle = {
-  backgroundColor: '#141920', borderRadius: '12px', border: '1px solid #1E2533', padding: '24px'
-};
-const inputStyle = {
-  width: '100%', padding: '12px 14px', backgroundColor: '#0D1117',
-  border: '1px solid #1E2533', borderRadius: '8px', color: '#FFFFFF',
-  fontSize: '14px', outline: 'none', boxSizing: 'border-box',
-  fontFamily: "'Barlow', sans-serif"
-};
-const btnPrimary = {
-  padding: '10px 20px', backgroundColor: '#E84C1E', color: '#FFFFFF',
-  border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600,
-  cursor: 'pointer', fontFamily: "'Barlow', sans-serif"
-};
+import { useTheme } from '../../../contexts/ThemeContext';
 
 export default function RelatoriosTab() {
+  const { theme } = useTheme();
   const [tipo, setTipo] = useState('periodo');
   const [inicio, setInicio] = useState('');
   const [fim, setFim] = useState('');
   const [dados, setDados] = useState(null);
   const [carregando, setCarregando] = useState(false);
+
+  const cardStyle = {
+    backgroundColor: theme.card, borderRadius: '12px', border: `1px solid ${theme.border}`, padding: '24px'
+  };
+  const inputStyle = {
+    width: '100%', padding: '12px 14px', backgroundColor: theme.bg,
+    border: `1px solid ${theme.border}`, borderRadius: '8px', color: theme.text,
+    fontSize: '14px', outline: 'none', boxSizing: 'border-box',
+    fontFamily: "'Barlow', sans-serif"
+  };
+  const btnPrimary = {
+    padding: '10px 20px', backgroundColor: theme.accent, color: '#FFFFFF',
+    border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600,
+    cursor: 'pointer', fontFamily: "'Barlow', sans-serif"
+  };
 
   const gerarRelatorio = async () => {
     if (['periodo', 'sla'].includes(tipo) && (!inicio || !fim)) {
@@ -65,25 +67,25 @@ export default function RelatoriosTab() {
     }
   };
 
-  const thStyle = { color: '#8A94A6', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'center', padding: '12px 16px', borderBottom: '1px solid #1E2533', backgroundColor: '#0D1117' };
-  const tdStyle = { color: '#FFFFFF', fontSize: '14px', textAlign: 'center', padding: '12px 16px', borderBottom: '1px solid #1E2533' };
+  const thStyle = { color: theme.textSecondary, fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'center', padding: '12px 16px', borderBottom: `1px solid ${theme.border}`, backgroundColor: theme.bg };
+  const tdStyle = { color: theme.text, fontSize: '14px', textAlign: 'center', padding: '12px 16px', borderBottom: `1px solid ${theme.border}` };
   const exportBtnStyle = {
-    padding: '8px 16px', borderRadius: '6px', border: '1px solid #1E2533',
-    backgroundColor: 'transparent', color: '#8A94A6', cursor: 'pointer',
+    padding: '8px 16px', borderRadius: '6px', border: `1px solid ${theme.border}`,
+    backgroundColor: 'transparent', color: theme.textSecondary, cursor: 'pointer',
     fontSize: '12px', fontFamily: "'Barlow', sans-serif",
     display: 'inline-flex', alignItems: 'center', gap: '4px'
   };
 
   return (
     <div>
-      <h2 style={{ color: '#FFFFFF', fontSize: '24px', marginBottom: '24px', fontFamily: "'Barlow Condensed', sans-serif" }}>
+      <h2 style={{ color: theme.text, fontSize: '24px', marginBottom: '24px', fontFamily: "'Barlow Condensed', sans-serif" }}>
         Relatórios
       </h2>
 
       <div style={{ ...cardStyle, marginBottom: '24px' }}>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
           <div>
-            <label style={{ color: '#8A94A6', fontSize: '13px', display: 'block', marginBottom: '6px' }}>Tipo</label>
+            <label style={{ color: theme.textSecondary, fontSize: '13px', display: 'block', marginBottom: '6px' }}>Tipo</label>
             <select value={tipo} onChange={(e) => { setTipo(e.target.value); setDados(null); }} style={{ ...inputStyle, width: 'auto' }}>
               <option value="periodo">Por Período</option>
               <option value="clientes">Por Cliente</option>
@@ -93,11 +95,11 @@ export default function RelatoriosTab() {
             </select>
           </div>
           <div>
-            <label style={{ color: '#8A94A6', fontSize: '13px', display: 'block', marginBottom: '6px' }}>Início</label>
+            <label style={{ color: theme.textSecondary, fontSize: '13px', display: 'block', marginBottom: '6px' }}>Início</label>
             <input type="date" value={inicio} onChange={(e) => setInicio(e.target.value)} style={inputStyle} />
           </div>
           <div>
-            <label style={{ color: '#8A94A6', fontSize: '13px', display: 'block', marginBottom: '6px' }}>Fim</label>
+            <label style={{ color: theme.textSecondary, fontSize: '13px', display: 'block', marginBottom: '6px' }}>Fim</label>
             <input type="date" value={fim} onChange={(e) => setFim(e.target.value)} style={inputStyle} />
           </div>
           <LoadingButton onClick={gerarRelatorio} loading={carregando} loadingText="Gerando..." className="btn-primary" style={btnPrimary}>
@@ -121,7 +123,7 @@ export default function RelatoriosTab() {
       {/* Relatório por Período */}
       {dados && tipo === 'periodo' && dados.resumo && (
         <div style={cardStyle}>
-          <h3 style={{ color: '#FFFFFF', fontSize: '18px', marginBottom: '16px' }}>Resumo do Período</h3>
+          <h3 style={{ color: theme.text, fontSize: '18px', marginBottom: '16px' }}>Resumo do Período</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px' }}>
             {[
               { label: 'Total', valor: dados.resumo.total },
@@ -133,9 +135,9 @@ export default function RelatoriosTab() {
               { label: 'Preventivos', valor: dados.resumo.por_tipo?.preventivo || 0 },
               { label: 'Corretivos', valor: dados.resumo.por_tipo?.corretivo || 0 }
             ].map(item => (
-              <div key={item.label} style={{ padding: '12px', backgroundColor: '#0D1117', borderRadius: '8px' }}>
-                <p style={{ color: '#8A94A6', fontSize: '12px', margin: '0 0 4px' }}>{item.label}</p>
-                <p style={{ color: '#FFFFFF', fontSize: '20px', fontWeight: 700, margin: 0 }}>{item.valor}</p>
+              <div key={item.label} style={{ padding: '12px', backgroundColor: theme.bg, borderRadius: '8px' }}>
+                <p style={{ color: theme.textSecondary, fontSize: '12px', margin: '0 0 4px' }}>{item.label}</p>
+                <p style={{ color: theme.text, fontSize: '20px', fontWeight: 700, margin: 0 }}>{item.valor}</p>
               </div>
             ))}
           </div>
@@ -145,7 +147,7 @@ export default function RelatoriosTab() {
       {/* Relatório por Cliente/Técnico */}
       {dados && ['clientes', 'tecnicos'].includes(tipo) && Array.isArray(dados) && (
         <div style={cardStyle}>
-          <h3 style={{ color: '#FFFFFF', fontSize: '18px', marginBottom: '16px' }}>
+          <h3 style={{ color: theme.text, fontSize: '18px', marginBottom: '16px' }}>
             {tipo === 'clientes' ? 'Por Cliente' : 'Por Técnico'}
           </h3>
           <div style={{ overflowX: 'auto' }}>
@@ -180,7 +182,7 @@ export default function RelatoriosTab() {
       {/* Relatório de SLA */}
       {dados && tipo === 'sla' && dados.resumo && (
         <div style={cardStyle}>
-          <h3 style={{ color: '#FFFFFF', fontSize: '18px', marginBottom: '16px' }}>Relatório de SLA</h3>
+          <h3 style={{ color: theme.text, fontSize: '18px', marginBottom: '16px' }}>Relatório de SLA</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px', marginBottom: '24px' }}>
             {[
               { label: 'Total Concluídos', valor: dados.resumo.total_concluidos },
@@ -188,9 +190,9 @@ export default function RelatoriosTab() {
               { label: 'Fora do SLA', valor: dados.resumo.fora_sla, color: '#E84C1E' },
               { label: '% Cumprimento', valor: `${dados.resumo.percentual_sla}%` }
             ].map(item => (
-              <div key={item.label} style={{ padding: '12px', backgroundColor: '#0D1117', borderRadius: '8px' }}>
-                <p style={{ color: '#8A94A6', fontSize: '12px', margin: '0 0 4px' }}>{item.label}</p>
-                <p style={{ color: item.color || '#FFFFFF', fontSize: '20px', fontWeight: 700, margin: 0 }}>{item.valor}</p>
+              <div key={item.label} style={{ padding: '12px', backgroundColor: theme.bg, borderRadius: '8px' }}>
+                <p style={{ color: theme.textSecondary, fontSize: '12px', margin: '0 0 4px' }}>{item.label}</p>
+                <p style={{ color: item.color || theme.text, fontSize: '20px', fontWeight: 700, margin: 0 }}>{item.valor}</p>
               </div>
             ))}
           </div>
@@ -236,9 +238,9 @@ export default function RelatoriosTab() {
       {/* Relatório de Peças */}
       {dados && tipo === 'pecas' && Array.isArray(dados) && (
         <div style={cardStyle}>
-          <h3 style={{ color: '#FFFFFF', fontSize: '18px', marginBottom: '16px' }}>Peças Utilizadas</h3>
+          <h3 style={{ color: theme.text, fontSize: '18px', marginBottom: '16px' }}>Peças Utilizadas</h3>
           {dados.length === 0 ? (
-            <p style={{ color: '#8A94A6', textAlign: 'center', padding: '24px' }}>
+            <p style={{ color: theme.textSecondary, textAlign: 'center', padding: '24px' }}>
               Nenhuma peça encontrada no período
             </p>
           ) : (

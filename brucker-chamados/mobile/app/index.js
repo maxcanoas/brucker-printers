@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator,
   KeyboardAvoidingView, ScrollView, Platform, Image
@@ -7,7 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import api from '../lib/api';
-import { colors } from '../lib/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import { registrarPushNotifications } from '../lib/notifications';
 
 const PERFIS = [
@@ -17,6 +17,7 @@ const PERFIS = [
 ];
 
 export default function LoginScreen() {
+  const { colors } = useTheme();
   const [carregando, setCarregando] = useState(true);
   const [perfil, setPerfil] = useState('cliente');
   const [codigoAcesso, setCodigoAcesso] = useState('');
@@ -27,6 +28,7 @@ export default function LoginScreen() {
   const [emailRecuperacao, setEmailRecuperacao] = useState('');
   const [enviando, setEnviando] = useState(false);
   const router = useRouter();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   useEffect(() => {
     AsyncStorage.getItem('token').then(async (token) => {
@@ -255,7 +257,7 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1, backgroundColor: colors.bg,
   },

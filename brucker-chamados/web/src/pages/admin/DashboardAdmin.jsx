@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import { useRealtimeChamados } from '../../hooks/useRealtime';
 import api from '../../lib/api';
 import { SkeletonDashboard } from '../../components/Skeleton';
 import toast from 'react-hot-toast';
 import {
   LayoutDashboard, FileText, Users, Printer, UserCog, BarChart3,
-  LogOut, Lock, Menu, X, Star
+  LogOut, Lock, Menu, X, Star, Sun, Moon
 } from 'lucide-react';
 
 // Tabs
@@ -39,6 +40,7 @@ const menuItems = [
 
 export default function DashboardAdmin() {
   const { usuario, logout } = useAuth();
+  const { theme, themeMode, toggleTheme } = useTheme();
   const [aba, setAba] = useState('dashboard');
   const [sidebarAberta, setSidebarAberta] = useState(false);
   const [dashboard, setDashboard] = useState(null);
@@ -117,12 +119,12 @@ export default function DashboardAdmin() {
   });
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#0D1117' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: theme.bg }}>
       {/* Botão Hamburger - Mobile */}
       <button onClick={() => setSidebarAberta(true)} style={{
         position: 'fixed', top: '16px', left: '16px', zIndex: 50,
-        background: '#141920', border: '1px solid #1E2533', borderRadius: '8px',
-        color: '#FFFFFF', padding: '8px', cursor: 'pointer',
+        background: theme.card, border: `1px solid ${theme.border}`, borderRadius: '8px',
+        color: theme.text, padding: '8px', cursor: 'pointer',
         display: 'none'
       }} className="sidebar-toggle">
         <Menu size={20} />
@@ -131,25 +133,25 @@ export default function DashboardAdmin() {
       {/* Overlay mobile */}
       {sidebarAberta && (
         <div onClick={() => setSidebarAberta(false)} style={{
-          position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 40,
+          position: 'fixed', inset: 0, backgroundColor: theme.overlayBg, zIndex: 40,
           display: 'none'
         }} className="sidebar-overlay" />
       )}
 
       {/* Sidebar */}
       <aside className={`sidebar${sidebarAberta ? ' aberta' : ''}`} style={{
-        width: '240px', backgroundColor: '#141920', borderRight: '1px solid #1E2533',
+        width: '240px', backgroundColor: theme.card, borderRight: `1px solid ${theme.border}`,
         padding: '24px 16px', display: 'flex', flexDirection: 'column',
         position: 'relative', zIndex: 45, flexShrink: 0
       }}>
         <img src="/logo-icon.png" alt="Brucker Printers" style={{ width: '48px', height: 'auto', display: 'block', margin: '0 auto 12px' }} />
         <h1 style={{
           fontFamily: "'Barlow Condensed', sans-serif", fontSize: '20px',
-          color: '#FFFFFF', margin: '0 0 8px', textAlign: 'center'
+          color: theme.text, margin: '0 0 8px', textAlign: 'center'
         }}>
-          BRUCKER <span style={{ color: '#E84C1E' }}>PRINTERS</span>
+          BRUCKER <span style={{ color: theme.accent }}>PRINTERS</span>
         </h1>
-        <p style={{ color: '#8A94A6', fontSize: '12px', textAlign: 'center', marginBottom: '32px' }}>
+        <p style={{ color: theme.textSecondary, fontSize: '12px', textAlign: 'center', marginBottom: '32px' }}>
           Painel Administrativo
         </p>
 
@@ -157,8 +159,8 @@ export default function DashboardAdmin() {
           {menuItems.map(item => (
             <button key={item.id} className="sidebar-item" onClick={() => { setAba(item.id); setSidebarAberta(false); }} style={{
               width: '100%', padding: '12px 16px', borderRadius: '8px', border: 'none',
-              backgroundColor: aba === item.id ? 'rgba(232, 76, 30, 0.15)' : 'transparent',
-              color: aba === item.id ? '#E84C1E' : '#8A94A6',
+              backgroundColor: aba === item.id ? theme.accentBg : 'transparent',
+              color: aba === item.id ? theme.accent : theme.textSecondary,
               cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px',
               fontSize: '14px', fontWeight: aba === item.id ? 600 : 400,
               marginBottom: '4px', fontFamily: "'Barlow', sans-serif", textAlign: 'left'
@@ -168,17 +170,25 @@ export default function DashboardAdmin() {
           ))}
         </nav>
 
-        <div style={{ borderTop: '1px solid #1E2533', paddingTop: '16px' }}>
-          <p style={{ color: '#FFFFFF', fontSize: '13px', margin: '0 0 8px' }}>{usuario?.nome}</p>
+        <div style={{ borderTop: `1px solid ${theme.border}`, paddingTop: '16px' }}>
+          <p style={{ color: theme.text, fontSize: '13px', margin: '0 0 8px' }}>{usuario?.nome}</p>
+          <button onClick={toggleTheme} className="btn-ghost" style={{
+            background: 'none', border: 'none', color: theme.textSecondary, cursor: 'pointer',
+            padding: 0, fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px',
+            marginBottom: '8px'
+          }}>
+            {themeMode === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
+            {themeMode === 'dark' ? ' Tema Claro' : ' Tema Escuro'}
+          </button>
           <button onClick={() => setModalSenha(true)} className="btn-ghost" style={{
-            background: 'none', border: 'none', color: '#8A94A6', cursor: 'pointer',
+            background: 'none', border: 'none', color: theme.textSecondary, cursor: 'pointer',
             padding: 0, fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px',
             marginBottom: '8px'
           }}>
             <Lock size={14} /> Alterar Senha
           </button>
           <button onClick={logout} className="btn-ghost" style={{
-            background: 'none', border: 'none', color: '#8A94A6', cursor: 'pointer',
+            background: 'none', border: 'none', color: theme.textSecondary, cursor: 'pointer',
             padding: 0, fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px'
           }}>
             <LogOut size={14} /> Sair

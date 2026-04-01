@@ -1,6 +1,7 @@
 import { PlusCircle, Edit3, Trash2 } from 'lucide-react';
 import api from '../../../lib/api';
 import toast from 'react-hot-toast';
+import { useTheme } from '../../../contexts/ThemeContext';
 
 function formatarTelefone(valor) {
   if (!valor) return '';
@@ -10,16 +11,18 @@ function formatarTelefone(valor) {
   return `(${nums.slice(0, 2)}) ${nums.slice(2, 7)}-${nums.slice(7)}`;
 }
 
-const cardStyle = {
-  backgroundColor: '#141920', borderRadius: '12px', border: '1px solid #1E2533', padding: '24px'
-};
-const btnPrimary = {
-  padding: '10px 20px', backgroundColor: '#E84C1E', color: '#FFFFFF',
-  border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600,
-  cursor: 'pointer', fontFamily: "'Barlow', sans-serif"
-};
-
 export default function TecnicosTab({ tecnicos, setModalTecnico, setModalEditarTecnico, onExcluido }) {
+  const { theme } = useTheme();
+
+  const cardStyle = {
+    backgroundColor: theme.card, borderRadius: '12px', border: `1px solid ${theme.border}`, padding: '24px'
+  };
+  const btnPrimary = {
+    padding: '10px 20px', backgroundColor: theme.accent, color: '#FFFFFF',
+    border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600,
+    cursor: 'pointer', fontFamily: "'Barlow', sans-serif"
+  };
+
   const excluirTecnico = async (tecnico) => {
     if (!confirm(`Excluir o técnico "${tecnico.nome}"?`)) return;
     try {
@@ -33,7 +36,7 @@ export default function TecnicosTab({ tecnicos, setModalTecnico, setModalEditarT
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <h2 style={{ color: '#FFFFFF', fontSize: '24px', margin: 0, fontFamily: "'Barlow Condensed', sans-serif" }}>Técnicos</h2>
+        <h2 style={{ color: theme.text, fontSize: '24px', margin: 0, fontFamily: "'Barlow Condensed', sans-serif" }}>Técnicos</h2>
         <button onClick={() => setModalTecnico(true)} className="btn-primary" style={{ ...btnPrimary, display: 'flex', alignItems: 'center', gap: '6px' }}>
           <PlusCircle size={16} /> Novo Técnico
         </button>
@@ -43,19 +46,19 @@ export default function TecnicosTab({ tecnicos, setModalTecnico, setModalEditarT
           <div key={t.id} className="card-interactive" style={cardStyle}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <p style={{ color: '#FFFFFF', fontWeight: 600, margin: '0 0 4px' }}>{t.nome}</p>
-                <p style={{ color: '#8A94A6', fontSize: '13px', margin: '0 0 2px' }}>{t.email}</p>
-                <p style={{ color: '#8A94A6', fontSize: '13px', margin: 0 }}>{formatarTelefone(t.whatsapp)}</p>
+                <p style={{ color: theme.text, fontWeight: 600, margin: '0 0 4px' }}>{t.nome}</p>
+                <p style={{ color: theme.textSecondary, fontSize: '13px', margin: '0 0 2px' }}>{t.email}</p>
+                <p style={{ color: theme.textSecondary, fontSize: '13px', margin: 0 }}>{formatarTelefone(t.whatsapp)}</p>
               </div>
               <span style={{
                 padding: '4px 12px', borderRadius: '20px', fontSize: '12px',
                 backgroundColor: t.ativo ? 'rgba(61, 158, 107, 0.15)' : 'rgba(138, 148, 166, 0.15)',
-                color: t.ativo ? '#3D9E6B' : '#8A94A6'
+                color: t.ativo ? '#3D9E6B' : theme.textSecondary
               }}>
                 {t.ativo ? 'Ativo' : 'Inativo'}
               </span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #1E2533' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px', marginTop: '12px', paddingTop: '12px', borderTop: `1px solid ${theme.border}` }}>
               <button onClick={() => setModalEditarTecnico(t)} className="btn-secondary" style={{
                 padding: '6px 12px', backgroundColor: 'rgba(77, 142, 245, 0.15)', border: 'none',
                 borderRadius: '6px', color: '#4D8EF5', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px',
@@ -64,8 +67,8 @@ export default function TecnicosTab({ tecnicos, setModalTecnico, setModalEditarT
                 <Edit3 size={12} /> Editar
               </button>
               <button onClick={() => excluirTecnico(t)} className="btn-secondary" style={{
-                padding: '6px 12px', backgroundColor: 'rgba(232, 76, 30, 0.15)', border: 'none',
-                borderRadius: '6px', color: '#E84C1E', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px',
+                padding: '6px 12px', backgroundColor: theme.accentBg, border: 'none',
+                borderRadius: '6px', color: theme.accent, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px',
                 fontFamily: "'Barlow', sans-serif"
               }}>
                 <Trash2 size={12} /> Excluir

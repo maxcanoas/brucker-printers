@@ -1,6 +1,7 @@
+import { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { colors } from '../lib/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function EmptyState({
   icon = 'inbox',
@@ -9,6 +10,9 @@ export default function EmptyState({
   actionLabel,
   onAction,
 }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <View style={styles.container}>
       <View style={styles.iconWrapper}>
@@ -25,7 +29,7 @@ export default function EmptyState({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: {
     padding: 48,
     alignItems: 'center',

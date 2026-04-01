@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl,
   Alert, TextInput, Modal, ScrollView, ActivityIndicator, Clipboard, Platform,
@@ -9,7 +9,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import api from '../lib/api';
 import { Feather } from '@expo/vector-icons';
-import { colors, statusColors, statusLabels, urgenciaColors } from '../lib/theme';
+import { useTheme } from '../contexts/ThemeContext';
+import { statusColors, statusLabels, urgenciaColors } from '../lib/theme';
 import DatePicker from '../components/DatePicker';
 
 function formatarTelefone(valor) {
@@ -32,10 +33,12 @@ const TABS = [
 ];
 
 export default function AdminHomeScreen() {
+  const { colors } = useTheme();
   const [aba, setAba] = useState('dashboard');
   const [admin, setAdmin] = useState(null);
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   useEffect(() => {
     AsyncStorage.getItem('admin').then(d => { if (d) setAdmin(JSON.parse(d)); });
@@ -91,6 +94,8 @@ export default function AdminHomeScreen() {
 // TAB: DASHBOARD
 // ═══════════════════════════════════════════
 function DashboardTab({ router }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [dashboard, setDashboard] = useState(null);
   const [chamados, setChamados] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -155,6 +160,8 @@ function DashboardTab({ router }) {
 // TAB: CHAMADOS
 // ═══════════════════════════════════════════
 function ChamadosTab({ router }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [chamados, setChamados] = useState([]);
   const [filtro, setFiltro] = useState('');
   const [refreshing, setRefreshing] = useState(false);
@@ -205,6 +212,8 @@ function ChamadosTab({ router }) {
 // TAB: CLIENTES
 // ═══════════════════════════════════════════
 function ClientesTab() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [clientes, setClientes] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [modalNovo, setModalNovo] = useState(false);
@@ -299,6 +308,8 @@ function ClientesTab() {
 // TAB: IMPRESSORAS
 // ═══════════════════════════════════════════
 function ImpressorasTab() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [impressoras, setImpressoras] = useState([]);
   const [clientes, setClientes] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -396,6 +407,8 @@ function ImpressorasTab() {
 // TAB: TÉCNICOS
 // ═══════════════════════════════════════════
 function TecnicosTab() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [tecnicos, setTecnicos] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [modalNovo, setModalNovo] = useState(false);
@@ -482,6 +495,8 @@ function TecnicosTab() {
 // TAB: RELATÓRIOS
 // ═══════════════════════════════════════════
 function RelatoriosTab() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [tipo, setTipo] = useState('periodo');
   const [inicio, setInicio] = useState(null);
   const [fim, setFim] = useState(null);
@@ -661,6 +676,8 @@ function RelatoriosTab() {
 // TAB: AVALIAÇÕES
 // ═══════════════════════════════════════════
 function AvaliacoesTab() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [avaliacoes, setAvaliacoes] = useState([]);
   const [stats, setStats] = useState({ total: 0, media: '0', distribuicao: [] });
   const [tecnicos, setTecnicos] = useState([]);
@@ -900,6 +917,8 @@ function AvaliacoesTab() {
 // SHARED: Chamado Card
 // ═══════════════════════════════════════════
 function ChamadoCard({ item, onPress }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const getSlaInfo = (chamado) => {
     if (!chamado.sla_vence_em || ['concluido', 'cancelado'].includes(chamado.status)) return null;
     if (chamado.sla_pausado_em) return { text: 'SLA pausado', color: colors.yellow };
@@ -951,6 +970,7 @@ function ChamadoCard({ item, onPress }) {
 // SHARED: Empty State
 // ═══════════════════════════════════════════
 function EmptyState({ text }) {
+  const { colors } = useTheme();
   return (
     <View style={{ padding: 40, alignItems: 'center' }}>
       <Text style={{ color: colors.textSecondary, fontSize: 15 }}>{text}</Text>
@@ -962,6 +982,8 @@ function EmptyState({ text }) {
 // MODAL: Novo Cliente
 // ═══════════════════════════════════════════
 function ModalNovoCliente({ visible, onClose, onCriado }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [form, setForm] = useState({ nome: '', email: '', telefone: '' });
   const [salvando, setSalvando] = useState(false);
   const [clienteCriado, setClienteCriado] = useState(null);
@@ -1053,6 +1075,8 @@ function ModalNovoCliente({ visible, onClose, onCriado }) {
 // MODAL: Editar Cliente
 // ═══════════════════════════════════════════
 function ModalEditarCliente({ cliente, onClose, onAtualizado }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [form, setForm] = useState({ nome: '', email: '', telefone: '' });
   const [salvando, setSalvando] = useState(false);
 
@@ -1104,6 +1128,8 @@ function ModalEditarCliente({ cliente, onClose, onAtualizado }) {
 // MODAL: Detalhe Cliente
 // ═══════════════════════════════════════════
 function ModalDetalheCliente({ cliente, onClose, onAtualizado }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [detalhes, setDetalhes] = useState(null);
   const [chamados, setChamados] = useState([]);
   const [gerandoCodigo, setGerandoCodigo] = useState(false);
@@ -1234,6 +1260,8 @@ function ModalDetalheCliente({ cliente, onClose, onAtualizado }) {
 // MODAL: Nova Impressora
 // ═══════════════════════════════════════════
 function ModalNovaImpressora({ visible, clientes, onClose, onCriada }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [form, setForm] = useState({ cliente_id: '', modelo: '', numero_serie: '', tipo_contrato: 'locacao' });
   const [salvando, setSalvando] = useState(false);
   const [showClientes, setShowClientes] = useState(false);
@@ -1319,6 +1347,8 @@ function ModalNovaImpressora({ visible, clientes, onClose, onCriada }) {
 // MODAL: Novo Técnico
 // ═══════════════════════════════════════════
 function ModalNovoTecnico({ visible, onClose, onCriado }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [form, setForm] = useState({ nome: '', email: '', senha: '', whatsapp: '' });
   const [salvando, setSalvando] = useState(false);
 
@@ -1370,6 +1400,8 @@ function ModalNovoTecnico({ visible, onClose, onCriado }) {
 // MODAL: Editar Técnico
 // ═══════════════════════════════════════════
 function ModalEditarTecnico({ tecnico, onClose, onAtualizado }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [form, setForm] = useState({ nome: '', whatsapp: '', ativo: true });
   const [salvando, setSalvando] = useState(false);
 
@@ -1434,6 +1466,7 @@ function ModalEditarTecnico({ tecnico, onClose, onAtualizado }) {
 // SHARED: InfoRow
 // ═══════════════════════════════════════════
 function InfoRow({ label, value }) {
+  const { colors } = useTheme();
   return (
     <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: colors.border }}>
       <Text style={{ color: colors.textSecondary, fontSize: 13 }}>{label}</Text>
@@ -1445,7 +1478,7 @@ function InfoRow({ label, value }) {
 // ═══════════════════════════════════════════
 // STYLES
 // ═══════════════════════════════════════════
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   header: {
     backgroundColor: colors.card, padding: 20, paddingTop: 60,

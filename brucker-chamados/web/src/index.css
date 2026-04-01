@@ -1,5 +1,37 @@
 @import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&display=swap');
 
+[data-theme="dark"] {
+  --bg: #0D1117;
+  --card: #141920;
+  --border: #1E2533;
+  --text: #FFFFFF;
+  --text-secondary: #8A94A6;
+  --accent: #E84C1E;
+  --accent-hover: #D4410F;
+  --hover-bg: rgba(255, 255, 255, 0.05);
+  --skeleton-1: #1E2533;
+  --skeleton-2: #2A3345;
+  --scroll-track: #0D1117;
+  --scroll-thumb: #1E2533;
+  --scroll-thumb-hover: #2A3345;
+}
+
+[data-theme="light"] {
+  --bg: #F5F6F8;
+  --card: #FFFFFF;
+  --border: #E2E5EA;
+  --text: #1A1D24;
+  --text-secondary: #6B7280;
+  --accent: #E84C1E;
+  --accent-hover: #D4410F;
+  --hover-bg: rgba(0, 0, 0, 0.04);
+  --skeleton-1: #E2E5EA;
+  --skeleton-2: #F0F1F3;
+  --scroll-track: #F5F6F8;
+  --scroll-thumb: #CDD1D8;
+  --scroll-thumb-hover: #B0B6C0;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -8,8 +40,8 @@
 
 body {
   font-family: 'Barlow', sans-serif;
-  background-color: #0D1117;
-  color: #FFFFFF;
+  background-color: var(--bg);
+  color: var(--text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -19,12 +51,12 @@ input, select, textarea, button {
 }
 
 input::placeholder, textarea::placeholder {
-  color: #8A94A6;
+  color: var(--text-secondary);
 }
 
 select option {
-  background-color: #141920;
-  color: #FFFFFF;
+  background-color: var(--card);
+  color: var(--text);
 }
 
 ::-webkit-scrollbar {
@@ -32,20 +64,20 @@ select option {
 }
 
 ::-webkit-scrollbar-track {
-  background: #0D1117;
+  background: var(--scroll-track);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1E2533;
+  background: var(--scroll-thumb);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #2A3345;
+  background: var(--scroll-thumb-hover);
 }
 
 a {
-  color: #E84C1E;
+  color: var(--accent);
   text-decoration: none;
 }
 
@@ -53,7 +85,7 @@ a:hover {
   text-decoration: underline;
 }
 
-/* Animação de loading */
+/* Animacao de loading */
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
@@ -66,19 +98,19 @@ a:hover {
 }
 
 .skeleton {
-  background: linear-gradient(90deg, #1E2533 25%, #2A3345 50%, #1E2533 75%);
+  background: linear-gradient(90deg, var(--skeleton-1) 25%, var(--skeleton-2) 50%, var(--skeleton-1) 75%);
   background-size: 200px 100%;
   animation: shimmer 1.5s ease-in-out infinite;
   border-radius: 8px;
 }
 
-/* Botões - hover e transições */
+/* Botoes - hover e transicoes */
 .btn-primary {
   transition: background-color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
 }
 
 .btn-primary:hover {
-  background-color: #D4410F !important;
+  background-color: var(--accent-hover) !important;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(232, 76, 30, 0.25);
 }
@@ -93,8 +125,8 @@ a:hover {
 }
 
 .btn-secondary:hover {
-  background-color: rgba(255, 255, 255, 0.05) !important;
-  border-color: #8A94A6 !important;
+  background-color: var(--hover-bg) !important;
+  border-color: var(--text-secondary) !important;
 }
 
 .btn-ghost {
@@ -102,8 +134,8 @@ a:hover {
 }
 
 .btn-ghost:hover {
-  color: #FFFFFF !important;
-  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--text) !important;
+  background-color: var(--hover-bg);
 }
 
 /* Cards interativos */
@@ -112,7 +144,7 @@ a:hover {
 }
 
 .card-interactive:hover {
-  border-color: #E84C1E !important;
+  border-color: var(--accent) !important;
   box-shadow: 0 4px 24px rgba(232, 76, 30, 0.08);
   transform: translateY(-1px);
 }
@@ -130,7 +162,7 @@ a:hover {
   background-color: rgba(232, 76, 30, 0.04) !important;
 }
 
-/* Modal animação */
+/* Modal animacao */
 @keyframes modalIn {
   from { opacity: 0; transform: scale(0.96) translateY(8px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
@@ -156,8 +188,8 @@ a:hover {
 }
 
 .btn-close:hover {
-  color: #FFFFFF !important;
-  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--text) !important;
+  background-color: var(--hover-bg);
 }
 
 /* Sidebar menu item hover */

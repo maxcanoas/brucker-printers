@@ -1,10 +1,13 @@
 import { AlertTriangle, UserCog, Wrench, Clock, CheckCircle } from 'lucide-react';
-
-const cardStyle = {
-  backgroundColor: '#141920', borderRadius: '12px', border: '1px solid #1E2533', padding: '24px'
-};
+import { useTheme } from '../../../contexts/ThemeContext';
 
 export default function DashboardTab({ dashboard }) {
+  const { theme } = useTheme();
+
+  const cardStyle = {
+    backgroundColor: theme.card, borderRadius: '12px', border: `1px solid ${theme.border}`, padding: '24px'
+  };
+
   const contadores = [
     { label: 'Abertos', valor: dashboard?.abertos || 0, icon: AlertTriangle, color: '#4D8EF5' },
     { label: 'Atribuídos', valor: dashboard?.atribuidos || 0, icon: UserCog, color: '#9B59B6' },
@@ -15,7 +18,7 @@ export default function DashboardTab({ dashboard }) {
 
   return (
     <div>
-      <h2 style={{ color: '#FFFFFF', fontSize: '24px', marginBottom: '24px', fontFamily: "'Barlow Condensed', sans-serif" }}>
+      <h2 style={{ color: theme.text, fontSize: '24px', marginBottom: '24px', fontFamily: "'Barlow Condensed', sans-serif" }}>
         Dashboard
       </h2>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '24px' }}>
@@ -30,8 +33,8 @@ export default function DashboardTab({ dashboard }) {
                 <c.icon size={24} color={c.color} />
               </div>
               <div>
-                <p style={{ color: '#8A94A6', fontSize: '13px', margin: 0 }}>{c.label}</p>
-                <p style={{ color: '#FFFFFF', fontSize: '28px', fontWeight: 700, margin: 0 }}>{c.valor}</p>
+                <p style={{ color: theme.textSecondary, fontSize: '13px', margin: 0 }}>{c.label}</p>
+                <p style={{ color: theme.text, fontSize: '28px', fontWeight: 700, margin: 0 }}>{c.valor}</p>
               </div>
             </div>
           </div>
@@ -48,7 +51,7 @@ export default function DashboardTab({ dashboard }) {
             <p style={{ color: '#E84C1E', fontWeight: 600, margin: 0 }}>
               {dashboard.sla_vencido} chamado(s) com SLA vencido!
             </p>
-            <p style={{ color: '#8A94A6', fontSize: '13px', margin: '4px 0 0' }}>
+            <p style={{ color: theme.textSecondary, fontSize: '13px', margin: '4px 0 0' }}>
               Verifique os chamados pendentes imediatamente.
             </p>
           </div>

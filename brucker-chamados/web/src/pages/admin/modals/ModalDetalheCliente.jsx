@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Modal } from '../../../components/Modal';
 import { StatusBadge, UrgenciaBadge } from '../../../components/StatusBadge';
+import { useTheme } from '../../../contexts/ThemeContext';
 import api from '../../../lib/api';
 import toast from 'react-hot-toast';
 import { Printer, FileText, Copy, RefreshCw } from 'lucide-react';
@@ -14,6 +15,7 @@ function formatarTelefone(valor) {
 }
 
 export default function ModalDetalheCliente({ cliente, onClose, onAtualizado }) {
+  const { theme } = useTheme();
   const [detalhes, setDetalhes] = useState(null);
   const [chamados, setChamados] = useState([]);
   const [gerandoCodigo, setGerandoCodigo] = useState(false);
@@ -67,19 +69,19 @@ export default function ModalDetalheCliente({ cliente, onClose, onAtualizado }) 
         <div>
           {/* Código de Acesso - Destaque */}
           <div style={{
-            padding: '20px', backgroundColor: '#0D1117', borderRadius: '12px',
-            border: '2px solid #E84C1E', marginBottom: '24px', textAlign: 'center'
+            padding: '20px', backgroundColor: theme.bg, borderRadius: '12px',
+            border: `2px solid ${theme.accent}`, marginBottom: '24px', textAlign: 'center'
           }}>
-            <p style={{ color: '#8A94A6', fontSize: '12px', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+            <p style={{ color: theme.textSecondary, fontSize: '12px', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
               Código de Acesso do Cliente
             </p>
             <p style={{
-              color: '#E84C1E', fontSize: '28px', fontWeight: 700, margin: '0 0 16px',
+              color: theme.accent, fontSize: '28px', fontWeight: 700, margin: '0 0 16px',
               fontFamily: 'monospace', letterSpacing: '2px'
             }}>
               {codigoAtual}
             </p>
-            <p style={{ color: '#8A94A6', fontSize: '12px', margin: '0 0 16px' }}>
+            <p style={{ color: theme.textSecondary, fontSize: '12px', margin: '0 0 16px' }}>
               O cliente usa este código para fazer login e abrir chamados
             </p>
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
@@ -107,44 +109,44 @@ export default function ModalDetalheCliente({ cliente, onClose, onAtualizado }) 
           {/* Dados do Cliente */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
             <div>
-              <p style={{ color: '#8A94A6', fontSize: '12px', margin: '0 0 4px' }}>Nome</p>
-              <p style={{ color: '#FFFFFF', margin: 0, fontWeight: 600 }}>{cliente.nome}</p>
+              <p style={{ color: theme.textSecondary, fontSize: '12px', margin: '0 0 4px' }}>Nome</p>
+              <p style={{ color: theme.text, margin: 0, fontWeight: 600 }}>{cliente.nome}</p>
             </div>
             <div>
-              <p style={{ color: '#8A94A6', fontSize: '12px', margin: '0 0 4px' }}>Cadastrado em</p>
-              <p style={{ color: '#FFFFFF', margin: 0 }}>{new Date(cliente.criado_em).toLocaleDateString('pt-BR')}</p>
+              <p style={{ color: theme.textSecondary, fontSize: '12px', margin: '0 0 4px' }}>Cadastrado em</p>
+              <p style={{ color: theme.text, margin: 0 }}>{new Date(cliente.criado_em).toLocaleDateString('pt-BR')}</p>
             </div>
             <div>
-              <p style={{ color: '#8A94A6', fontSize: '12px', margin: '0 0 4px' }}>E-mail</p>
-              <p style={{ color: '#FFFFFF', margin: 0 }}>{cliente.email || 'Não informado'}</p>
+              <p style={{ color: theme.textSecondary, fontSize: '12px', margin: '0 0 4px' }}>E-mail</p>
+              <p style={{ color: theme.text, margin: 0 }}>{cliente.email || 'Não informado'}</p>
             </div>
             <div>
-              <p style={{ color: '#8A94A6', fontSize: '12px', margin: '0 0 4px' }}>Telefone</p>
-              <p style={{ color: '#FFFFFF', margin: 0 }}>{cliente.telefone ? formatarTelefone(cliente.telefone) : 'Não informado'}</p>
+              <p style={{ color: theme.textSecondary, fontSize: '12px', margin: '0 0 4px' }}>Telefone</p>
+              <p style={{ color: theme.text, margin: 0 }}>{cliente.telefone ? formatarTelefone(cliente.telefone) : 'Não informado'}</p>
             </div>
           </div>
 
           {/* Impressoras do Cliente */}
           <div style={{ marginBottom: '24px' }}>
-            <h3 style={{ color: '#FFFFFF', fontSize: '16px', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Printer size={18} color="#E84C1E" /> Impressoras ({detalhes?.impressoras?.length || 0})
+            <h3 style={{ color: theme.text, fontSize: '16px', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Printer size={18} color={theme.accent} /> Impressoras ({detalhes?.impressoras?.length || 0})
             </h3>
             {detalhes?.impressoras?.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {detalhes.impressoras.map(imp => (
                   <div key={imp.id} style={{
-                    padding: '12px 16px', backgroundColor: '#0D1117', borderRadius: '8px',
+                    padding: '12px 16px', backgroundColor: theme.bg, borderRadius: '8px',
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                   }}>
                     <div>
-                      <p style={{ color: '#FFFFFF', margin: 0, fontWeight: 500 }}>{imp.modelo}</p>
-                      <p style={{ color: '#8A94A6', fontSize: '12px', margin: '2px 0 0' }}>S/N: {imp.numero_serie}</p>
+                      <p style={{ color: theme.text, margin: 0, fontWeight: 500 }}>{imp.modelo}</p>
+                      <p style={{ color: theme.textSecondary, fontSize: '12px', margin: '2px 0 0' }}>S/N: {imp.numero_serie}</p>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <span style={{
                         padding: '3px 10px', borderRadius: '4px', fontSize: '11px',
                         backgroundColor: imp.ativo ? 'rgba(61,158,107,0.15)' : 'rgba(138,148,166,0.15)',
-                        color: imp.ativo ? '#3D9E6B' : '#8A94A6'
+                        color: imp.ativo ? '#3D9E6B' : theme.textSecondary
                       }}>
                         {imp.ativo ? 'Ativa' : 'Inativa'}
                       </span>
@@ -159,40 +161,40 @@ export default function ModalDetalheCliente({ cliente, onClose, onAtualizado }) 
                 ))}
               </div>
             ) : (
-              <p style={{ color: '#8A94A6', fontSize: '13px', fontStyle: 'italic' }}>Nenhuma impressora cadastrada</p>
+              <p style={{ color: theme.textSecondary, fontSize: '13px', fontStyle: 'italic' }}>Nenhuma impressora cadastrada</p>
             )}
           </div>
 
           {/* Chamados Recentes */}
           <div>
-            <h3 style={{ color: '#FFFFFF', fontSize: '16px', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <FileText size={18} color="#E84C1E" /> Chamados Recentes ({chamados.length})
+            <h3 style={{ color: theme.text, fontSize: '16px', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <FileText size={18} color={theme.accent} /> Chamados Recentes ({chamados.length})
             </h3>
             {chamados.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {chamados.slice(0, 5).map(ch => (
                   <div key={ch.id} style={{
-                    padding: '12px 16px', backgroundColor: '#0D1117', borderRadius: '8px',
+                    padding: '12px 16px', backgroundColor: theme.bg, borderRadius: '8px',
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ color: '#FFFFFF', fontWeight: 600, fontSize: '13px' }}>#{ch.numero}</span>
+                      <span style={{ color: theme.text, fontWeight: 600, fontSize: '13px' }}>#{ch.numero}</span>
                       <StatusBadge status={ch.status} />
                       <UrgenciaBadge urgencia={ch.urgencia} />
                     </div>
-                    <span style={{ color: '#8A94A6', fontSize: '12px' }}>
+                    <span style={{ color: theme.textSecondary, fontSize: '12px' }}>
                       {new Date(ch.criado_em).toLocaleDateString('pt-BR')}
                     </span>
                   </div>
                 ))}
                 {chamados.length > 5 && (
-                  <p style={{ color: '#8A94A6', fontSize: '12px', textAlign: 'center', margin: '8px 0 0' }}>
+                  <p style={{ color: theme.textSecondary, fontSize: '12px', textAlign: 'center', margin: '8px 0 0' }}>
                     + {chamados.length - 5} chamado(s) anteriores
                   </p>
                 )}
               </div>
             ) : (
-              <p style={{ color: '#8A94A6', fontSize: '13px', fontStyle: 'italic' }}>Nenhum chamado aberto</p>
+              <p style={{ color: theme.textSecondary, fontSize: '13px', fontStyle: 'italic' }}>Nenhum chamado aberto</p>
             )}
           </div>
         </div>

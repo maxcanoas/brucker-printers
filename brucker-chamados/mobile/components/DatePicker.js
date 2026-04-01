@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { View, Text, TouchableOpacity, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Feather } from '@expo/vector-icons';
-import { colors } from '../lib/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function DatePicker({ label, value, onChange, placeholder }) {
+  const { colors } = useTheme();
   const [show, setShow] = useState(false);
 
   const handleChange = (event, selectedDate) => {

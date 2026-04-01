@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import { useRealtimeChamados } from '../../hooks/useRealtime';
 import api from '../../lib/api';
 import { StatusBadge, UrgenciaBadge } from '../../components/StatusBadge';
@@ -9,37 +10,38 @@ import { LoadingButton } from '../../components/LoadingButton';
 import toast from 'react-hot-toast';
 import {
   FileText, Printer, PlusCircle, LogOut, Clock, CheckCircle,
-  AlertCircle, Wrench, LayoutDashboard, Star, XCircle
+  AlertCircle, Wrench, LayoutDashboard, Star, XCircle, Sun, Moon
 } from 'lucide-react';
-
-const containerStyle = { minHeight: '100vh', backgroundColor: '#0D1117' };
-const headerStyle = {
-  backgroundColor: '#141920', borderBottom: '1px solid #1E2533',
-  padding: '16px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-};
-const cardStyle = {
-  backgroundColor: '#141920', borderRadius: '12px', border: '1px solid #1E2533', padding: '24px'
-};
-const inputStyle = {
-  width: '100%', padding: '12px 14px', backgroundColor: '#0D1117',
-  border: '1px solid #1E2533', borderRadius: '8px', color: '#FFFFFF',
-  fontSize: '14px', outline: 'none', boxSizing: 'border-box',
-  fontFamily: "'Barlow', sans-serif"
-};
-const btnPrimary = {
-  padding: '12px 24px', backgroundColor: '#E84C1E', color: '#FFFFFF',
-  border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600,
-  cursor: 'pointer', fontFamily: "'Barlow', sans-serif"
-};
 
 export default function DashboardCliente() {
   const { usuario, logout } = useAuth();
+  const { theme, themeMode, toggleTheme } = useTheme();
   const [dashboard, setDashboard] = useState(null);
   const [chamados, setChamados] = useState([]);
   const [impressoras, setImpressoras] = useState([]);
   const [aba, setAba] = useState('dashboard');
   const [modalAbrir, setModalAbrir] = useState(false);
   const [modalDetalhe, setModalDetalhe] = useState(null);
+
+  const containerStyle = { minHeight: '100vh', backgroundColor: theme.bg };
+  const headerStyle = {
+    backgroundColor: theme.card, borderBottom: `1px solid ${theme.border}`,
+    padding: '16px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+  };
+  const cardStyle = {
+    backgroundColor: theme.card, borderRadius: '12px', border: `1px solid ${theme.border}`, padding: '24px'
+  };
+  const inputStyle = {
+    width: '100%', padding: '12px 14px', backgroundColor: theme.inputBg,
+    border: `1px solid ${theme.border}`, borderRadius: '8px', color: theme.text,
+    fontSize: '14px', outline: 'none', boxSizing: 'border-box',
+    fontFamily: "'Barlow', sans-serif"
+  };
+  const btnPrimary = {
+    padding: '12px 24px', backgroundColor: theme.accent, color: '#FFFFFF',
+    border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600,
+    cursor: 'pointer', fontFamily: "'Barlow', sans-serif"
+  };
 
   const carregarDados = useCallback(async () => {
     try {
@@ -74,19 +76,28 @@ export default function DashboardCliente() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <img src="/logo-icon.png" alt="Brucker Printers" style={{ width: '32px', height: 'auto' }} />
           <div>
-          <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '20px', color: '#FFFFFF', margin: 0 }}>
-            BRUCKER <span style={{ color: '#E84C1E' }}>PRINTERS</span>
+          <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '20px', color: theme.text, margin: 0 }}>
+            BRUCKER <span style={{ color: theme.accent }}>PRINTERS</span>
           </h1>
-          <p style={{ color: '#8A94A6', fontSize: '13px', margin: 0 }}>Olá, {usuario?.nome}</p>
+          <p style={{ color: theme.textSecondary, fontSize: '13px', margin: 0 }}>Olá, {usuario?.nome}</p>
         </div>
         </div>
-        <button className="btn-secondary" onClick={logout} style={{
-          background: 'none', border: '1px solid #1E2533', borderRadius: '8px',
-          color: '#8A94A6', padding: '8px 16px', cursor: 'pointer',
-          display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px'
-        }}>
-          <LogOut size={16} /> Sair
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button onClick={toggleTheme} style={{
+            background: 'none', border: `1px solid ${theme.border}`, borderRadius: '8px',
+            color: theme.textSecondary, padding: '8px', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }} title={themeMode === 'dark' ? 'Tema claro' : 'Tema escuro'}>
+            {themeMode === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
+          <button className="btn-secondary" onClick={logout} style={{
+            background: 'none', border: `1px solid ${theme.border}`, borderRadius: '8px',
+            color: theme.textSecondary, padding: '8px 16px', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px'
+          }}>
+            <LogOut size={16} /> Sair
+          </button>
+        </div>
       </header>
 
       <div style={{ padding: '32px', maxWidth: '1200px', margin: '0 auto' }}>
@@ -99,8 +110,8 @@ export default function DashboardCliente() {
           ].map(tab => (
             <button key={tab.id} onClick={() => setAba(tab.id)} style={{
               padding: '10px 20px', borderRadius: '8px', border: 'none',
-              backgroundColor: aba === tab.id ? '#E84C1E' : '#141920',
-              color: aba === tab.id ? '#FFFFFF' : '#8A94A6',
+              backgroundColor: aba === tab.id ? theme.accent : theme.card,
+              color: aba === tab.id ? '#FFFFFF' : theme.textSecondary,
               cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
               fontSize: '14px', fontWeight: 500, fontFamily: "'Barlow', sans-serif"
             }}>
@@ -129,8 +140,8 @@ export default function DashboardCliente() {
                     <c.icon size={24} color={c.color} />
                   </div>
                   <div>
-                    <p style={{ color: '#8A94A6', fontSize: '13px', margin: 0 }}>{c.label}</p>
-                    <p style={{ color: '#FFFFFF', fontSize: '28px', fontWeight: 700, margin: 0 }}>{c.valor}</p>
+                    <p style={{ color: theme.textSecondary, fontSize: '13px', margin: 0 }}>{c.label}</p>
+                    <p style={{ color: theme.text, fontSize: '28px', fontWeight: 700, margin: 0 }}>{c.valor}</p>
                   </div>
                 </div>
               </div>
@@ -142,7 +153,7 @@ export default function DashboardCliente() {
         {aba === 'chamados' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {chamados.length === 0 ? (
-              <div style={{ ...cardStyle, textAlign: 'center', color: '#8A94A6', padding: '48px' }}>
+              <div style={{ ...cardStyle, textAlign: 'center', color: theme.textSecondary, padding: '48px' }}>
                 Nenhum chamado encontrado
               </div>
             ) : chamados.map(chamado => (
@@ -151,17 +162,17 @@ export default function DashboardCliente() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                      <span style={{ color: '#FFFFFF', fontWeight: 600, fontSize: '16px' }}>
+                      <span style={{ color: theme.text, fontWeight: 600, fontSize: '16px' }}>
                         #{chamado.numero}
                       </span>
                       <StatusBadge status={chamado.status} />
                       <UrgenciaBadge urgencia={chamado.urgencia} />
                     </div>
-                    <p style={{ color: '#8A94A6', fontSize: '14px', margin: '4px 0' }}>
+                    <p style={{ color: theme.textSecondary, fontSize: '14px', margin: '4px 0' }}>
                       {chamado.descricao?.substring(0, 100)}{chamado.descricao?.length > 100 ? '...' : ''}
                     </p>
                     {chamado.impressoras && (
-                      <p style={{ color: '#8A94A6', fontSize: '12px', margin: '4px 0' }}>
+                      <p style={{ color: theme.textSecondary, fontSize: '12px', margin: '4px 0' }}>
                         <Printer size={12} style={{ marginRight: '4px' }} />
                         {chamado.impressoras.modelo} — {chamado.impressoras.numero_serie}
                       </p>
@@ -174,7 +185,7 @@ export default function DashboardCliente() {
                       status={chamado.status}
                       slaTempoRestanteMinutos={chamado.sla_tempo_restante_minutos}
                     />
-                    <p style={{ color: '#8A94A6', fontSize: '12px', marginTop: '4px' }}>
+                    <p style={{ color: theme.textSecondary, fontSize: '12px', marginTop: '4px' }}>
                       {new Date(chamado.criado_em).toLocaleDateString('pt-BR')}
                     </p>
                   </div>
@@ -190,10 +201,10 @@ export default function DashboardCliente() {
             {impressoras.map(imp => (
               <div key={imp.id} style={cardStyle}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                  <Printer size={24} color="#E84C1E" />
+                  <Printer size={24} color={theme.accent} />
                   <div>
-                    <p style={{ color: '#FFFFFF', fontWeight: 600, margin: 0 }}>{imp.modelo}</p>
-                    <p style={{ color: '#8A94A6', fontSize: '13px', margin: 0 }}>S/N: {imp.numero_serie}</p>
+                    <p style={{ color: theme.text, fontWeight: 600, margin: 0 }}>{imp.modelo}</p>
+                    <p style={{ color: theme.textSecondary, fontSize: '13px', margin: 0 }}>S/N: {imp.numero_serie}</p>
                   </div>
                 </div>
                 <span style={{
@@ -214,6 +225,9 @@ export default function DashboardCliente() {
         onClose={() => setModalAbrir(false)}
         impressoras={impressoras}
         onCriado={() => { setModalAbrir(false); carregarDados(); }}
+        theme={theme}
+        inputStyle={inputStyle}
+        btnPrimary={btnPrimary}
       />
 
       {/* Modal Detalhe Chamado */}
@@ -221,12 +235,15 @@ export default function DashboardCliente() {
         chamado={modalDetalhe}
         onClose={() => setModalDetalhe(null)}
         onAtualizado={carregarDados}
+        theme={theme}
+        inputStyle={inputStyle}
+        btnPrimary={btnPrimary}
       />
     </div>
   );
 }
 
-function ModalAbrirChamado({ isOpen, onClose, impressoras, onCriado }) {
+function ModalAbrirChamado({ isOpen, onClose, impressoras, onCriado, theme, inputStyle, btnPrimary }) {
   const [form, setForm] = useState({
     numero_serie: '', impressora_id: '', modelo: '',
     tipo: 'corretivo', urgencia: 'normal', descricao: ''
@@ -273,7 +290,7 @@ function ModalAbrirChamado({ isOpen, onClose, impressoras, onCriado }) {
     <Modal isOpen={isOpen} onClose={onClose} title="Abrir Novo Chamado">
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: '16px' }}>
-          <label style={{ color: '#8A94A6', fontSize: '13px', display: 'block', marginBottom: '6px' }}>
+          <label style={{ color: theme.textSecondary, fontSize: '13px', display: 'block', marginBottom: '6px' }}>
             Número de Série da Impressora
           </label>
           <input
@@ -296,7 +313,7 @@ function ModalAbrirChamado({ isOpen, onClose, impressoras, onCriado }) {
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
           <div>
-            <label style={{ color: '#8A94A6', fontSize: '13px', display: 'block', marginBottom: '6px' }}>Tipo</label>
+            <label style={{ color: theme.textSecondary, fontSize: '13px', display: 'block', marginBottom: '6px' }}>Tipo</label>
             <select value={form.tipo} onChange={(e) => setForm(f => ({ ...f, tipo: e.target.value }))}
               style={{ ...inputStyle, cursor: 'pointer' }}>
               <option value="corretivo">Corretivo</option>
@@ -304,7 +321,7 @@ function ModalAbrirChamado({ isOpen, onClose, impressoras, onCriado }) {
             </select>
           </div>
           <div>
-            <label style={{ color: '#8A94A6', fontSize: '13px', display: 'block', marginBottom: '6px' }}>Urgência</label>
+            <label style={{ color: theme.textSecondary, fontSize: '13px', display: 'block', marginBottom: '6px' }}>Urgência</label>
             <select value={form.urgencia} onChange={(e) => setForm(f => ({ ...f, urgencia: e.target.value }))}
               style={{ ...inputStyle, cursor: 'pointer' }}>
               <option value="normal">Normal</option>
@@ -314,12 +331,12 @@ function ModalAbrirChamado({ isOpen, onClose, impressoras, onCriado }) {
           </div>
         </div>
 
-        <p style={{ color: '#8A94A6', fontSize: '12px', margin: '-8px 0 16px', textAlign: 'right' }}>
+        <p style={{ color: theme.textSecondary, fontSize: '12px', margin: '-8px 0 16px', textAlign: 'right' }}>
           SLA: 24 horas úteis
         </p>
 
         <div style={{ marginBottom: '24px' }}>
-          <label style={{ color: '#8A94A6', fontSize: '13px', display: 'block', marginBottom: '6px' }}>
+          <label style={{ color: theme.textSecondary, fontSize: '13px', display: 'block', marginBottom: '6px' }}>
             Descrição do Problema *
           </label>
           <textarea
@@ -341,7 +358,7 @@ function ModalAbrirChamado({ isOpen, onClose, impressoras, onCriado }) {
   );
 }
 
-function ModalDetalheChamado({ chamado, onClose, onAtualizado }) {
+function ModalDetalheChamado({ chamado, onClose, onAtualizado, theme, inputStyle, btnPrimary }) {
   const [detalhes, setDetalhes] = useState(null);
   const [cancelando, setCancelando] = useState(false);
   const [avaliacao, setAvaliacao] = useState({ nota: 0, comentario: '' });
@@ -383,7 +400,6 @@ function ModalDetalheChamado({ chamado, onClose, onAtualizado }) {
         comentario: avaliacao.comentario || null
       });
       toast.success('Avaliação enviada!');
-      // Recarregar detalhes para mostrar avaliação
       const res = await api.get(`/chamados/${chamado.id}`);
       setDetalhes(res.data);
     } catch (err) {
@@ -401,38 +417,38 @@ function ModalDetalheChamado({ chamado, onClose, onAtualizado }) {
         <div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
             <div>
-              <p style={{ color: '#8A94A6', fontSize: '12px', margin: '0 0 4px' }}>Status</p>
+              <p style={{ color: theme.textSecondary, fontSize: '12px', margin: '0 0 4px' }}>Status</p>
               <StatusBadge status={detalhes.status} />
             </div>
             <div>
-              <p style={{ color: '#8A94A6', fontSize: '12px', margin: '0 0 4px' }}>Urgência</p>
+              <p style={{ color: theme.textSecondary, fontSize: '12px', margin: '0 0 4px' }}>Urgência</p>
               <UrgenciaBadge urgencia={detalhes.urgencia} />
             </div>
             <div>
-              <p style={{ color: '#8A94A6', fontSize: '12px', margin: '0 0 4px' }}>Tipo</p>
-              <p style={{ color: '#FFFFFF', margin: 0 }}>{detalhes.tipo === 'preventivo' ? 'Preventivo' : 'Corretivo'}</p>
+              <p style={{ color: theme.textSecondary, fontSize: '12px', margin: '0 0 4px' }}>Tipo</p>
+              <p style={{ color: theme.text, margin: 0 }}>{detalhes.tipo === 'preventivo' ? 'Preventivo' : 'Corretivo'}</p>
             </div>
             <div>
-              <p style={{ color: '#8A94A6', fontSize: '12px', margin: '0 0 4px' }}>Técnico</p>
-              <p style={{ color: '#FFFFFF', margin: 0 }}>{detalhes.tecnicos?.nome || 'Não atribuído'}</p>
+              <p style={{ color: theme.textSecondary, fontSize: '12px', margin: '0 0 4px' }}>Técnico</p>
+              <p style={{ color: theme.text, margin: 0 }}>{detalhes.tecnicos?.nome || 'Não atribuído'}</p>
             </div>
             {detalhes.impressoras && (
               <>
                 <div>
-                  <p style={{ color: '#8A94A6', fontSize: '12px', margin: '0 0 4px' }}>Impressora</p>
-                  <p style={{ color: '#FFFFFF', margin: 0 }}>{detalhes.impressoras.modelo}</p>
+                  <p style={{ color: theme.textSecondary, fontSize: '12px', margin: '0 0 4px' }}>Impressora</p>
+                  <p style={{ color: theme.text, margin: 0 }}>{detalhes.impressoras.modelo}</p>
                 </div>
                 <div>
-                  <p style={{ color: '#8A94A6', fontSize: '12px', margin: '0 0 4px' }}>N° Série</p>
-                  <p style={{ color: '#FFFFFF', margin: 0 }}>{detalhes.impressoras.numero_serie}</p>
+                  <p style={{ color: theme.textSecondary, fontSize: '12px', margin: '0 0 4px' }}>N° Série</p>
+                  <p style={{ color: theme.text, margin: 0 }}>{detalhes.impressoras.numero_serie}</p>
                 </div>
               </>
             )}
           </div>
 
           <div style={{ marginBottom: '20px' }}>
-            <p style={{ color: '#8A94A6', fontSize: '12px', margin: '0 0 4px' }}>Descrição</p>
-            <p style={{ color: '#FFFFFF', margin: 0, lineHeight: 1.6 }}>{detalhes.descricao}</p>
+            <p style={{ color: theme.textSecondary, fontSize: '12px', margin: '0 0 4px' }}>Descrição</p>
+            <p style={{ color: theme.text, margin: 0, lineHeight: 1.6 }}>{detalhes.descricao}</p>
           </div>
 
           <SlaIndicator
@@ -447,8 +463,8 @@ function ModalDetalheChamado({ chamado, onClose, onAtualizado }) {
             <div style={{ marginTop: '20px' }}>
               <LoadingButton onClick={handleCancelar} loading={cancelando} loadingText="Cancelando..." style={{
                 padding: '10px 20px', backgroundColor: 'transparent',
-                border: '1px solid #E84C1E', borderRadius: '8px',
-                color: '#E84C1E', fontSize: '14px', fontWeight: 600,
+                border: `1px solid ${theme.accent}`, borderRadius: '8px',
+                color: theme.accent, fontSize: '14px', fontWeight: 600,
                 cursor: 'pointer', fontFamily: "'Barlow', sans-serif"
               }}>
                 <XCircle size={16} /> Cancelar Chamado
@@ -459,10 +475,10 @@ function ModalDetalheChamado({ chamado, onClose, onAtualizado }) {
           {/* Avaliação — só para chamados concluídos */}
           {detalhes.status === 'concluido' && (
             <div style={{
-              marginTop: '24px', padding: '20px', backgroundColor: '#0D1117',
-              borderRadius: '12px', border: '1px solid #1E2533'
+              marginTop: '24px', padding: '20px', backgroundColor: theme.bg,
+              borderRadius: '12px', border: `1px solid ${theme.border}`
             }}>
-              <h3 style={{ color: '#FFFFFF', fontSize: '16px', margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h3 style={{ color: theme.text, fontSize: '16px', margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Star size={18} color="#C9A227" /> Avaliação do Atendimento
               </h3>
 
@@ -477,7 +493,7 @@ function ModalDetalheChamado({ chamado, onClose, onAtualizado }) {
                     ))}
                   </div>
                   {avaliacaoExistente.comentario && (
-                    <p style={{ color: '#8A94A6', fontSize: '14px', margin: '8px 0 0', fontStyle: 'italic' }}>
+                    <p style={{ color: theme.textSecondary, fontSize: '14px', margin: '8px 0 0', fontStyle: 'italic' }}>
                       "{avaliacaoExistente.comentario}"
                     </p>
                   )}
@@ -485,7 +501,7 @@ function ModalDetalheChamado({ chamado, onClose, onAtualizado }) {
                 </div>
               ) : (
                 <div>
-                  <p style={{ color: '#8A94A6', fontSize: '13px', marginBottom: '12px' }}>
+                  <p style={{ color: theme.textSecondary, fontSize: '13px', marginBottom: '12px' }}>
                     Como foi o atendimento? Sua avaliação é muito importante.
                   </p>
                   <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
@@ -527,22 +543,22 @@ function ModalDetalheChamado({ chamado, onClose, onAtualizado }) {
           {/* Histórico de atualizações */}
           {detalhes.chamado_atualizacoes?.length > 0 && (
             <div style={{ marginTop: '24px' }}>
-              <h3 style={{ color: '#FFFFFF', fontSize: '16px', marginBottom: '12px' }}>Histórico</h3>
+              <h3 style={{ color: theme.text, fontSize: '16px', marginBottom: '12px' }}>Histórico</h3>
               {detalhes.chamado_atualizacoes
                 .sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em))
                 .map(at => (
                   <div key={at.id} style={{
-                    padding: '12px', backgroundColor: '#0D1117', borderRadius: '8px',
-                    marginBottom: '8px', borderLeft: '3px solid #E84C1E'
+                    padding: '12px', backgroundColor: theme.bg, borderRadius: '8px',
+                    marginBottom: '8px', borderLeft: `3px solid ${theme.accent}`
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <StatusBadge status={at.status_novo} />
-                      <span style={{ color: '#8A94A6', fontSize: '12px' }}>
+                      <span style={{ color: theme.textSecondary, fontSize: '12px' }}>
                         {new Date(at.criado_em).toLocaleString('pt-BR')}
                       </span>
                     </div>
                     {at.observacao && (
-                      <p style={{ color: '#8A94A6', fontSize: '13px', margin: '8px 0 0' }}>{at.observacao}</p>
+                      <p style={{ color: theme.textSecondary, fontSize: '13px', margin: '8px 0 0' }}>{at.observacao}</p>
                     )}
                   </div>
                 ))}
@@ -550,7 +566,7 @@ function ModalDetalheChamado({ chamado, onClose, onAtualizado }) {
           )}
         </div>
       ) : (
-        <p style={{ color: '#8A94A6', textAlign: 'center' }}>Carregando...</p>
+        <p style={{ color: theme.textSecondary, textAlign: 'center' }}>Carregando...</p>
       )}
     </Modal>
   );

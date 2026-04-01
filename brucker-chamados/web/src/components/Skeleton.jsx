@@ -1,3 +1,5 @@
+import { useTheme } from '../contexts/ThemeContext';
+
 export function Skeleton({ width = '100%', height = '20px', borderRadius = '8px', style = {} }) {
   return (
     <div
@@ -13,11 +15,12 @@ export function Skeleton({ width = '100%', height = '20px', borderRadius = '8px'
 }
 
 export function SkeletonCard({ style = {} }) {
+  const { theme } = useTheme();
   return (
     <div style={{
-      backgroundColor: '#141920',
+      backgroundColor: theme.card,
       borderRadius: '12px',
-      border: '1px solid #1E2533',
+      border: `1px solid ${theme.border}`,
       padding: '24px',
       ...style,
     }}>
@@ -28,6 +31,7 @@ export function SkeletonCard({ style = {} }) {
 }
 
 export function SkeletonDashboard() {
+  const { theme } = useTheme();
   return (
     <div>
       <div style={{
@@ -43,9 +47,9 @@ export function SkeletonDashboard() {
       <Skeleton width="200px" height="16px" style={{ marginBottom: '16px' }} />
       {[1, 2, 3].map(i => (
         <div key={i} style={{
-          backgroundColor: '#141920',
+          backgroundColor: theme.card,
           borderRadius: '12px',
-          border: '1px solid #1E2533',
+          border: `1px solid ${theme.border}`,
           padding: '16px 20px',
           marginBottom: '8px',
         }}>
@@ -62,13 +66,14 @@ export function SkeletonDashboard() {
 }
 
 export function SkeletonList({ count = 4 }) {
+  const { theme } = useTheme();
   return (
     <div>
       {Array.from({ length: count }).map((_, i) => (
         <div key={i} style={{
-          backgroundColor: '#141920',
+          backgroundColor: theme.card,
           borderRadius: '12px',
-          border: '1px solid #1E2533',
+          border: `1px solid ${theme.border}`,
           padding: '16px 20px',
           marginBottom: '8px',
         }}>

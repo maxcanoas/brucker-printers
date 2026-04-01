@@ -1,14 +1,16 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import api from '../lib/api';
-import { colors } from '../lib/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function RelatorioScreen() {
+  const { colors } = useTheme();
   const { chamado_id, numero } = useLocalSearchParams();
   const router = useRouter();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [form, setForm] = useState({
     descricao_servico: '',
     pecas_utilizadas: '',
@@ -95,7 +97,7 @@ export default function RelatorioScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: 16 },
   card: {

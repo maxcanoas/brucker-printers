@@ -1,17 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import toast from 'react-hot-toast';
-import { LogIn } from 'lucide-react';
+import { LogIn, Sun, Moon } from 'lucide-react';
 
 export default function LoginCliente() {
   const [codigo, setCodigo] = useState('');
   const [carregando, setCarregando] = useState(false);
   const { loginCliente, usuario, logout } = useAuth();
+  const { theme, themeMode, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
-  // Se já está logado como cliente, vai direto ao dashboard
-  // Se está logado como outro tipo, limpa a sessão para permitir login cliente
   useEffect(() => {
     if (usuario) {
       if (usuario.tipo === 'cliente') {
@@ -41,16 +41,32 @@ export default function LoginCliente() {
   return (
     <div style={{
       minHeight: '100vh',
-      backgroundColor: '#0D1117',
+      backgroundColor: theme.bg,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '20px'
+      padding: '20px',
+      position: 'relative'
     }}>
+      <button
+        onClick={toggleTheme}
+        style={{
+          position: 'absolute', top: '20px', right: '20px',
+          background: 'none', border: `1px solid ${theme.border}`,
+          borderRadius: '8px', padding: '8px',
+          cursor: 'pointer', display: 'flex',
+          alignItems: 'center', justifyContent: 'center',
+          color: theme.textSecondary
+        }}
+        title={themeMode === 'dark' ? 'Tema claro' : 'Tema escuro'}
+      >
+        {themeMode === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+      </button>
+
       <div style={{
-        backgroundColor: '#141920',
+        backgroundColor: theme.card,
         borderRadius: '16px',
-        border: '1px solid #1E2533',
+        border: `1px solid ${theme.border}`,
         padding: '48px',
         width: '100%',
         maxWidth: '440px'
@@ -61,12 +77,12 @@ export default function LoginCliente() {
             fontFamily: "'Barlow Condensed', sans-serif",
             fontSize: '28px',
             fontWeight: 700,
-            color: '#FFFFFF',
+            color: theme.text,
             marginBottom: '8px'
           }}>
-            BRUCKER <span style={{ color: '#E84C1E' }}>PRINTERS</span>
+            BRUCKER <span style={{ color: theme.accent }}>PRINTERS</span>
           </h1>
-          <p style={{ color: '#8A94A6', fontSize: '14px' }}>
+          <p style={{ color: theme.textSecondary, fontSize: '14px' }}>
             Área do Cliente — Sistema de Chamados
           </p>
         </div>
@@ -74,7 +90,7 @@ export default function LoginCliente() {
         <form onSubmit={handleSubmit}>
           <label style={{
             display: 'block',
-            color: '#8A94A6',
+            color: theme.textSecondary,
             fontSize: '13px',
             marginBottom: '8px',
             fontWeight: 500
@@ -85,14 +101,14 @@ export default function LoginCliente() {
             type="text"
             value={codigo}
             onChange={(e) => setCodigo(e.target.value.toUpperCase())}
-            placeholder="Ex: BRK-A1B2C3D4"
+            placeholder="Ex: BRKXXXXXXXX"
             style={{
               width: '100%',
               padding: '14px 16px',
-              backgroundColor: '#0D1117',
-              border: '1px solid #1E2533',
+              backgroundColor: theme.inputBg,
+              border: `1px solid ${theme.border}`,
               borderRadius: '8px',
-              color: '#FFFFFF',
+              color: theme.text,
               fontSize: '15px',
               outline: 'none',
               boxSizing: 'border-box',
@@ -108,7 +124,7 @@ export default function LoginCliente() {
             style={{
               width: '100%',
               padding: '14px',
-              backgroundColor: '#E84C1E',
+              backgroundColor: theme.accent,
               color: '#FFFFFF',
               border: 'none',
               borderRadius: '8px',
@@ -130,7 +146,7 @@ export default function LoginCliente() {
 
         <p style={{
           textAlign: 'center',
-          color: '#8A94A6',
+          color: theme.textSecondary,
           fontSize: '12px',
           marginTop: '24px'
         }}>
@@ -142,11 +158,12 @@ export default function LoginCliente() {
           style={{
             display: 'block',
             textAlign: 'center',
-            color: '#555D6B',
+            color: theme.textSecondary,
             fontSize: '12px',
             marginTop: '16px',
             textDecoration: 'none',
-            fontFamily: "'Barlow', sans-serif"
+            fontFamily: "'Barlow', sans-serif",
+            opacity: 0.6
           }}
         >
           Acesso Administrativo

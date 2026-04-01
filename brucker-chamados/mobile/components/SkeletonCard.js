@@ -1,8 +1,9 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import { View, Animated, StyleSheet } from 'react-native';
-import { colors } from '../lib/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 function SkeletonPulse({ width = '100%', height = 20, borderRadius = 8, style }) {
+  const { colors } = useTheme();
   const opacity = useRef(new Animated.Value(0.3)).current;
 
   useEffect(() => {
@@ -33,6 +34,9 @@ function SkeletonPulse({ width = '100%', height = 20, borderRadius = 8, style })
 }
 
 export function SkeletonCard({ style }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <View style={[styles.card, style]}>
       <SkeletonPulse width="40%" height={14} style={{ marginBottom: 12 }} />
@@ -42,6 +46,9 @@ export function SkeletonCard({ style }) {
 }
 
 export function SkeletonDashboard() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <View style={{ padding: 16 }}>
       <View style={styles.metricsRow}>
@@ -58,6 +65,9 @@ export function SkeletonDashboard() {
 }
 
 export function SkeletonListItem({ style }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <View style={[styles.card, { marginBottom: 10 }, style]}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 }}>
@@ -80,7 +90,7 @@ export function SkeletonList({ count = 4 }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   card: {
     backgroundColor: colors.card,
     borderRadius: 12,

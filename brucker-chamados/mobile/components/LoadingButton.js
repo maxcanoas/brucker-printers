@@ -1,5 +1,4 @@
 import { TouchableOpacity, Text, ActivityIndicator, StyleSheet } from 'react-native';
-import { colors } from '../lib/theme';
 
 export default function LoadingButton({
   onPress,

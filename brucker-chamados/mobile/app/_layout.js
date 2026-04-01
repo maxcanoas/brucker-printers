@@ -2,20 +2,19 @@ import { useEffect, useRef } from 'react';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as Notifications from 'expo-notifications';
-import { colors } from '../lib/theme';
+import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
 
-export default function RootLayout() {
+function RootNav() {
   const router = useRouter();
+  const { colors, themeMode } = useTheme();
   const notificationListener = useRef();
   const responseListener = useRef();
 
   useEffect(() => {
-    // Listener para notificações recebidas com app aberto
     notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
       console.log('Notificação recebida:', notification);
     });
 
-    // Listener para quando o usuário toca na notificação
     responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
       const data = response.notification.request.content.data;
       if (data?.chamado_id) {
@@ -35,7 +34,7 @@ export default function RootLayout() {
 
   return (
     <>
-      <StatusBar style="light" />
+      <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
       <Stack
         screenOptions={{
           headerStyle: { backgroundColor: colors.card },
@@ -53,5 +52,13 @@ export default function RootLayout() {
         <Stack.Screen name="perfil" options={{ title: 'Meu Perfil' }} />
       </Stack>
     </>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <ThemeProvider>
+      <RootNav />
+    </ThemeProvider>
   );
 }

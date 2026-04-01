@@ -1,13 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, ActivityIndicator,
   TouchableOpacity, TextInput, Alert, Modal as RNModal
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import api from '../lib/api';
-import { colors } from '../lib/theme';
+import { useTheme } from '../contexts/ThemeContext';
+
+const THEME_OPTIONS = [
+  { key: 'dark', label: 'Escuro', desc: 'Tema escuro para ambientes com pouca luz', icon: 'moon' },
+  { key: 'light', label: 'Claro', desc: 'Tema claro para uso durante o dia', icon: 'sun' },
+  { key: 'system', label: 'Sistema', desc: 'Segue a preferência do dispositivo', icon: 'smartphone' },
+];
 
 export default function PerfilScreen() {
+  const { colors, preference, setPreference } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const [perfil, setPerfil] = useState(null);
   const [metricas, setMetricas] = useState(null);
   const [modalSenha, setModalSenha] = useState(false);
@@ -47,28 +56,66 @@ export default function PerfilScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Métricas */}
+      {/* Tema */}
+      <View style={styles.card}>
+        <View style={styles.themeSectionHeader}>
+          <Feather name="sun" size={18} color={colors.accent} />
+          <Text style={styles.sectionTitle}>Tema</Text>
+        </View>
+        {THEME_OPTIONS.map(opt => {
+          const selected = preference === opt.key;
+          return (
+            <TouchableOpacity
+              key={opt.key}
+              style={[styles.themeOption, selected && styles.themeOptionSelected]}
+              onPress={() => setPreference(opt.key)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.themeOptionLeft}>
+                <View style={[styles.radio, selected && styles.radioSelected]}>
+                  {selected && <View style={styles.radioDot} />}
+                </View>
+                <Feather
+                  name={opt.icon}
+                  size={16}
+                  color={selected ? colors.accent : colors.textSecondary}
+                  style={{ marginRight: 10 }}
+                />
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.themeLabel, selected && { color: colors.accent }]}>
+                    {opt.label}
+                  </Text>
+                  <Text style={styles.themeDesc}>{opt.desc}</Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      {/* Metricas */}
       {metricas && (
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Minhas Métricas</Text>
+          <Text style={styles.sectionTitle}>Minhas Metricas</Text>
           <View style={styles.metricsGrid}>
-            <MetricCard label="Total" value={metricas.total} color={colors.blue} />
-            <MetricCard label="Concluídos" value={metricas.concluidos} color={colors.green} />
-            <MetricCard label="Em Andamento" value={metricas.em_andamento} color={colors.yellow} />
+            <MetricCard label="Total" value={metricas.total} color={colors.blue} colors={colors} />
+            <MetricCard label="Concluidos" value={metricas.concluidos} color={colors.green} colors={colors} />
+            <MetricCard label="Em Andamento" value={metricas.em_andamento} color={colors.yellow} colors={colors} />
             <MetricCard label="% SLA" value={`${metricas.percentual_sla}%`} color={
               metricas.percentual_sla >= 80 ? colors.green :
               metricas.percentual_sla >= 60 ? colors.yellow : colors.red
-            } />
+            } colors={colors} />
           </View>
         </View>
       )}
 
-      <ModalAlterarSenha visible={modalSenha} onClose={() => setModalSenha(false)} />
+      <ModalAlterarSenha visible={modalSenha} onClose={() => setModalSenha(false)} colors={colors} />
     </ScrollView>
   );
 }
 
-function ModalAlterarSenha({ visible, onClose }) {
+function ModalAlterarSenha({ visible, onClose, colors }) {
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [senhaAtual, setSenhaAtual] = useState('');
   const [novaSenha, setNovaSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
@@ -79,10 +126,10 @@ function ModalAlterarSenha({ visible, onClose }) {
       return Alert.alert('Erro', 'Preencha todos os campos');
     }
     if (novaSenha !== confirmarSenha) {
-      return Alert.alert('Erro', 'As senhas não coincidem');
+      return Alert.alert('Erro', 'As senhas nao coincidem');
     }
     if (novaSenha.length < 6) {
-      return Alert.alert('Erro', 'A nova senha deve ter no mínimo 6 caracteres');
+      return Alert.alert('Erro', 'A nova senha deve ter no minimo 6 caracteres');
     }
     setSalvando(true);
     try {
@@ -129,7 +176,8 @@ function ModalAlterarSenha({ visible, onClose }) {
   );
 }
 
-function MetricCard({ label, value, color }) {
+function MetricCard({ label, value, color, colors }) {
+  const styles = useMemo(() => createStyles(colors), [colors]);
   return (
     <View style={[styles.metric, { borderColor: color + '40' }]}>
       <Text style={styles.metricLabel}>{label}</Text>
@@ -138,7 +186,7 @@ function MetricCard({ label, value, color }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: 16, gap: 16 },
   card: {
@@ -162,6 +210,41 @@ const styles = StyleSheet.create({
     borderRadius: 8, borderWidth: 1, borderColor: colors.border, alignSelf: 'flex-start'
   },
   btnSenhaText: { color: colors.textSecondary, fontSize: 14 },
+  // Theme selector
+  themeSectionHeader: {
+    flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16
+  },
+  themeOption: {
+    flexDirection: 'row', alignItems: 'center', padding: 14,
+    borderRadius: 10, borderWidth: 1, borderColor: colors.border,
+    backgroundColor: colors.bg, marginBottom: 8
+  },
+  themeOptionSelected: {
+    borderColor: colors.accent + '80',
+    backgroundColor: colors.accent + '10'
+  },
+  themeOptionLeft: {
+    flexDirection: 'row', alignItems: 'center', flex: 1
+  },
+  radio: {
+    width: 20, height: 20, borderRadius: 10, borderWidth: 2,
+    borderColor: colors.border, marginRight: 10,
+    justifyContent: 'center', alignItems: 'center'
+  },
+  radioSelected: {
+    borderColor: colors.accent
+  },
+  radioDot: {
+    width: 10, height: 10, borderRadius: 5,
+    backgroundColor: colors.accent
+  },
+  themeLabel: {
+    fontSize: 15, fontWeight: '600', color: colors.text
+  },
+  themeDesc: {
+    fontSize: 12, color: colors.textSecondary, marginTop: 2
+  },
+  // Modal
   modalOverlay: {
     flex: 1, backgroundColor: 'rgba(0,0,0,0.7)',
     justifyContent: 'center', padding: 24
