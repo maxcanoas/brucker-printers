@@ -23,10 +23,10 @@ function formatarTelefone(valor) {
 
 // ─── Bottom Tab Bar ───
 const TABS = [
-  { id: 'dashboard', label: 'Dashboard', icon: 'bar-chart-2' },
+  { id: 'dashboard', label: 'Painel', icon: 'bar-chart-2' },
   { id: 'chamados', label: 'Chamados', icon: 'file-text' },
   { id: 'clientes', label: 'Clientes', icon: 'users' },
-  { id: 'impressoras', label: 'Impressoras', icon: 'printer' },
+  { id: 'impressoras', label: 'Impress.', icon: 'printer' },
   { id: 'tecnicos', label: 'Técnicos', icon: 'tool' },
   { id: 'avaliacoes', label: 'Aval.', icon: 'star' },
   { id: 'relatorios', label: 'Relatórios', icon: 'trending-up' },
@@ -120,6 +120,7 @@ function DashboardTab({ router }) {
     { label: 'Atribuídos', valor: dashboard?.atribuidos || 0, cor: colors.purple },
     { label: 'Em Atendimento', valor: dashboard?.em_atendimento || 0, cor: colors.yellow },
     { label: 'SLA Vencido', valor: dashboard?.sla_vencido || 0, cor: colors.red },
+    { label: 'Concluídos Hoje', valor: dashboard?.concluidos_hoje || 0, cor: colors.green },
   ];
 
   return (
@@ -1499,17 +1500,21 @@ const createStyles = (colors) => StyleSheet.create({
     flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 4,
   },
   tabBtnAtivo: {},
-  tabLabel: { fontSize: 9, color: colors.textSecondary, marginTop: 2 },
+  tabLabel: { fontSize: 10, color: colors.textSecondary, marginTop: 2 },
   tabLabelAtivo: { color: colors.accent, fontWeight: '600' },
 
   // Dashboard
-  dashGrid: { flexDirection: 'row', padding: 16, gap: 8 },
+  dashGrid: {
+    flexDirection: 'row', flexWrap: 'wrap', padding: 16, gap: 10,
+    justifyContent: 'center',
+  },
   dashCard: {
-    flex: 1, backgroundColor: colors.card, borderRadius: 10, padding: 12,
+    width: (Dimensions.get('window').width - 32 - 20) / 3,
+    backgroundColor: colors.card, borderRadius: 12, paddingVertical: 14, paddingHorizontal: 8,
     borderWidth: 1, borderColor: colors.border, alignItems: 'center',
   },
-  dashValor: { fontSize: 22, fontWeight: '700' },
-  dashLabel: { fontSize: 10, color: colors.textSecondary, marginTop: 4, textAlign: 'center' },
+  dashValor: { fontSize: 24, fontWeight: '700' },
+  dashLabel: { fontSize: 11, color: colors.textSecondary, marginTop: 4, textAlign: 'center' },
 
   // Cards
   card: {
