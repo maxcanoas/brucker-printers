@@ -93,7 +93,13 @@ exports.gerarPDF = async (req, res) => {
       .from('relatorios_atendimento')
       .select(`
         *,
-        chamados (*, impressoras (modelo, numero_serie)),
+        chamados (
+          *,
+          clientes (*),
+          impressoras (*),
+          chamado_atualizacoes (*),
+          avaliacoes (*)
+        ),
         tecnicos (nome, email)
       `)
       .eq('id', req.params.id)
@@ -101,19 +107,16 @@ exports.gerarPDF = async (req, res) => {
 
     if (error) return res.status(404).json({ error: 'Relatório não encontrado' });
 
-    // Buscar cliente
-    const { data: cliente } = await supabase
-      .from('clientes')
-      .select('nome, email')
-      .eq('id', relatorio.chamados.cliente_id)
-      .single();
-
-    const pdfBuffer = await gerarRelatorioPDF(
-      { ...relatorio.chamados, impressora: relatorio.chamados.impressoras },
+    const ch = relatorio.chamados || {};
+    const pdfBuffer = await gerarRelatorioPDF({
+      chamado: ch,
       relatorio,
-      cliente,
-      relatorio.tecnicos
-    );
+      cliente: ch.clientes,
+      tecnico: relatorio.tecnicos,
+      impressora: ch.impressoras,
+      atualizacoes: ch.chamado_atualizacoes || [],
+      avaliacao: (ch.avaliacoes && ch.avaliacoes[0]) || null,
+    });
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition',

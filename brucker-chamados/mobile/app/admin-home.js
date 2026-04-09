@@ -7,6 +7,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as Sharing from 'expo-sharing';
 import api from '../lib/api';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
@@ -495,33 +497,171 @@ function TecnicosTab() {
 // ═══════════════════════════════════════════
 // TAB: RELATÓRIOS
 // ═══════════════════════════════════════════
+const STATUS_OPCOES_REL = [
+  { value: '', label: 'Todos' },
+  { value: 'aberto', label: 'Aberto' },
+  { value: 'atribuido', label: 'Atribuído' },
+  { value: 'em_atendimento', label: 'Em Atend.' },
+  { value: 'aguardando_peca', label: 'Aguard. Peça' },
+  { value: 'concluido', label: 'Concluído' },
+  { value: 'cancelado', label: 'Cancelado' },
+];
+
+const TIPO_OPCOES_REL = [
+  { value: '', label: 'Todos' },
+  { value: 'preventivo', label: 'Preventivo' },
+  { value: 'corretivo', label: 'Corretivo' },
+];
+
+const URGENCIA_OPCOES_REL = [
+  { value: '', label: 'Todas' },
+  { value: 'normal', label: 'Normal' },
+  { value: 'alta', label: 'Alta' },
+  { value: 'critica', label: 'Crítica' },
+];
+
+const FILTROS_REL_VAZIOS = {
+  inicio: null,
+  fim: null,
+  cliente_id: '',
+  tecnico_id: '',
+  status: '',
+  tipo: '',
+  urgencia: '',
+};
+
+function ChipsFiltro({ label, opcoes, valor, onChange, colors, styles }) {
+  return (
+    <View style={{ marginBottom: 12 }}>
+      <Text style={{ color: colors.textSecondary, fontSize: 13, marginBottom: 6 }}>{label}</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }}>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          {opcoes.map(o => (
+            <TouchableOpacity
+              key={o.value || 'todos'}
+              style={[styles.filtroBtn, valor === o.value && styles.filtroBtnAtivo]}
+              onPress={() => onChange(o.value)}
+            >
+              <Text style={[styles.filtroText, valor === o.value && styles.filtroTextAtivo]}>{o.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+function PickerSeletor({ label, valor, opcoes, onChange, placeholder, colors }) {
+  const [aberto, setAberto] = useState(false);
+  const selecionado = opcoes.find(o => o.id === valor);
+  return (
+    <View style={{ marginBottom: 12 }}>
+      <Text style={{ color: colors.textSecondary, fontSize: 13, marginBottom: 6 }}>{label}</Text>
+      <TouchableOpacity
+        onPress={() => setAberto(true)}
+        style={{
+          backgroundColor: colors.bg,
+          borderWidth: 1,
+          borderColor: colors.border,
+          borderRadius: 8,
+          padding: 14,
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
+        <Text style={{ color: selecionado ? colors.text : colors.textSecondary, fontSize: 14 }}>
+          {selecionado ? selecionado.nome : (placeholder || 'Todos')}
+        </Text>
+        <Feather name="chevron-down" size={18} color={colors.textSecondary} />
+      </TouchableOpacity>
+      <Modal visible={aberto} animationType="slide" transparent onRequestClose={() => setAberto(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' }}>
+          <View style={{ backgroundColor: colors.card, borderTopLeftRadius: 16, borderTopRightRadius: 16, maxHeight: '70%', padding: 16 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <Text style={{ color: colors.text, fontSize: 16, fontWeight: '700' }}>{label}</Text>
+              <TouchableOpacity onPress={() => setAberto(false)}>
+                <Feather name="x" size={22} color={colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView>
+              <TouchableOpacity
+                style={{ padding: 14, borderBottomWidth: 1, borderBottomColor: colors.border }}
+                onPress={() => { onChange(''); setAberto(false); }}
+              >
+                <Text style={{ color: !valor ? colors.accent : colors.text, fontSize: 14, fontWeight: !valor ? '700' : '400' }}>
+                  Todos
+                </Text>
+              </TouchableOpacity>
+              {opcoes.map(o => (
+                <TouchableOpacity
+                  key={o.id}
+                  style={{ padding: 14, borderBottomWidth: 1, borderBottomColor: colors.border }}
+                  onPress={() => { onChange(o.id); setAberto(false); }}
+                >
+                  <Text style={{
+                    color: valor === o.id ? colors.accent : colors.text,
+                    fontSize: 14,
+                    fontWeight: valor === o.id ? '700' : '400',
+                  }}>
+                    {o.nome}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
+}
+
 function RelatoriosTab() {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const [tipo, setTipo] = useState('periodo');
-  const [inicio, setInicio] = useState(null);
-  const [fim, setFim] = useState(null);
+  const router = useRouter();
+  const [filtros, setFiltros] = useState(FILTROS_REL_VAZIOS);
+  const [clientes, setClientes] = useState([]);
+  const [tecnicos, setTecnicos] = useState([]);
   const [dados, setDados] = useState(null);
   const [carregando, setCarregando] = useState(false);
+  const [exportando, setExportando] = useState(false);
 
-  const formatarParaAPI = (date) => {
-    if (!date) return null;
-    return date.toISOString().split('T')[0];
+  useEffect(() => {
+    api.get('/clientes').then(r => setClientes(r.data || [])).catch(() => {});
+    api.get('/tecnicos').then(r => setTecnicos((r.data || []).filter(t => t.ativo))).catch(() => {});
+  }, []);
+
+  const setF = (k, v) => {
+    setFiltros(prev => ({ ...prev, [k]: v }));
+    setDados(null);
+  };
+
+  const limparFiltros = () => {
+    setFiltros(FILTROS_REL_VAZIOS);
+    setDados(null);
+  };
+
+  const formatarDataAPI = (d) => (d ? d.toISOString().split('T')[0] : null);
+
+  const buildParams = (extra = {}) => {
+    const params = {};
+    Object.entries({ ...filtros, ...extra }).forEach(([k, v]) => {
+      if (!v) return;
+      if (k === 'inicio' || k === 'fim') params[k] = formatarDataAPI(v);
+      else params[k] = v;
+    });
+    return params;
   };
 
   const gerarRelatorio = async () => {
-    if (['periodo', 'sla'].includes(tipo) && (!inicio || !fim)) {
-      Alert.alert('Atenção', 'Selecione o período');
-      return;
-    }
     setCarregando(true);
     try {
-      const params = new URLSearchParams();
-      if (inicio) params.append('inicio', formatarParaAPI(inicio));
-      if (fim) params.append('fim', formatarParaAPI(fim));
-      const query = params.toString() ? `?${params.toString()}` : '';
-      const { data } = await api.get(`/admin/relatorios/${tipo}${query}`);
+      const { data } = await api.get('/admin/relatorios/historico', { params: buildParams() });
       setDados(data);
+      if ((data?.chamados || []).length === 0) {
+        Alert.alert('Sem resultados', 'Nenhum chamado encontrado para os filtros aplicados.');
+      }
     } catch {
       Alert.alert('Erro', 'Erro ao gerar relatório');
     } finally {
@@ -529,105 +669,176 @@ function RelatoriosTab() {
     }
   };
 
-  const tipos = [
-    { id: 'periodo', label: 'Período' },
-    { id: 'clientes', label: 'Clientes' },
-    { id: 'tecnicos', label: 'Técnicos' },
-    { id: 'sla', label: 'SLA' },
-    { id: 'pecas', label: 'Peças' },
-  ];
+  const exportarPDF = async () => {
+    if (!dados || (dados.chamados || []).length === 0) {
+      Alert.alert('Atenção', 'Gere o relatório antes de exportar.');
+      return;
+    }
+    setExportando(true);
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const params = new URLSearchParams();
+      Object.entries(buildParams({ formato: 'pdf' })).forEach(([k, v]) => params.append(k, v));
+      const url = `${api.defaults.baseURL}/admin/relatorios/historico?${params.toString()}`;
+      const fileUri = FileSystem.cacheDirectory + 'relatorio-historico.pdf';
+      const result = await FileSystem.downloadAsync(url, fileUri, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (result.status !== 200) {
+        throw new Error(`Falha ao baixar (${result.status})`);
+      }
+      const podeCompartilhar = await Sharing.isAvailableAsync();
+      if (!podeCompartilhar) {
+        Alert.alert('PDF salvo', `Arquivo salvo em: ${result.uri}`);
+        return;
+      }
+      await Sharing.shareAsync(result.uri, {
+        mimeType: 'application/pdf',
+        UTI: 'com.adobe.pdf',
+        dialogTitle: 'Compartilhar relatório',
+      });
+    } catch (err) {
+      Alert.alert('Erro', err?.message || 'Falha ao exportar PDF');
+    } finally {
+      setExportando(false);
+    }
+  };
+
+  const resumo = dados?.resumo;
+  const chamados = dados?.chamados || [];
+
+  const slaInfo = (c) => {
+    if (c.status !== 'concluido' || !c.sla_vence_em) return null;
+    const cumprido = new Date(c.atualizado_em) <= new Date(c.sla_vence_em);
+    return { texto: cumprido ? 'Cumprido' : 'Estourado', cor: cumprido ? colors.green : colors.red };
+  };
 
   return (
     <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 100 }}>
-      <Text style={{ color: colors.text, fontSize: 18, fontWeight: '700' }}>Relatórios</Text>
-
-      {/* Tipo selector */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }}>
-        <View style={{ flexDirection: 'row', gap: 8 }}>
-          {tipos.map(t => (
-            <TouchableOpacity
-              key={t.id}
-              style={[styles.filtroBtn, tipo === t.id && styles.filtroBtnAtivo]}
-              onPress={() => { setTipo(t.id); setDados(null); }}
-            >
-              <Text style={[styles.filtroText, tipo === t.id && styles.filtroTextAtivo]}>{t.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </ScrollView>
-
-      {/* Date picker nativo */}
-      <View style={styles.card}>
-        <DatePicker label="Data Início" value={inicio} onChange={setInicio} placeholder="Selecionar início" />
-        <DatePicker label="Data Fim" value={fim} onChange={setFim} placeholder="Selecionar fim" />
-        <TouchableOpacity style={[styles.addBtn, { alignSelf: 'stretch', alignItems: 'center', marginTop: 8 }]} onPress={gerarRelatorio} disabled={carregando}>
-          <Text style={styles.addBtnText}>{carregando ? 'Gerando...' : 'Gerar Relatório'}</Text>
-        </TouchableOpacity>
+      <View>
+        <Text style={{ color: colors.text, fontSize: 18, fontWeight: '700' }}>Relatórios</Text>
+        <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 4 }}>
+          Histórico e comprovação de atendimentos
+        </Text>
       </View>
 
-      {/* Results: periodo */}
-      {dados && tipo === 'periodo' && dados.resumo && (
+      {/* ============ Filtros ============ */}
+      <View style={styles.card}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+          <Feather name="filter" size={16} color={colors.accent} />
+          <Text style={{ color: colors.text, fontWeight: '700', fontSize: 14 }}>Filtros</Text>
+        </View>
+
+        <DatePicker label="Data início" value={filtros.inicio} onChange={(d) => setF('inicio', d)} placeholder="Início" />
+        <DatePicker label="Data fim" value={filtros.fim} onChange={(d) => setF('fim', d)} placeholder="Fim" />
+
+        <PickerSeletor
+          label="Cliente"
+          valor={filtros.cliente_id}
+          opcoes={clientes}
+          onChange={(v) => setF('cliente_id', v)}
+          placeholder="Todos"
+          colors={colors}
+        />
+        <PickerSeletor
+          label="Técnico"
+          valor={filtros.tecnico_id}
+          opcoes={tecnicos}
+          onChange={(v) => setF('tecnico_id', v)}
+          placeholder="Todos"
+          colors={colors}
+        />
+        <ChipsFiltro
+          label="Status"
+          opcoes={STATUS_OPCOES_REL}
+          valor={filtros.status}
+          onChange={(v) => setF('status', v)}
+          colors={colors}
+          styles={styles}
+        />
+        <ChipsFiltro
+          label="Tipo"
+          opcoes={TIPO_OPCOES_REL}
+          valor={filtros.tipo}
+          onChange={(v) => setF('tipo', v)}
+          colors={colors}
+          styles={styles}
+        />
+        <ChipsFiltro
+          label="Urgência"
+          opcoes={URGENCIA_OPCOES_REL}
+          valor={filtros.urgencia}
+          onChange={(v) => setF('urgencia', v)}
+          colors={colors}
+          styles={styles}
+        />
+
+        <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+          <TouchableOpacity
+            style={[styles.addBtn, { flex: 1, alignItems: 'center', opacity: carregando ? 0.6 : 1 }]}
+            onPress={gerarRelatorio}
+            disabled={carregando}
+          >
+            <Text style={styles.addBtnText}>{carregando ? 'Gerando...' : 'Gerar Relatório'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={{
+              paddingVertical: 12,
+              paddingHorizontal: 16,
+              borderRadius: 8,
+              borderWidth: 1,
+              borderColor: colors.border,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            onPress={limparFiltros}
+          >
+            <Text style={{ color: colors.textSecondary, fontWeight: '600' }}>Limpar</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* ============ Botão de Export ============ */}
+      {dados && chamados.length > 0 && (
+        <TouchableOpacity
+          style={{
+            backgroundColor: colors.accent,
+            padding: 14,
+            borderRadius: 8,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            opacity: exportando ? 0.6 : 1,
+          }}
+          onPress={exportarPDF}
+          disabled={exportando}
+        >
+          {exportando ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <Feather name="file-text" size={18} color="#FFFFFF" />
+          )}
+          <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 14 }}>
+            {exportando ? 'Exportando...' : 'Exportar PDF'}
+          </Text>
+        </TouchableOpacity>
+      )}
+
+      {/* ============ Resumo ============ */}
+      {resumo && (
         <View style={styles.card}>
-          <Text style={{ color: colors.text, fontWeight: '700', fontSize: 16, marginBottom: 12 }}>Resumo do Período</Text>
+          <Text style={{ color: colors.text, fontWeight: '700', fontSize: 16, marginBottom: 12 }}>Resumo</Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
             {[
-              { label: 'Total', valor: dados.resumo.total },
-              { label: 'Concluídos', valor: dados.resumo.concluidos },
-              { label: 'Dentro SLA', valor: dados.resumo.dentro_sla },
-              { label: 'Fora SLA', valor: dados.resumo.fora_sla },
-              { label: '% SLA', valor: `${dados.resumo.percentual_sla}%` },
-              { label: 'Tempo Médio', valor: `${dados.resumo.tempo_medio}min` },
-            ].map(item => (
-              <View key={item.label} style={{ backgroundColor: colors.bg, borderRadius: 8, padding: 12, minWidth: '45%', flex: 1 }}>
-                <Text style={{ color: colors.textSecondary, fontSize: 11 }}>{item.label}</Text>
-                <Text style={{ color: colors.text, fontSize: 20, fontWeight: '700' }}>{item.valor}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-      )}
-
-      {/* Results: clientes/tecnicos */}
-      {dados && ['clientes', 'tecnicos'].includes(tipo) && Array.isArray(dados) && (
-        <View style={styles.card}>
-          <Text style={{ color: colors.text, fontWeight: '700', fontSize: 16, marginBottom: 12 }}>
-            {tipo === 'clientes' ? 'Por Cliente' : 'Por Técnico'}
-          </Text>
-          {dados.map((item, i) => (
-            <View key={i} style={{ backgroundColor: colors.bg, borderRadius: 8, padding: 12, marginBottom: 8 }}>
-              <Text style={{ color: colors.text, fontWeight: '600', marginBottom: 6 }}>{item.cliente || item.tecnico}</Text>
-              <View style={{ flexDirection: 'row', gap: 16 }}>
-                <View>
-                  <Text style={{ color: colors.textSecondary, fontSize: 10 }}>Total</Text>
-                  <Text style={{ color: colors.text, fontWeight: '700' }}>{item.total}</Text>
-                </View>
-                <View>
-                  <Text style={{ color: colors.textSecondary, fontSize: 10 }}>Concluídos</Text>
-                  <Text style={{ color: colors.text, fontWeight: '700' }}>{item.concluidos}</Text>
-                </View>
-                <View>
-                  <Text style={{ color: colors.textSecondary, fontSize: 10 }}>{tipo === 'tecnicos' ? '% SLA' : 'Dentro SLA'}</Text>
-                  <Text style={{ color: colors.text, fontWeight: '700' }}>
-                    {tipo === 'tecnicos' ? `${item.percentual_sla}%` : item.dentro_sla}
-                  </Text>
-                </View>
-              </View>
-            </View>
-          ))}
-          {dados.length === 0 && <Text style={{ color: colors.textSecondary, textAlign: 'center' }}>Sem dados para o período</Text>}
-        </View>
-      )}
-
-      {/* Results: SLA */}
-      {dados && tipo === 'sla' && dados.resumo && (
-        <View style={styles.card}>
-          <Text style={{ color: colors.text, fontWeight: '700', fontSize: 16, marginBottom: 12 }}>Relatório de SLA</Text>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
-            {[
-              { label: 'Total', valor: dados.resumo.total_concluidos },
-              { label: 'Cumprido', valor: dados.resumo.dentro_sla, cor: colors.green },
-              { label: 'Estourado', valor: dados.resumo.fora_sla, cor: colors.red },
-              { label: '% SLA', valor: `${dados.resumo.percentual_sla}%` },
+              { label: 'Total', valor: String(resumo.total ?? 0) },
+              { label: 'Concluídos', valor: String(resumo.concluidos ?? 0) },
+              { label: 'Dentro SLA', valor: String(resumo.dentro_sla ?? 0), cor: colors.green },
+              { label: 'Fora SLA', valor: String(resumo.fora_sla ?? 0), cor: colors.red },
+              { label: '% SLA', valor: `${resumo.percentual_sla ?? 0}%` },
+              { label: 'Tempo Médio', valor: resumo.tempo_medio ? `${resumo.tempo_medio} min` : '-' },
+              { label: 'Avaliação', valor: resumo.avaliacao_media ? `${resumo.avaliacao_media} ★` : '-' },
+              { label: 'Cancelados', valor: String(resumo.cancelados ?? 0) },
             ].map(item => (
               <View key={item.label} style={{ backgroundColor: colors.bg, borderRadius: 8, padding: 12, minWidth: '45%', flex: 1 }}>
                 <Text style={{ color: colors.textSecondary, fontSize: 11 }}>{item.label}</Text>
@@ -635,38 +846,58 @@ function RelatoriosTab() {
               </View>
             ))}
           </View>
-          {dados.chamados?.map(c => (
-            <View key={c.id} style={{ backgroundColor: colors.bg, borderRadius: 8, padding: 12, marginBottom: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <View>
-                <Text style={{ color: colors.text, fontWeight: '600' }}>#{c.numero}</Text>
-                <Text style={{ color: colors.textSecondary, fontSize: 11 }}>{c.clientes?.nome}</Text>
-              </View>
-              <View style={{ paddingVertical: 4, paddingHorizontal: 10, borderRadius: 8, backgroundColor: c.sla_cumprido ? colors.green + '25' : colors.red + '25' }}>
-                <Text style={{ color: c.sla_cumprido ? colors.green : colors.red, fontSize: 11, fontWeight: '600' }}>
-                  {c.sla_cumprido ? 'Cumprido' : 'Estourado'}
-                </Text>
-              </View>
-            </View>
-          ))}
         </View>
       )}
 
-      {/* Results: Peças */}
-      {dados && tipo === 'pecas' && Array.isArray(dados) && (
+      {/* ============ Lista de chamados ============ */}
+      {dados && (
         <View style={styles.card}>
-          <Text style={{ color: colors.text, fontWeight: '700', fontSize: 16, marginBottom: 12 }}>Peças Utilizadas</Text>
-          {dados.length === 0 ? (
-            <Text style={{ color: colors.textSecondary, textAlign: 'center' }}>Nenhuma peça encontrada</Text>
-          ) : dados.map((item, i) => (
-            <View key={i} style={{ backgroundColor: colors.bg, borderRadius: 8, padding: 12, marginBottom: 8 }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
-                <Text style={{ color: colors.text, fontWeight: '600' }}>#{item.numero}</Text>
-                <Text style={{ color: colors.textSecondary, fontSize: 11 }}>{item.data}</Text>
-              </View>
-              <Text style={{ color: colors.textSecondary, fontSize: 12 }}>{item.cliente} — {item.tecnico}</Text>
-              <Text style={{ color: colors.accent, fontSize: 13, marginTop: 6 }}>{item.pecas_utilizadas}</Text>
-            </View>
-          ))}
+          <Text style={{ color: colors.text, fontWeight: '700', fontSize: 16, marginBottom: 12 }}>
+            Chamados ({chamados.length})
+          </Text>
+          {chamados.length === 0 ? (
+            <Text style={{ color: colors.textSecondary, textAlign: 'center', paddingVertical: 24 }}>
+              Nenhum chamado encontrado.
+            </Text>
+          ) : (
+            chamados.map(c => {
+              const sla = slaInfo(c);
+              const stCor = statusColors[c.status] || colors.textSecondary;
+              const stLbl = statusLabels[c.status] || c.status;
+              return (
+                <TouchableOpacity
+                  key={c.id}
+                  style={{
+                    backgroundColor: colors.bg,
+                    borderRadius: 8,
+                    padding: 12,
+                    marginBottom: 8,
+                    borderLeftWidth: 3,
+                    borderLeftColor: stCor,
+                  }}
+                  onPress={() => router.push(`/chamado/${c.id}`)}
+                >
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <Text style={{ color: colors.text, fontWeight: '700' }}>#{c.numero}</Text>
+                    <View style={{ paddingVertical: 2, paddingHorizontal: 8, borderRadius: 6, backgroundColor: stCor + '25' }}>
+                      <Text style={{ color: stCor, fontSize: 11, fontWeight: '600' }}>{stLbl}</Text>
+                    </View>
+                  </View>
+                  <Text style={{ color: colors.text, fontSize: 13, marginBottom: 2 }}>
+                    {c.clientes?.nome || '-'}
+                  </Text>
+                  <Text style={{ color: colors.textSecondary, fontSize: 11 }}>
+                    {c.tecnicos?.nome ? `Téc.: ${c.tecnicos.nome}` : 'Sem técnico'} · {new Date(c.criado_em).toLocaleDateString('pt-BR')}
+                  </Text>
+                  {sla && (
+                    <View style={{ marginTop: 6, alignSelf: 'flex-start', paddingVertical: 2, paddingHorizontal: 8, borderRadius: 6, backgroundColor: sla.cor + '25' }}>
+                      <Text style={{ color: sla.cor, fontSize: 10, fontWeight: '600' }}>SLA {sla.texto}</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              );
+            })
+          )}
         </View>
       )}
     </ScrollView>

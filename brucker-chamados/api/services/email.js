@@ -261,6 +261,46 @@ async function notificarRelatorioEmail(cliente, chamado) {
   await enviarEmail(cliente.email, assunto, html);
 }
 
+// E-mail de redefinição de senha (admin ou técnico)
+async function enviarEmailRedefinicaoSenha(email, nome, link) {
+  const assunto = 'Redefinição de senha — Brucker Chamados';
+
+  const html = wrapEmail(`
+    <div style="background-color: #111111; padding: 20px; border-radius: 8px 8px 0 0; border-top: 4px solid #facc15;">
+      <h2 style="margin: 0; color: #facc15;">Redefinição de Senha</h2>
+    </div>
+    <div style="border: 1px solid #e5e7eb; border-top: none; padding: 20px; border-radius: 0 0 8px 8px;">
+      <p style="font-size: 16px;">Olá${nome ? `, <strong>${nome}</strong>` : ''}!</p>
+      <p>Recebemos uma solicitação para redefinir a senha da sua conta no sistema de chamados da Brucker Printers.</p>
+      <p>Clique no botão abaixo para criar uma nova senha:</p>
+      <p style="text-align: center; margin: 24px 0;">
+        <a href="${link}" style="display: inline-block; background-color: #facc15; color: #111111; font-weight: bold; padding: 12px 24px; border-radius: 6px; text-decoration: none;">
+          Redefinir senha
+        </a>
+      </p>
+      <p style="color: #6b7280; font-size: 13px;">
+        Caso o botão não funcione, copie e cole o link abaixo no seu navegador:
+      </p>
+      <p style="word-break: break-all; font-size: 12px; color: #4D8EF5;">
+        <a href="${link}" style="color: #4D8EF5;">${link}</a>
+      </p>
+      <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 16px 0;" />
+      <p style="color: #6b7280; font-size: 12px; margin: 0;">
+        Se você não solicitou esta redefinição, ignore este e-mail. Sua senha atual permanecerá inalterada.
+      </p>
+    </div>
+  `);
+
+  // Não usa enviarEmail() porque ele engole erros — aqui precisamos propagar
+  // a falha para o controller responder corretamente ao usuário.
+  await transporter.sendMail({
+    from: process.env.SMTP_FROM || process.env.SMTP_USER,
+    to: email,
+    subject: assunto,
+    html,
+  });
+}
+
 module.exports = {
   enviarEmail,
   notificarNovoChamadoEmail,
@@ -268,4 +308,5 @@ module.exports = {
   notificarTecnicoAtribuidoEmail,
   notificarChamadoConcluidoEmail,
   notificarRelatorioEmail,
+  enviarEmailRedefinicaoSenha,
 };

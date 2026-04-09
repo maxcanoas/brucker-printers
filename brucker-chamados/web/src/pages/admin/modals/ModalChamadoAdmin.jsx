@@ -94,7 +94,7 @@ export default function ModalChamadoAdmin({ chamado, tecnicos, onClose, onAtuali
             <p style={{ color: theme.text, margin: 0, lineHeight: 1.6 }}>{detalhes.descricao}</p>
           </div>
 
-          <SlaIndicator slaVenceEm={detalhes.sla_vence_em} slaPausadoEm={detalhes.sla_pausado_em} status={detalhes.status} />
+          <SlaIndicator slaVenceEm={detalhes.sla_vence_em} slaPausadoEm={detalhes.sla_pausado_em} status={detalhes.status} slaTempoRestanteMinutos={detalhes.sla_tempo_restante_minutos} />
 
           <div style={{ borderTop: `1px solid ${theme.border}`, marginTop: '20px', paddingTop: '20px' }}>
             <h3 style={{ color: theme.text, fontSize: '16px', marginBottom: '16px' }}>Atualizar Chamado</h3>

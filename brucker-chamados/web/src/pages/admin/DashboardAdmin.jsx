@@ -236,7 +236,7 @@ export default function DashboardAdmin() {
           />
         )}
 
-        {aba === 'relatorios' && <RelatoriosTab />}
+        {aba === 'relatorios' && <RelatoriosTab clientes={clientes} tecnicos={tecnicos} />}
 
         {aba === 'avaliacoes' && <AvaliacoesTab tecnicos={tecnicos} />}
       </main>

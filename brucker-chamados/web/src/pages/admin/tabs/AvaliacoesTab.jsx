@@ -162,7 +162,7 @@ export default function AvaliacoesTab({ tecnicos }) {
                 </thead>
                 <tbody>
                   {avaliacoes.map((a, index) => (
-                    <tr key={a.id} className="table-row" style={{ backgroundColor: index % 2 === 1 ? 'rgba(30, 37, 51, 0.5)' : 'transparent' }}>
+                    <tr key={a.id} className="table-row" style={{ backgroundColor: index % 2 === 1 ? theme.zebraBg : 'transparent' }}>
                       <td style={tdStyle}>#{a.chamados?.numero || '—'}</td>
                       <td style={tdStyle}>{a.clientes?.nome || '—'}</td>
                       <td style={tdStyle}>{a.chamados?.tecnicos?.nome || '—'}</td>

@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const supabase = require('../services/supabase');
+const { enviarEmailRedefinicaoSenha } = require('../services/email');
 
 function gerarToken(payload) {
   return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '24h' });
@@ -84,22 +85,34 @@ exports.esqueciSenha = async (req, res) => {
     }
 
     // Verificar se é admin ou técnico
-    const { data: admin } = await supabase.from('admins').select('id').eq('email', email).single();
-    const { data: tecnico } = await supabase.from('tecnicos').select('id').eq('email', email).single();
+    const { data: admin } = await supabase.from('admins').select('nome, email').eq('email', email).single();
+    const { data: tecnico } = await supabase.from('tecnicos').select('nome, email').eq('email', email).single();
 
     if (!admin && !tecnico) {
       // Retorna sucesso mesmo se não encontrar, para não expor quais e-mails existem
       return res.json({ message: 'Se o e-mail estiver cadastrado, você receberá um link de redefinição.' });
     }
 
+    const nome = (admin || tecnico).nome;
     const redirectUrl = `${process.env.FRONTEND_URL}/redefinir-senha`;
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: redirectUrl
+    // Gera o link de recovery via Supabase Admin API (sem enviar e-mail pelo Supabase)
+    const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+      type: 'recovery',
+      email,
+      options: { redirectTo: redirectUrl },
     });
 
-    if (error) {
-      console.error('Erro ao enviar e-mail de redefinição:', error);
+    if (linkError || !linkData?.properties?.action_link) {
+      console.error('Erro ao gerar link de redefinição:', linkError);
+      return res.status(500).json({ error: 'Erro ao enviar e-mail de redefinição' });
+    }
+
+    // Envia o e-mail via nodemailer (mesmo SMTP usado pelas demais notificações)
+    try {
+      await enviarEmailRedefinicaoSenha(email, nome, linkData.properties.action_link);
+    } catch (sendError) {
+      console.error('Erro ao enviar e-mail de redefinição:', sendError);
       return res.status(500).json({ error: 'Erro ao enviar e-mail de redefinição' });
     }
 
