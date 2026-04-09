@@ -342,6 +342,17 @@ exports.aceitarChamado = async (req, res) => {
       return res.status(403).json({ error: 'Este chamado não está atribuído a você' });
     }
 
+    const { data: chamadosAtivos } = await supabase
+      .from('chamados')
+      .select('id')
+      .eq('tecnico_id', req.usuario.id)
+      .eq('status', 'em_atendimento')
+      .limit(1);
+
+    if (chamadosAtivos && chamadosAtivos.length > 0) {
+      return res.status(400).json({ error: 'Você já possui um chamado em atendimento. Encerre-o antes de aceitar outro.' });
+    }
+
     const { data, error } = await supabase
       .from('chamados')
       .update({ status: 'em_atendimento' })
