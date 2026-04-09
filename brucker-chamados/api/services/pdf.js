@@ -180,7 +180,6 @@ function criarRenderer(doc) {
     const cardY = doc.y;
     const linhasCliente = [
       ['Nome', cliente?.nome],
-      ['CNPJ', cliente?.cnpj],
       ['Telefone', cliente?.telefone],
       ['Email', cliente?.email],
     ];
@@ -188,7 +187,6 @@ function criarRenderer(doc) {
       ['Modelo', impressora?.modelo],
       ['N° Série', impressora?.numero_serie],
       ['Contrato', impressora?.tipo_contrato === 'locacao' ? 'Locação' : (impressora?.tipo_contrato || '-')],
-      ['', ''],
     ];
     const h1 = desenharCard('Cliente', linhasCliente, MARGIN, cardY, cardW);
     const h2 = desenharCard('Equipamento', linhasEquip, MARGIN + cardW + 12, cardY, cardW);
@@ -264,7 +262,8 @@ function criarRenderer(doc) {
     if (avaliacao) {
       desenharSecaoTitulo('Avaliação do cliente');
       const padding = 10;
-      const stars = '★'.repeat(avaliacao.nota || 0) + '☆'.repeat(5 - (avaliacao.nota || 0));
+      const nota = avaliacao.nota || 0;
+      const stars = `${nota} / 5`;
       const com = (avaliacao.comentario || '').trim();
       doc.font('Helvetica-Oblique').fontSize(10);
       const comH = com ? doc.heightOfString(`"${com}"`, { width: CONTENT_W - padding * 2 }) : 0;
@@ -450,7 +449,7 @@ function gerarRelatorioHistoricoPDF(filtros = {}, resumo = {}, chamados = []) {
         { label: 'Fora do SLA', valor: String(resumo.fora_sla ?? 0), cor: RED },
         { label: '% SLA Cumprido', valor: `${resumo.percentual_sla ?? 0}%` },
         { label: 'Tempo Médio', valor: resumo.tempo_medio ? `${resumo.tempo_medio} min` : '-' },
-        { label: 'Avaliação Média', valor: resumo.avaliacao_media ? `${resumo.avaliacao_media} ★` : '-' },
+        { label: 'Avaliação Média', valor: resumo.avaliacao_media ? `${resumo.avaliacao_media} / 5` : '-' },
         { label: 'Cancelados', valor: String(resumo.cancelados ?? 0) },
       ];
       const colCards = 4;

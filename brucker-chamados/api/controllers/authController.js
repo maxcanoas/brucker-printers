@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const supabase = require('../services/supabase');
+const { createAuthClient } = require('../services/supabase');
 const { enviarEmailRedefinicaoSenha } = require('../services/email');
 
 function gerarToken(payload) {
@@ -44,7 +45,8 @@ exports.loginAdmin = async (req, res) => {
       return res.status(400).json({ error: 'Email e senha são obrigatórios' });
     }
 
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+    const authClient = createAuthClient();
+    const { data: authData, error: authError } = await authClient.auth.signInWithPassword({
       email,
       password: senha
     });
@@ -148,7 +150,8 @@ exports.alterarSenha = async (req, res) => {
     }
 
     // Verificar senha atual
-    const { error: authError } = await supabase.auth.signInWithPassword({
+    const authClient = createAuthClient();
+    const { error: authError } = await authClient.auth.signInWithPassword({
       email: usuario.email,
       password: senha_atual
     });
@@ -182,7 +185,8 @@ exports.loginTecnico = async (req, res) => {
       return res.status(400).json({ error: 'Email e senha são obrigatórios' });
     }
 
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+    const authClient = createAuthClient();
+    const { data: authData, error: authError } = await authClient.auth.signInWithPassword({
       email,
       password: senha
     });

@@ -95,6 +95,19 @@ export default function ChamadoDetalhe() {
   };
 
   const encerrarChamado = () => {
+    if (chamado?.status === 'aguardando_peca') {
+      Alert.alert(
+        'Atenção',
+        'Este chamado está aguardando peça. Deseja mesmo encerrar sem receber a peça?',
+        [
+          { text: 'Não', style: 'cancel' },
+          { text: 'Sim, encerrar', onPress: () => {
+            router.push({ pathname: '/relatorio', params: { chamado_id: id, numero: chamado?.numero } });
+          }},
+        ]
+      );
+      return;
+    }
     router.push({ pathname: '/relatorio', params: { chamado_id: id, numero: chamado?.numero } });
   };
 
