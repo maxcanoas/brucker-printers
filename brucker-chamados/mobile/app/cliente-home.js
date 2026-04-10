@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl,
-  Alert, TextInput, Modal, ScrollView, ActivityIndicator
+  Alert, TextInput, Modal, ScrollView, ActivityIndicator, Image
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
@@ -232,6 +233,19 @@ function ModalAbrirChamado({ visible, onClose, onCriado }) {
     tipo: 'corretivo', urgencia: 'normal', descricao: ''
   });
   const [salvando, setSalvando] = useState(false);
+  const [fotos, setFotos] = useState([]);
+
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsMultipleSelection: true,
+      selectionLimit: 5 - fotos.length,
+      quality: 0.7,
+    });
+    if (!result.canceled) {
+      setFotos(prev => [...prev, ...result.assets].slice(0, 5));
+    }
+  };
 
   const buscarImpressora = async (serie) => {
     setForm(f => ({ ...f, numero_serie: serie, impressora_id: '', modelo: '' }));
@@ -248,14 +262,23 @@ function ModalAbrirChamado({ visible, onClose, onCriado }) {
     }
     setSalvando(true);
     try {
-      await api.post('/chamados', {
-        impressora_id: form.impressora_id || null,
-        tipo: form.tipo,
-        urgencia: form.urgencia,
-        descricao: form.descricao
+      const formData = new FormData();
+      formData.append('tipo', form.tipo);
+      formData.append('urgencia', form.urgencia);
+      formData.append('descricao', form.descricao);
+      if (form.impressora_id) formData.append('impressora_id', form.impressora_id);
+      fotos.forEach((foto, i) => {
+        const uri = foto.uri;
+        const ext = uri.split('.').pop() || 'jpg';
+        formData.append('fotos', { uri, name: `foto-${i}.${ext}`, type: `image/${ext === 'jpg' ? 'jpeg' : ext}` });
+      });
+
+      await api.post('/chamados', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
       Alert.alert('Sucesso', 'Chamado aberto com sucesso!');
       setForm({ numero_serie: '', impressora_id: '', modelo: '', tipo: 'corretivo', urgencia: 'normal', descricao: '' });
+      setFotos([]);
       onCriado();
     } catch (err) {
       Alert.alert('Erro', err.response?.data?.error || 'Erro ao abrir chamado');
@@ -334,9 +357,29 @@ function ModalAbrirChamado({ visible, onClose, onCriado }) {
               multiline
             />
 
-            <Text style={{ color: colors.textSecondary, fontSize: 11, textAlign: 'right', marginTop: -8, marginBottom: 16 }}>
-              SLA: 24 horas úteis
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: -4, marginBottom: 12 }}>
+              <TouchableOpacity onPress={pickImage} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <Feather name="camera" size={14} color={colors.textSecondary} />
+                <Text style={{ color: colors.textSecondary, fontSize: 11 }}>
+                  {fotos.length > 0 ? `${fotos.length} foto(s)` : 'Anexar fotos'}
+                </Text>
+              </TouchableOpacity>
+              <Text style={{ color: colors.textSecondary, fontSize: 11 }}>SLA: 24 horas úteis</Text>
+            </View>
+            {fotos.length > 0 && (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
+                {fotos.map((foto, i) => (
+                  <View key={i} style={{ marginRight: 8 }}>
+                    <Image source={{ uri: foto.uri }} style={{ width: 56, height: 56, borderRadius: 6 }} />
+                    <TouchableOpacity
+                      onPress={() => setFotos(prev => prev.filter((_, idx) => idx !== i))}
+                      style={{ position: 'absolute', top: -4, right: -4, backgroundColor: colors.card, borderRadius: 8, width: 16, height: 16, alignItems: 'center', justifyContent: 'center' }}>
+                      <Text style={{ color: colors.textSecondary, fontSize: 10, lineHeight: 12 }}>&times;</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </ScrollView>
+            )}
 
             <TouchableOpacity
               style={[styles.submitBtn, salvando && { opacity: 0.7 }]}

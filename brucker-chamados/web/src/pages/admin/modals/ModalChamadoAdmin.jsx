@@ -94,6 +94,19 @@ export default function ModalChamadoAdmin({ chamado, tecnicos, onClose, onAtuali
             <p style={{ color: theme.text, margin: 0, lineHeight: 1.6 }}>{detalhes.descricao}</p>
           </div>
 
+          {detalhes.fotos?.length > 0 && (
+            <div style={{ marginBottom: '20px' }}>
+              <p style={{ color: theme.textSecondary, fontSize: '12px', margin: '0 0 8px' }}>Fotos</p>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {detalhes.fotos.map((url, i) => (
+                  <img key={i} src={url} alt={`Foto ${i + 1}`}
+                    onClick={() => window.open(url, '_blank')}
+                    style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 8, cursor: 'pointer', border: `1px solid ${theme.border}` }} />
+                ))}
+              </div>
+            </div>
+          )}
+
           <SlaIndicator slaVenceEm={detalhes.sla_vence_em} slaPausadoEm={detalhes.sla_pausado_em} status={detalhes.status} slaTempoRestanteMinutos={detalhes.sla_tempo_restante_minutos} />
 
           <div style={{ borderTop: `1px solid ${theme.border}`, marginTop: '20px', paddingTop: '20px' }}>

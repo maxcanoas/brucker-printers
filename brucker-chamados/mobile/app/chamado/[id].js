@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, Alert, ActivityIndicator, KeyboardAvoidingView, Platform
+  View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, Image, Linking
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -208,6 +208,20 @@ export default function ChamadoDetalhe() {
         <Text style={styles.sectionTitle}>Descrição do Problema</Text>
         <Text style={styles.descricao}>{chamado.descricao}</Text>
       </View>
+
+      {/* Fotos */}
+      {chamado.fotos?.length > 0 && (
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Fotos</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {chamado.fotos.map((url, i) => (
+              <TouchableOpacity key={i} onPress={() => Linking.openURL(url)} style={{ marginRight: 8 }}>
+                <Image source={{ uri: url }} style={{ width: 80, height: 80, borderRadius: 8 }} />
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
 
       {/* Técnico: Aceitar chamado atribuído */}
       {isTecnico && chamado.status === 'atribuido' && (

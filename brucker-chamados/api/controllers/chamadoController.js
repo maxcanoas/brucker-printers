@@ -38,6 +38,28 @@ exports.criarChamado = async (req, res) => {
       }
     }
 
+    // Upload de fotos para Supabase Storage (opcional)
+    let fotos = [];
+    if (req.files && req.files.length > 0) {
+      for (let i = 0; i < req.files.length; i++) {
+        const file = req.files[i];
+        const ext = file.mimetype.split('/')[1] === 'jpeg' ? 'jpg' : file.mimetype.split('/')[1];
+        const path = `${req.usuario.id}/${Date.now()}-${i}.${ext}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('chamado-fotos')
+          .upload(path, file.buffer, { contentType: file.mimetype, upsert: false });
+
+        if (uploadError) throw uploadError;
+
+        const { data: urlData } = supabase.storage
+          .from('chamado-fotos')
+          .getPublicUrl(path);
+
+        fotos.push(urlData.publicUrl);
+      }
+    }
+
     // SLA fixo em 24 horas
     const sla_horas = 24;
     const agora = new Date();
@@ -51,6 +73,7 @@ exports.criarChamado = async (req, res) => {
         tipo,
         urgencia: urgencia || 'normal',
         descricao,
+        fotos,
         sla_horas,
         sla_vence_em: sla_vence_em.toISOString()
       })

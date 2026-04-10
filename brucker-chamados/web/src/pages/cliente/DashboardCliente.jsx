@@ -10,7 +10,7 @@ import { LoadingButton } from '../../components/LoadingButton';
 import toast from 'react-hot-toast';
 import {
   FileText, Printer, PlusCircle, LogOut, Clock, CheckCircle,
-  AlertCircle, Wrench, LayoutDashboard, Star, XCircle, Sun, Moon
+  AlertCircle, Wrench, LayoutDashboard, Star, XCircle, Sun, Moon, Camera
 } from 'lucide-react';
 
 export default function DashboardCliente() {
@@ -249,6 +249,7 @@ function ModalAbrirChamado({ isOpen, onClose, impressoras, onCriado, theme, inpu
     tipo: 'corretivo', urgencia: 'normal', descricao: ''
   });
   const [carregando, setCarregando] = useState(false);
+  const [fotos, setFotos] = useState([]);
 
   const buscarImpressora = async (serie) => {
     setForm(f => ({ ...f, numero_serie: serie, impressora_id: '', modelo: '' }));
@@ -270,14 +271,19 @@ function ModalAbrirChamado({ isOpen, onClose, impressoras, onCriado, theme, inpu
     }
     setCarregando(true);
     try {
-      await api.post('/chamados', {
-        impressora_id: form.impressora_id || null,
-        tipo: form.tipo,
-        urgencia: form.urgencia,
-        descricao: form.descricao
+      const formData = new FormData();
+      formData.append('tipo', form.tipo);
+      formData.append('urgencia', form.urgencia);
+      formData.append('descricao', form.descricao);
+      if (form.impressora_id) formData.append('impressora_id', form.impressora_id);
+      fotos.forEach(f => formData.append('fotos', f));
+
+      await api.post('/chamados', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
       toast.success('Chamado aberto com sucesso!');
       setForm({ numero_serie: '', impressora_id: '', modelo: '', tipo: 'corretivo', urgencia: 'normal', descricao: '' });
+      setFotos([]);
       onCriado();
     } catch {
       toast.error('Erro ao abrir chamado');
@@ -331,9 +337,22 @@ function ModalAbrirChamado({ isOpen, onClose, impressoras, onCriado, theme, inpu
           </div>
         </div>
 
-        <p style={{ color: theme.textSecondary, fontSize: '12px', margin: '-8px 0 16px', textAlign: 'right' }}>
-          SLA: 24 horas úteis
-        </p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '-8px 0 16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <label htmlFor="foto-input" style={{ cursor: 'pointer', color: theme.textSecondary, display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
+              <Camera size={14} /> Anexar fotos
+            </label>
+            <input id="foto-input" type="file" accept="image/*" multiple style={{ display: 'none' }}
+              onChange={(e) => { setFotos(prev => [...prev, ...Array.from(e.target.files)].slice(0, 5)); e.target.value = ''; }} />
+            {fotos.length > 0 && (
+              <span style={{ color: theme.accent, fontSize: '12px' }}>
+                {fotos.length} foto(s)
+                <span onClick={() => setFotos([])} style={{ marginLeft: '6px', cursor: 'pointer', color: theme.textSecondary }}>&times;</span>
+              </span>
+            )}
+          </div>
+          <span style={{ color: theme.textSecondary, fontSize: '12px' }}>SLA: 24 horas úteis</span>
+        </div>
 
         <div style={{ marginBottom: '24px' }}>
           <label style={{ color: theme.textSecondary, fontSize: '13px', display: 'block', marginBottom: '6px' }}>
@@ -450,6 +469,19 @@ function ModalDetalheChamado({ chamado, onClose, onAtualizado, theme, inputStyle
             <p style={{ color: theme.textSecondary, fontSize: '12px', margin: '0 0 4px' }}>Descrição</p>
             <p style={{ color: theme.text, margin: 0, lineHeight: 1.6 }}>{detalhes.descricao}</p>
           </div>
+
+          {detalhes.fotos?.length > 0 && (
+            <div style={{ marginBottom: '20px' }}>
+              <p style={{ color: theme.textSecondary, fontSize: '12px', margin: '0 0 8px' }}>Fotos</p>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {detalhes.fotos.map((url, i) => (
+                  <img key={i} src={url} alt={`Foto ${i + 1}`}
+                    onClick={() => window.open(url, '_blank')}
+                    style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 8, cursor: 'pointer', border: `1px solid ${theme.border}` }} />
+                ))}
+              </div>
+            </div>
+          )}
 
           <SlaIndicator
             slaVenceEm={detalhes.sla_vence_em}

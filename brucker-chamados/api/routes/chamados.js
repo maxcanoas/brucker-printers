@@ -2,9 +2,10 @@ const express = require('express');
 const router = express.Router();
 const chamadoController = require('../controllers/chamadoController');
 const { autenticarCliente, autenticarAdmin, autenticarTecnico, autenticarStaff, autenticar } = require('../middleware/auth');
+const upload = require('../middleware/upload');
 
 // Cliente: abrir chamado
-router.post('/', autenticarCliente, chamadoController.criarChamado);
+router.post('/', autenticarCliente, upload.array('fotos', 5), chamadoController.criarChamado);
 
 // Cliente: cancelar chamado
 router.put('/:id/cancelar', autenticarCliente, chamadoController.cancelarChamado);
