@@ -166,6 +166,24 @@ export default function DashboardAdmin() {
               marginBottom: '4px', fontFamily: "'Barlow', sans-serif", textAlign: 'left'
             }}>
               <item.icon size={18} /> {item.label}
+              {item.id === 'chamados' && dashboard?.abertos > 0 && (
+                <span style={{
+                  marginLeft: 'auto',
+                  backgroundColor: '#E84C1E',
+                  color: '#FFF',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  minWidth: '20px',
+                  height: '20px',
+                  borderRadius: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '0 6px',
+                }}>
+                  {dashboard.abertos}
+                </span>
+              )}
             </button>
           ))}
         </nav>

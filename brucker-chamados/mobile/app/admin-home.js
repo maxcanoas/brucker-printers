@@ -38,12 +38,16 @@ export default function AdminHomeScreen() {
   const { colors } = useTheme();
   const [aba, setAba] = useState('dashboard');
   const [admin, setAdmin] = useState(null);
+  const [abertosCount, setAbertosCount] = useState(0);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   useEffect(() => {
     AsyncStorage.getItem('admin').then(d => { if (d) setAdmin(JSON.parse(d)); });
+    api.get('/admin/dashboard').then(res => {
+      setAbertosCount(res.data?.abertos || 0);
+    }).catch(() => {});
   }, []);
 
   const handleLogout = async () => {
@@ -65,7 +69,7 @@ export default function AdminHomeScreen() {
       </View>
 
       {/* Content */}
-      {aba === 'dashboard' && <DashboardTab router={router} />}
+      {aba === 'dashboard' && <DashboardTab router={router} onAbertosChange={setAbertosCount} />}
       {aba === 'chamados' && <ChamadosTab router={router} />}
       {aba === 'clientes' && <ClientesTab />}
       {aba === 'impressoras' && <ImpressorasTab />}
@@ -81,7 +85,20 @@ export default function AdminHomeScreen() {
             style={[styles.tabBtn, aba === tab.id && styles.tabBtnAtivo]}
             onPress={() => setAba(tab.id)}
           >
-            <Feather name={tab.icon} size={20} color={aba === tab.id ? colors.accent : colors.textSecondary} />
+            <View style={{ position: 'relative' }}>
+              <Feather name={tab.icon} size={20} color={aba === tab.id ? colors.accent : colors.textSecondary} />
+              {tab.id === 'chamados' && abertosCount > 0 && (
+                <View style={{
+                  position: 'absolute', top: -4, right: -8,
+                  backgroundColor: colors.red,
+                  borderRadius: 8, minWidth: 16, height: 16,
+                  alignItems: 'center', justifyContent: 'center',
+                  paddingHorizontal: 4,
+                }}>
+                  <Text style={{ color: '#FFF', fontSize: 9, fontWeight: '700' }}>{abertosCount}</Text>
+                </View>
+              )}
+            </View>
             <Text style={[styles.tabLabel, aba === tab.id && styles.tabLabelAtivo]}>
               {tab.label}
             </Text>
@@ -95,7 +112,7 @@ export default function AdminHomeScreen() {
 // ═══════════════════════════════════════════
 // TAB: DASHBOARD
 // ═══════════════════════════════════════════
-function DashboardTab({ router }) {
+function DashboardTab({ router, onAbertosChange }) {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [dashboard, setDashboard] = useState(null);
@@ -110,8 +127,9 @@ function DashboardTab({ router }) {
       ]);
       setDashboard(dashRes.data);
       setChamados(chamadosRes.data.data || chamadosRes.data);
+      onAbertosChange?.(dashRes.data?.abertos || 0);
     } catch {}
-  }, []);
+  }, [onAbertosChange]);
 
   useEffect(() => { carregar(); }, [carregar]);
 
