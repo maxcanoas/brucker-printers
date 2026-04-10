@@ -120,3 +120,19 @@ exports.desativar = async (req, res) => {
     res.status(500).json({ error: 'Erro ao desativar impressora' });
   }
 };
+
+exports.reativar = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('impressoras')
+      .update({ ativo: true })
+      .eq('id', req.params.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json({ message: 'Impressora reativada', data });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao reativar impressora' });
+  }
+};

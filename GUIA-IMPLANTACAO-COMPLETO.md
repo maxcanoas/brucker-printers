@@ -1,7 +1,7 @@
 
 # Guia Completo de Implantacao - Sistema Brucker Printers
 
-> **Data:** 22/03/2026
+> **Data:** 31/03/2026 (atualizado)
 > **Projeto:** Site institucional + Sistema de Chamados Tecnicos (Web + API + App Mobile)
 > **Dominio atual:** www.bruckerprinters.com.br
 
@@ -16,14 +16,15 @@
 5. [ETAPA 3 - Painel Web do Sistema de Chamados](#5-etapa-3---painel-web-do-sistema-de-chamados)
 6. [ETAPA 4 - Atualizar o Site Institucional](#6-etapa-4---atualizar-o-site-institucional)
 7. [ETAPA 5 - Notificacoes WhatsApp (Twilio)](#7-etapa-5---notificacoes-whatsapp-twilio)
-8. [ETAPA 6 - App Mobile (Play Store e Apple Store)](#8-etapa-6---app-mobile-play-store-e-apple-store)
-9. [ETAPA 7 - Testes Completos](#9-etapa-7---testes-completos)
-10. [ETAPA 8 - Cadastros Iniciais (Primeiros Dados)](#10-etapa-8---cadastros-iniciais-primeiros-dados)
-11. [Fluxo Completo: Como Tudo Funciona no Dia a Dia](#11-fluxo-completo-como-tudo-funciona-no-dia-a-dia)
-12. [Custos Mensais Estimados](#12-custos-mensais-estimados)
-13. [Manutencao e Monitoramento](#13-manutencao-e-monitoramento)
-14. [Problemas Comuns e Solucoes](#14-problemas-comuns-e-solucoes)
-15. [Glossario de Termos Tecnicos](#15-glossario-de-termos-tecnicos)
+8. [ETAPA 6 - Notificacoes por Email (SMTP)](#8-etapa-6---notificacoes-por-email-smtp)
+9. [ETAPA 7 - App Mobile (Play Store e Apple Store)](#9-etapa-7---app-mobile-play-store-e-apple-store)
+10. [ETAPA 8 - Testes Completos](#10-etapa-8---testes-completos)
+11. [ETAPA 9 - Cadastros Iniciais (Primeiros Dados)](#11-etapa-9---cadastros-iniciais-primeiros-dados)
+12. [Fluxo Completo: Como Tudo Funciona no Dia a Dia](#12-fluxo-completo-como-tudo-funciona-no-dia-a-dia)
+13. [Custos Mensais Estimados](#13-custos-mensais-estimados)
+14. [Manutencao e Monitoramento](#14-manutencao-e-monitoramento)
+15. [Problemas Comuns e Solucoes](#15-problemas-comuns-e-solucoes)
+16. [Glossario de Termos Tecnicos](#16-glossario-de-termos-tecnicos)
 
 ---
 
@@ -38,9 +39,11 @@ O sistema da Brucker Printers e composto por **4 partes** que trabalham juntas:
 |                            |       |                            |
 |   - Pagina inicial         |       |   - Login de Tecnico       |
 |   - Pagina de impressoras  |       |   - Login de Admin         |
-|   - Botao "Abrir Chamado"--+--+    |   - Ver chamados           |
-+----------------------------+  |    |   - Atualizar status       |
+|   - Botao "Abrir Chamado"--+--+    |   - Login de Cliente       |
++----------------------------+  |    |   - Ver/aceitar chamados   |
+                                |    |   - Atualizar status       |
                                 |    |   - Gerar relatorio        |
+                                |    |   - Avaliar atendimento    |
                                 |    +-------------+--------------+
                                 |                  |
                                 v                  v
@@ -51,7 +54,8 @@ O sistema da Brucker Printers e composto por **4 partes** que trabalham juntas:
                     |                            |
                     |   - Login do Cliente       |
                     |   - Login do Admin         |
-                    |   - Abrir chamados         |
+                    |   - Abrir/cancelar chamados|
+                    |   - Avaliar atendimento    |
                     |   - Gerenciar tudo         |
                     +-------------+--------------+
                                   |
@@ -64,27 +68,54 @@ O sistema da Brucker Printers e composto por **4 partes** que trabalham juntas:
                     |   - Processa requisicoes   |
                     |   - Regras de negocio      |
                     |   - Autenticacao           |
+                    |   - SLA com horario comerc.|
                     +-------------+--------------+
                                   |
-                                  v
-                    +----------------------------+
-                    |   BANCO DE DADOS           |
-                    |   (Supabase/PostgreSQL)    |
-                    |                            |
-                    |   - Clientes               |
-                    |   - Chamados               |
-                    |   - Tecnicos               |
-                    |   - Impressoras            |
-                    +----------------------------+
+                     +------------+------------+
+                     |            |            |
+                     v            v            v
+          +-----------+  +--------+--+  +-----+------+
+          |  BANCO DE |  | NOTIFIC.  |  | NOTIFIC.   |
+          |  DADOS    |  | EMAIL     |  | WHATSAPP   |
+          | (Supabase)|  | (SMTP)    |  | (Twilio)   |
+          |           |  |           |  |            |
+          | 9 tabelas |  | Gmail ou  |  | Opcional   |
+          | Realtime  |  | profiss.  |  |            |
+          +-----------+  +-----------+  +------------+
 ```
 
 ### Quem usa o que:
 
-| Pessoa         | O que usa                         | Como acessa                              |
-|----------------|-----------------------------------|------------------------------------------|
-| **Cliente**    | Site + Painel Web                 | Clica "Abrir Chamado" no site, loga com codigo de acesso |
-| **Tecnico**    | App Mobile                        | Baixa o app na loja, loga com email/senha |
-| **Admin**      | Painel Web + App Mobile           | Acessa o painel web OU o app             |
+| Pessoa         | O que usa                         | Como acessa                              | O que pode fazer |
+|----------------|-----------------------------------|------------------------------------------|------------------|
+| **Cliente**    | Site + Painel Web + App Mobile    | Clica "Abrir Chamado" no site, loga com codigo de acesso | Abrir chamados, cancelar chamados, avaliar atendimento (1-5 estrelas), acompanhar status em tempo real |
+| **Tecnico**    | App Mobile                        | Baixa o app na loja, loga com email/senha | Aceitar chamados atribuidos, atualizar status, registrar pecas/aguardar peca, gerar relatorio de atendimento |
+| **Admin**      | Painel Web + App Mobile           | Acessa o painel web OU o app             | Gerenciar clientes/impressoras/tecnicos, atribuir tecnicos, ver avaliacoes, gerar relatorios PDF/Excel, alterar senha |
+
+### Fluxo de status dos chamados:
+
+```
+aberto --> atribuido --> em_atendimento --> aguardando_peca --> concluido
+                                       \                    /
+                                        +------------------+
+                                        (volta quando peca chega)
+
+* "cancelado" pode ser feito a partir de qualquer status (exceto concluido)
+```
+
+### Banco de dados - 9 tabelas:
+
+| Tabela | O que guarda |
+|--------|-------------|
+| `clientes` | Empresas clientes (nome, codigo de acesso, email, telefone) |
+| `impressoras` | Impressoras cadastradas (modelo, serie, contrato, cliente) |
+| `tecnicos` | Tecnicos (nome, email, whatsapp, push token) |
+| `admins` | Administradores (nome, email, push token) |
+| `chamados` | Chamados/ordens de servico (status, SLA, urgencia, etc.) |
+| `chamado_atualizacoes` | Historico de mudancas de status de cada chamado |
+| `relatorios_atendimento` | Relatorios preenchidos pelo tecnico ao concluir |
+| `avaliacoes` | Notas de 1-5 estrelas dadas pelos clientes |
+| `configuracoes` | Configuracoes do sistema (horario comercial para SLA) |
 
 ---
 
@@ -99,6 +130,7 @@ Antes de colocar tudo no ar, voce precisa ter estas contas e servicos contratado
 | **Supabase** | Banco de dados na nuvem | Gratis ate 500MB (plano Free) | https://supabase.com |
 | **Render** ou **Railway** | Hospedar a API (servidor backend) | ~$7/mes (Render) ou ~$5/mes (Railway) | https://render.com ou https://railway.app |
 | **Vercel** | Hospedar o Painel Web de chamados | Gratis (plano Hobby) | https://vercel.com |
+| **Conta de email SMTP** | Enviar notificacoes por email (novos chamados, mudancas de status, etc.) | Gratis (Gmail com App Password) | Usar sua conta Gmail existente |
 | **Conta Google Play** | Publicar app Android na Play Store | $25 (unica vez) | https://play.google.com/console |
 | **Conta Apple Developer** | Publicar app iOS na App Store | $99/ano (~R$500/ano) | https://developer.apple.com |
 | **Conta Expo (EAS)** | Compilar o app para as lojas | Gratis ate 30 builds/mes | https://expo.dev |
@@ -148,16 +180,22 @@ O banco de dados ja esta criado no Supabase. Mas voce precisa garantir que tudo 
 ### 3.2 Verificar se as tabelas existem
 
 1. No menu lateral esquerdo, clique em **"Table Editor"**
-2. Voce deve ver estas 7 tabelas:
+2. Voce deve ver estas **9 tabelas**:
    - `admins`
+   - `avaliacoes`
    - `chamado_atualizacoes`
    - `chamados`
    - `clientes`
+   - `configuracoes`
    - `impressoras`
    - `relatorios_atendimento`
    - `tecnicos`
 
-**Se as tabelas NAO existirem**, voce precisa executar o script de migracao:
+**Se as tabelas NAO existirem**, voce precisa executar os scripts de migracao (siga o passo 3.3).
+
+**Se existem apenas 7 tabelas** (faltam `avaliacoes` e `configuracoes`), voce precisa executar a migracao V2 (siga o passo 3.4).
+
+### 3.3 Executar a migracao base (se nenhuma tabela existir)
 
 1. No menu lateral, clique em **"SQL Editor"**
 2. Clique em **"New query"**
@@ -167,15 +205,48 @@ O banco de dados ja esta criado no Supabase. Mas voce precisa garantir que tudo 
 6. Clique no botao **"Run"** (ou pressione Ctrl+Enter)
 7. Deve aparecer "Success" sem erros
 
-### 3.3 Verificar o Realtime
+> **IMPORTANTE:** Apos executar a migracao base, execute tambem a migracao V2 no passo 3.4.
 
-O sistema usa atualizacoes em tempo real. Para verificar:
+### 3.4 Executar a migracao V2 (adiciona avaliacoes, configuracoes e melhorias)
+
+Esta migracao adiciona funcionalidades novas: sistema de avaliacoes, configuracao de horario comercial, status "atribuido" nos chamados, e melhoria no calculo de SLA.
+
+1. No **"SQL Editor"** do Supabase, clique em **"New query"**
+2. Abra o arquivo `brucker-chamados/api/database/migration_v2.sql` no seu computador
+3. Copie TODO o conteudo do arquivo
+4. Cole no editor SQL do Supabase
+5. Clique no botao **"Run"**
+6. Deve aparecer "Success" sem erros
+
+### 3.5 Adicionar coluna push_token na tabela admins
+
+O sistema envia notificacoes push para os celulares dos administradores. Para isso funcionar, a tabela `admins` precisa de uma coluna extra que nao esta nos scripts de migracao.
+
+1. No **"SQL Editor"** do Supabase, clique em **"New query"**
+2. Cole e execute este comando:
+
+```sql
+ALTER TABLE admins ADD COLUMN IF NOT EXISTS push_token TEXT;
+```
+
+3. Clique em **"Run"**
+
+> **POR QUE ISSO E NECESSARIO:** As notificacoes push usam um "token" (codigo unico do celular) para saber para qual aparelho enviar. Sem essa coluna, o admin nao recebe notificacoes push no app mobile.
+
+### 3.6 Verificar o Realtime
+
+O sistema usa atualizacoes em tempo real (a tela atualiza sozinha, sem precisar dar F5). Para verificar:
 
 1. No menu lateral, clique em **"Database"** > **"Replication"**
-2. Na secao "Realtime", verifique se as tabelas `chamados` e `chamado_atualizacoes` estao com o toggle **ligado**
-3. Se nao estiverem, clique no toggle para ativar
+2. Na secao "Realtime", verifique se estas **3 tabelas** estao com o toggle **ligado**:
+   - `chamados`
+   - `chamado_atualizacoes`
+   - `avaliacoes`
+3. Se alguma nao estiver ativada, clique no toggle para ativar
 
-### 3.4 Criar o primeiro usuario Admin no Supabase Auth
+> **IMPORTANTE:** Se `avaliacoes` nao estiver na lista, e porque a migracao V2 nao foi executada. Volte ao passo 3.4.
+
+### 3.7 Criar o primeiro usuario Admin no Supabase Auth
 
 O admin loga com email/senha pelo Supabase Auth. Voce precisa criar esse usuario:
 
@@ -189,7 +260,7 @@ O admin loga com email/senha pelo Supabase Auth. Voce precisa criar esse usuario
 5. Clique em **"Create user"**
 6. **ANOTE** o `User UID` que aparece - voce vai precisar no proximo passo
 
-### 3.5 Inserir o Admin na tabela `admins`
+### 3.8 Inserir o Admin na tabela `admins`
 
 Agora voce precisa vincular o usuario Auth com a tabela admins:
 
@@ -208,7 +279,7 @@ VALUES (
 
 3. Clique em **"Run"**
 
-### 3.6 Anotar as chaves do Supabase
+### 3.9 Anotar as chaves do Supabase
 
 Voce vai precisar dessas chaves em varias etapas. Para encontra-las:
 
@@ -228,7 +299,7 @@ SUPABASE_SERVICE_ROLE_KEY = eyJhbGciOiJIUz... (outra chave longa - NUNCA compart
 
 ## 4. ETAPA 2 - Servidor da API (Backend)
 
-A API e o "cerebro" do sistema. Ela recebe as requisicoes do painel web e do app, processa as regras de negocio, e salva/busca dados no banco.
+A API e o "cerebro" do sistema. Ela recebe as requisicoes do painel web e do app, processa as regras de negocio, calcula SLA com base no horario comercial, envia notificacoes, e salva/busca dados no banco.
 
 ### 4.1 Opcao A: Deploy no Render (RECOMENDADO para iniciantes)
 
@@ -280,26 +351,64 @@ git push -u origin main
 
 > **IMPORTANTE:** O plano Free desliga o servidor apos 15 minutos sem uso, fazendo a proxima requisicao demorar ~30 segundos. Para um sistema de chamados em producao, use pelo menos o plano **Starter ($7/mes)**.
 
-4. Clique em **"Advanced"** e adicione as **variaveis de ambiente**:
+4. Clique em **"Advanced"** e adicione as **variaveis de ambiente**.
 
-| Key | Value |
-|-----|-------|
-| `SUPABASE_URL` | `https://bzvzxecflpcvtlkxoulm.supabase.co` |
-| `SUPABASE_SERVICE_KEY` | (cole a Service Role Key do Supabase) |
-| `SUPABASE_ANON_KEY` | (cole a Anon Key do Supabase) |
-| `JWT_SECRET` | (crie uma senha longa e aleatoria, ex: `bkr-prod-2026-X7k9mP2qR5tY8wZ1`) |
-| `PORT` | `3001` |
-| `NODE_ENV` | `production` |
-| `FRONTEND_URL` | `https://chamados.bruckerprinters.com.br` |
-| `TWILIO_ACCOUNT_SID` | (deixe vazio por enquanto se nao configurou Twilio) |
-| `TWILIO_AUTH_TOKEN` | (deixe vazio por enquanto) |
-| `TWILIO_WHATSAPP_FROM` | (deixe vazio por enquanto) |
+#### Passo 4: Configurar TODAS as variaveis de ambiente
+
+Esta e uma das partes mais importantes. Configure cada variavel abaixo no Render:
+
+**Variaveis do Supabase (OBRIGATORIAS):**
+
+| Key | Value | Explicacao |
+|-----|-------|-----------|
+| `SUPABASE_URL` | `https://bzvzxecflpcvtlkxoulm.supabase.co` | URL do seu projeto Supabase |
+| `SUPABASE_SERVICE_KEY` | (cole a Service Role Key do Supabase) | Chave secreta de administracao |
+| `SUPABASE_ANON_KEY` | (cole a Anon Key do Supabase) | Chave publica do Supabase |
+
+**Variaveis de Autenticacao (OBRIGATORIAS):**
+
+| Key | Value | Explicacao |
+|-----|-------|-----------|
+| `JWT_SECRET` | (crie uma frase secreta longa e aleatoria, ex: `bkr-prod-2026-X7k9mP2qR5tY8wZ1`) | Usada para gerar os tokens de login |
+
+**Variaveis do Servidor (OBRIGATORIAS):**
+
+| Key | Value | Explicacao |
+|-----|-------|-----------|
+| `PORT` | `3001` | Porta onde a API roda |
+| `NODE_ENV` | `production` | Modo de producao |
+| `FRONTEND_URL` | `https://chamados.bruckerprinters.com.br` | URL(s) do painel web. Suporta multiplas URLs separadas por virgula |
+
+> **NOTA SOBRE CORS:** O sistema ja e configurado para aceitar automaticamente as URLs listadas em `FRONTEND_URL`. Se voce tiver mais de uma URL (ex: dominio personalizado + dominio da Vercel), separe por virgula:
+> `https://chamados.bruckerprinters.com.br,https://brucker-chamados.vercel.app`
+> **Nao e necessario alterar nenhum codigo** para configurar o CORS.
+
+**Variaveis de Email - SMTP (OBRIGATORIAS):**
+
+| Key | Value | Explicacao |
+|-----|-------|-----------|
+| `SMTP_HOST` | `smtp.gmail.com` | Servidor de email (Gmail neste exemplo) |
+| `SMTP_PORT` | `587` | Porta do servidor de email |
+| `SMTP_USER` | `seuemail@gmail.com` | Email que vai enviar as notificacoes |
+| `SMTP_PASS` | (App Password do Gmail - veja ETAPA 6) | Senha especial do app (NAO e a senha normal do Gmail) |
+| `SMTP_FROM` | `Brucker Chamados <seuemail@gmail.com>` | Nome que aparece no remetente |
+| `NOTIFY_EMAILS` | `admin1@email.com,admin2@email.com` | Emails que recebem notificacao de novos chamados (separados por virgula) |
+
+> **IMPORTANTE:** As variaveis de email sao obrigatorias para o sistema funcionar corretamente. O sistema envia emails automaticos quando chamados sao criados, quando o status muda, quando um tecnico e atribuido, e quando um chamado e concluido. Veja detalhes na ETAPA 6.
+
+**Variaveis do Twilio - WhatsApp (OPCIONAIS):**
+
+| Key | Value | Explicacao |
+|-----|-------|-----------|
+| `TWILIO_ACCOUNT_SID` | (deixe vazio se nao configurou Twilio) | Identificador da conta Twilio |
+| `TWILIO_AUTH_TOKEN` | (deixe vazio se nao configurou Twilio) | Token de autenticacao Twilio |
+| `TWILIO_WHATSAPP_FROM` | `whatsapp:+14155238886` | Numero WhatsApp de envio |
 
 5. Clique em **"Create Web Service"**
 6. Aguarde o deploy (pode levar 2-5 minutos)
 7. Quando terminar, o Render vai gerar uma URL como: `https://brucker-api.onrender.com`
 
-#### Passo 4: Testar a API
+#### Passo 5: Testar a API
 
 Abra o navegador e acesse:
 ```
@@ -308,7 +417,7 @@ https://brucker-api.onrender.com/api/health
 
 Deve retornar:
 ```json
-{"status": "ok", "timestamp": "2026-03-22T..."}
+{"status": "ok", "timestamp": "2026-03-31T..."}
 ```
 
 Se retornou isso, a API esta funcionando!
@@ -322,7 +431,7 @@ Se preferir o Railway:
 1. Acesse https://railway.app e crie uma conta
 2. Clique em **"New Project"** > **"Deploy from GitHub repo"**
 3. Selecione o repositorio
-4. Clique em **"Add variables"** e adicione as mesmas variaveis de ambiente da Opcao A
+4. Clique em **"Add variables"** e adicione as mesmas variaveis de ambiente da Opcao A (todas elas!)
 5. Em **Settings** > **Root Directory**, coloque: `brucker-chamados/api`
 6. Em **Settings** > **Start Command**, coloque: `node server.js`
 7. O deploy e automatico
@@ -346,7 +455,7 @@ Em vez de usar `brucker-api.onrender.com`, voce pode usar `api.bruckerprinters.c
 
 ## 5. ETAPA 3 - Painel Web do Sistema de Chamados
 
-O painel web e a interface onde os clientes abrem chamados e os administradores gerenciam tudo.
+O painel web e a interface onde os clientes abrem chamados, avaliam atendimentos, e os administradores gerenciam tudo.
 
 ### 5.1 Deploy na Vercel (RECOMENDADO)
 
@@ -380,6 +489,8 @@ A Vercel e gratuita para projetos pessoais e perfeita para React/Vite.
 | `VITE_SUPABASE_URL` | `https://bzvzxecflpcvtlkxoulm.supabase.co` |
 | `VITE_SUPABASE_ANON_KEY` | (cole a Anon Key do Supabase) |
 
+> **IMPORTANTE:** As variaveis do frontend PRECISAM comecar com `VITE_`. Sem esse prefixo, o Vite ignora a variavel.
+
 5. Clique em **"Deploy"**
 6. Aguarde o build (1-2 minutos)
 7. A Vercel vai gerar uma URL como: `https://brucker-chamados.vercel.app`
@@ -408,27 +519,23 @@ Agora que voce tem a URL final do painel, atualize no Render:
 1. Va ao painel do Render > seu servico `brucker-api`
 2. Va em **"Environment"**
 3. Edite a variavel `FRONTEND_URL` para: `https://chamados.bruckerprinters.com.br`
+   - Se quiser manter a URL da Vercel tambem: `https://chamados.bruckerprinters.com.br,https://brucker-chamados.vercel.app`
 4. O Render vai fazer redeploy automatico
 
 ---
 
 ## 6. ETAPA 4 - Atualizar o Site Institucional
 
-O site principal (bruckerprinters.com.br) tem um botao "Abrir Chamado" que atualmente aponta para `localhost:5173`. Voce precisa atualizar para a URL de producao.
+O site principal (bruckerprinters.com.br) tem um link para a area do cliente que atualmente aponta para `localhost:5173`. Voce precisa atualizar para a URL de producao.
 
-### 6.1 Alterar o link do botao
+### 6.1 Alterar o link
 
 1. Abra o arquivo `index.html` na raiz do projeto
-2. Encontre a linha 144 (aproximadamente):
+2. Procure por `localhost:5173` (use Ctrl+F)
+3. Troque todas as ocorrencias por a URL do seu frontend:
 
-```html
-<a href="http://localhost:5173/cliente" class="btn-header btn-chamado" target="_blank" rel="noopener noreferrer">Abrir Chamado</a>
 ```
-
-3. Altere para:
-
-```html
-<a href="https://chamados.bruckerprinters.com.br/cliente" class="btn-header btn-chamado" target="_blank" rel="noopener noreferrer">Abrir Chamado</a>
+https://chamados.bruckerprinters.com.br
 ```
 
 ### 6.2 Subir a alteracao para a hospedagem
@@ -442,7 +549,7 @@ O site institucional e HTML puro e esta hospedado no servidor atual (provavelmen
 3. Navegue ate a pasta `public_html` (ou onde o site esta)
 4. Encontre o arquivo `index.html`
 5. Clique com botao direito > **"Edit"**
-6. Encontre a linha com `localhost:5173` e substitua por `https://chamados.bruckerprinters.com.br/cliente`
+6. Encontre as linhas com `localhost:5173` e substitua por `https://chamados.bruckerprinters.com.br`
 7. Salve o arquivo
 
 **Se voce usa FTP:**
@@ -470,7 +577,7 @@ Voce precisa criar os subdominios no painel de DNS do seu dominio:
 
 ## 7. ETAPA 5 - Notificacoes WhatsApp (Twilio)
 
-As notificacoes por WhatsApp sao **opcionais** mas muito uteis. Quando um chamado e atribuido a um tecnico, ele recebe uma mensagem no WhatsApp com os detalhes.
+As notificacoes por WhatsApp sao **opcionais** mas muito uteis. Quando um chamado e atribuido a um tecnico, ele recebe uma mensagem no WhatsApp com os detalhes. Quando um chamado e concluido, o cliente tambem recebe.
 
 ### 7.1 Criar conta no Twilio
 
@@ -518,13 +625,87 @@ Para usar um numero proprio de WhatsApp (nao o sandbox):
 
 > **NOTA:** O custo e de aproximadamente $0.05 (R$0.25) por mensagem enviada.
 
+### 7.6 Quais mensagens sao enviadas por WhatsApp
+
+| Evento | Quem recebe | Conteudo |
+|--------|------------|---------|
+| Novo chamado criado | Admins (via NOTIFY_PHONES se configurado) | Dados do chamado |
+| Tecnico atribuido | Tecnico (WhatsApp cadastrado) | Detalhes do chamado e cliente |
+| Status atualizado | Cliente (telefone cadastrado) | Novo status do chamado |
+| Chamado concluido | Cliente (telefone cadastrado) | Confirmacao de conclusao |
+
 ---
 
-## 8. ETAPA 6 - App Mobile (Play Store e Apple Store)
+## 8. ETAPA 6 - Notificacoes por Email (SMTP)
 
-Esta e a etapa mais complexa. O app e usado pelos **tecnicos** e **admins** para gerenciar chamados em campo.
+O sistema envia emails automaticos em varios momentos. Esta etapa e **obrigatoria** para o sistema funcionar corretamente.
 
-### 8.1 Preparacao: Conta Expo (EAS)
+### 8.1 Quais emails o sistema envia automaticamente
+
+| Evento | Quem recebe | O que o email diz |
+|--------|------------|-------------------|
+| Novo chamado aberto | Todos os admins + emails em NOTIFY_EMAILS | "Novo chamado #1001 aberto pela empresa X" |
+| Status do chamado mudou | Cliente (email cadastrado) | "Seu chamado #1001 mudou para Em Atendimento" |
+| Tecnico atribuido a um chamado | Tecnico (email cadastrado) | "Voce foi atribuido ao chamado #1001" |
+| Chamado concluido | Cliente (email cadastrado) | "Seu chamado #1001 foi concluido. Avalie o atendimento!" |
+| Relatorio de atendimento gerado | Cliente (email cadastrado) | "O relatorio do chamado #1001 esta disponivel" |
+
+### 8.2 Configurar o Gmail para enviar emails (mais facil)
+
+O jeito mais simples e usar sua conta Gmail existente. Para isso, voce precisa criar uma **App Password** (senha especial para apps):
+
+#### Passo 1: Ativar verificacao em duas etapas no Google
+
+1. Acesse https://myaccount.google.com/security
+2. Em **"Como voce faz login no Google"**, clique em **"Verificacao em duas etapas"**
+3. Siga as instrucoes para ativar (se ja estiver ativada, pule para o passo 2)
+
+#### Passo 2: Criar a App Password
+
+1. Acesse https://myaccount.google.com/apppasswords
+2. Em **"Nome do app"**, digite: `Brucker Chamados`
+3. Clique em **"Criar"**
+4. O Google vai gerar uma senha de 16 caracteres como: `abcd efgh ijkl mnop`
+5. **COPIE ESSA SENHA** - ela so aparece uma vez!
+
+> **ATENCAO:** Essa senha e diferente da senha normal do seu Gmail. Ela e usada SOMENTE pelo sistema para enviar emails. Guarde-a em lugar seguro.
+
+#### Passo 3: Configurar as variaveis no Render
+
+1. Va ao painel do Render > seu servico `brucker-api`
+2. Va em **"Environment"**
+3. Configure estas variaveis:
+
+| Key | Value | Exemplo |
+|-----|-------|---------|
+| `SMTP_HOST` | `smtp.gmail.com` | Servidor do Gmail |
+| `SMTP_PORT` | `587` | Porta padrao |
+| `SMTP_USER` | Seu email Gmail | `seuemail@gmail.com` |
+| `SMTP_PASS` | A App Password criada no passo 2 | `abcd efgh ijkl mnop` |
+| `SMTP_FROM` | Nome e email do remetente | `Brucker Chamados <seuemail@gmail.com>` |
+| `NOTIFY_EMAILS` | Emails que recebem alerta de novos chamados | `admin@brucker.com,luciano@brucker.com` |
+
+> **NOTA:** O `NOTIFY_EMAILS` aceita varios emails separados por virgula. Todos esses emails receberao uma notificacao quando um novo chamado for aberto.
+
+### 8.3 Alternativa: Usar um servico SMTP profissional
+
+Se voce tiver volume alto de emails (mais de 500/dia) ou quiser um email com dominio proprio (ex: `chamados@bruckerprinters.com.br`), considere:
+
+| Servico | Custo | Limite |
+|---------|-------|--------|
+| **Gmail** (App Password) | Gratis | ~500 emails/dia |
+| **Brevo** (ex-Sendinblue) | Gratis ate 300/dia | 300 emails/dia |
+| **Mailgun** | ~$0.80/1000 emails | Pay as you go |
+
+Para qualquer servico SMTP, basta trocar `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER` e `SMTP_PASS` pelas credenciais do servico escolhido.
+
+---
+
+## 9. ETAPA 7 - App Mobile (Play Store e Apple Store)
+
+Esta e a etapa mais complexa. O app e usado pelos **tecnicos**, **admins** e **clientes** para gerenciar chamados.
+
+### 9.1 Preparacao: Conta Expo (EAS)
 
 #### Passo 1: Criar conta no Expo
 
@@ -609,7 +790,7 @@ eas init
 
 Isso vai automaticamente adicionar o `extra.eas.projectId` ao seu `app.json`.
 
-### 8.2 Publicar na Google Play Store (Android)
+### 9.2 Publicar na Google Play Store (Android)
 
 #### Passo 1: Criar conta de desenvolvedor Google Play
 
@@ -641,14 +822,17 @@ A Google exige MUITAS informacoes antes de publicar. Va preenchendo cada secao:
   Brucker Chamados e o aplicativo oficial da Brucker Printers para gestao
   de chamados tecnicos.
 
-  Com este aplicativo, tecnicos e administradores podem:
+  Com este aplicativo, voce pode:
   - Visualizar chamados abertos e em andamento
+  - Aceitar chamados atribuidos (tecnicos)
   - Atualizar o status dos chamados em tempo real
   - Receber notificacoes push sobre novos chamados
   - Gerar relatorios de atendimento
   - Acompanhar metricas de desempenho e SLA
+  - Avaliar o atendimento recebido (clientes)
+  - Cancelar chamados quando necessario
 
-  Aplicativo exclusivo para equipe tecnica da Brucker Printers.
+  Aplicativo para clientes e equipe tecnica da Brucker Printers.
   ```
 - **Screenshots:** Voce precisa de:
   - Pelo menos 2 screenshots do app (telefone)
@@ -728,7 +912,7 @@ Ou, se preferir fazer manualmente:
 
 > **ATENCAO:** A primeira revisao da Google pode levar de **3 a 7 dias uteis**. Apps subsequentes sao mais rapidos (1-3 dias).
 
-### 8.3 Publicar na Apple App Store (iOS)
+### 9.3 Publicar na Apple App Store (iOS)
 
 #### Passo 1: Criar conta Apple Developer
 
@@ -799,7 +983,7 @@ Similar ao Android, voce precisa preencher:
 - Forneca credenciais de teste para os revisores da Apple:
   - **Email:** (um email de tecnico de teste)
   - **Password:** (a senha do tecnico de teste)
-  - **Notes:** "This app is for internal use by Brucker Printers technicians. Use the provided credentials to log in as a technician."
+  - **Notes:** "This app is for internal use by Brucker Printers technicians and clients. Use the provided credentials to log in as a technician."
 
 #### Passo 5: Configurar Push Notifications para iOS
 
@@ -863,7 +1047,7 @@ eas submit --platform ios --profile production
 > - App crasha durante revisao
 > - Descricao incompleta
 
-### 8.4 Configurar icones e splash screen do app
+### 9.4 Configurar icones e splash screen do app
 
 Antes de fazer o build final, configure os icones:
 
@@ -888,97 +1072,179 @@ Antes de fazer o build final, configure os icones:
 
 ---
 
-## 9. ETAPA 7 - Testes Completos
+## 10. ETAPA 8 - Testes Completos
 
-Antes de anunciar o sistema para os clientes, faca estes testes:
+Antes de anunciar o sistema para os clientes, faca TODOS estes testes:
 
-### 9.1 Teste da API
+### 10.1 Teste da API
 
-Abra o navegador ou use uma ferramenta como o Postman:
-
+Abra o navegador e acesse:
 ```
 GET https://SUA-URL-API/api/health
 ```
 Esperado: `{"status": "ok"}`
 
-### 9.2 Teste do Painel Web (fluxo do Admin)
+### 10.2 Teste do Painel Web (fluxo do Admin)
 
 1. Acesse `https://chamados.bruckerprinters.com.br/admin`
 2. Faca login com o email/senha do admin criado no Supabase
-3. Verifique se o dashboard carrega
-4. Teste criar um **cliente**:
-   - Clique em "Clientes" > "Novo Cliente"
-   - Preencha nome, email, telefone
-   - Anote o **codigo de acesso** gerado (ex: `BRK-A1B2C3D4`)
-5. Teste criar uma **impressora** para esse cliente:
-   - Clique em "Impressoras" > "Nova Impressora"
-   - Selecione o cliente, modelo, numero de serie
-6. Teste criar um **tecnico**:
-   - Clique em "Tecnicos" > "Novo Tecnico"
-   - Preencha nome, email, WhatsApp, senha
+3. Verifique se o dashboard carrega com os cartoes de KPI (Abertos, Atribuidos, Em Atendimento, etc.)
 
-### 9.3 Teste do Painel Web (fluxo do Cliente)
+**Teste CRUD de clientes:**
+4. Clique na aba **"Clientes"** > **"Novo Cliente"**
+5. Preencha nome, email, telefone
+6. Anote o **codigo de acesso** gerado (ex: `BRK-A1B2C3D4`)
+7. Teste **editar** o cliente criado
+8. Teste **excluir** um cliente de teste
+
+**Teste CRUD de impressoras:**
+9. Clique na aba **"Impressoras"** > **"Nova Impressora"**
+10. Selecione o cliente, modelo, numero de serie
+11. Teste editar e excluir
+
+**Teste CRUD de tecnicos:**
+12. Clique na aba **"Tecnicos"** > **"Novo Tecnico"**
+13. Preencha nome, email, WhatsApp, senha
+14. Teste editar e excluir
+
+**Teste de atribuicao:**
+15. Abra um chamado existente
+16. Atribua um tecnico ao chamado
+17. Verifique se o status mudou para **"Atribuido"**
+
+**Teste de avaliacoes:**
+18. Clique na aba **"Avaliacoes"**
+19. Verifique se exibe as avaliacoes dos clientes (se houver)
+
+**Teste de alteracao de senha:**
+20. Teste alterar a senha do admin pelo painel
+
+### 10.3 Teste do Painel Web (fluxo do Cliente)
 
 1. Acesse `https://chamados.bruckerprinters.com.br/cliente`
 2. Digite o codigo de acesso do cliente criado (ex: `BRK-A1B2C3D4`)
-3. Verifique se o dashboard carrega
-4. Teste abrir um **chamado**:
-   - Clique em "Abrir Chamado"
-   - Selecione a impressora, tipo, urgencia
-   - Escreva uma descricao
-   - Envie
-5. Verifique se o chamado aparece na lista
+3. Verifique se o dashboard carrega com os contadores
 
-### 9.4 Teste do App Mobile
+**Teste abrir chamado:**
+4. Clique em **"Abrir Chamado"**
+5. Selecione a impressora, tipo (preventivo/corretivo), urgencia (normal/alta/critica)
+6. Escreva uma descricao
+7. Envie o chamado
+8. Verifique se o chamado aparece na lista com status "Aberto"
+
+**Teste cancelar chamado:**
+9. Clique em um chamado aberto
+10. Clique em **"Cancelar Chamado"**
+11. Verifique se o status mudou para "Cancelado"
+
+**Teste avaliar chamado:**
+12. Encontre um chamado com status **"Concluido"**
+13. Clique nele e de uma nota de 1 a 5 estrelas
+14. Escreva um comentario (opcional)
+15. Envie a avaliacao
+16. Verifique que nao e possivel avaliar novamente o mesmo chamado
+
+### 10.4 Teste do App Mobile (tecnico)
 
 1. Instale o app no celular (via Expo Go para teste, ou pelo build)
 2. Faca login como **tecnico** (email/senha do tecnico criado)
-3. Verifique se os chamados aparecem
-4. Teste atualizar o status de um chamado
-5. Teste gerar um relatorio
 
-### 9.5 Teste do Site
+**Teste aceitar chamado:**
+3. Verifique se aparece um chamado com status "Atribuido"
+4. Clique em **"Aceitar"** o chamado
+5. Verifique se o status mudou para "Em Atendimento"
+
+**Teste atualizar status:**
+6. Mude o status para "Aguardando Peca"
+7. Verifique que o SLA pausou
+8. Mude de volta para "Em Atendimento"
+9. Verifique que o SLA retomou
+
+**Teste concluir chamado:**
+10. Clique em "Concluir" e preencha o relatorio:
+    - Descricao do servico realizado
+    - Pecas utilizadas
+    - Duracao em minutos
+11. Envie o relatorio
+12. Verifique se o chamado mudou para "Concluido"
+
+### 10.5 Teste do App Mobile (admin)
+
+1. Faca login como admin no app
+2. Verifique se o dashboard carrega
+3. Teste atribuir um tecnico a um chamado
+4. Teste visualizar clientes, impressoras e tecnicos
+
+### 10.6 Teste do App Mobile (cliente)
+
+1. Faca login como cliente no app (codigo de acesso)
+2. Teste abrir um chamado
+3. Teste visualizar chamados existentes
+4. Teste avaliar um chamado concluido
+
+### 10.7 Teste do Site Institucional
 
 1. Acesse `https://bruckerprinters.com.br`
-2. Clique no botao **"Abrir Chamado"**
-3. Verifique se abre a pagina de login do cliente
+2. Clique no link da **"Area do Cliente"**
+3. Verifique se abre a pagina de login do cliente no painel de chamados
 4. Verifique se o formulario de contato (WhatsApp) funciona
 
-### 9.6 Teste de Notificacoes Push
+### 10.8 Teste de Notificacoes por Email
+
+1. Abra um novo chamado como cliente
+2. Verifique se os emails em `NOTIFY_EMAILS` receberam notificacao
+3. Atribua um tecnico ao chamado
+4. Verifique se o tecnico recebeu email de atribuicao
+5. Conclua o chamado
+6. Verifique se o cliente recebeu email de conclusao com convite para avaliar
+
+> **DICA:** Se nao receber o email, verifique a **pasta de spam/lixo eletrônico**. Emails enviados por App Password do Gmail podem cair no spam inicialmente.
+
+### 10.9 Teste de Notificacoes Push
 
 1. Com o app aberto em segundo plano no celular do tecnico
 2. Atribua um chamado para esse tecnico pelo painel admin
 3. Verifique se o tecnico recebe uma notificacao push
 4. Toque na notificacao e verifique se abre o chamado correto
 
-### 9.7 Teste de Tempo Real
+### 10.10 Teste de Tempo Real (Realtime)
 
 1. Abra o painel admin em um computador
 2. Abra o painel do cliente em outro navegador/aba
 3. Mude o status de um chamado no painel admin
 4. Verifique se a mudanca aparece automaticamente no painel do cliente (sem dar refresh)
+5. Faca o cliente enviar uma avaliacao
+6. Verifique se a avaliacao aparece no painel admin sem dar refresh
+
+### 10.11 Teste de Esqueci Senha
+
+1. Na tela de login admin, clique em **"Esqueci minha senha"**
+2. Digite o email do admin
+3. Verifique se recebeu o email de recuperacao
+4. Siga o link e altere a senha
+5. Faca login com a nova senha
 
 ---
 
-## 10. ETAPA 8 - Cadastros Iniciais (Primeiros Dados)
+## 11. ETAPA 9 - Cadastros Iniciais (Primeiros Dados)
 
 Apos tudo configurado e testado, cadastre os dados reais:
 
-### 10.1 Cadastrar Clientes
+### 11.1 Cadastrar Clientes
 
-No painel admin (`/admin/dashboard`), secao "Clientes":
+No painel admin (`/admin`), aba "Clientes":
 
 1. Clique em **"Novo Cliente"**
 2. Para cada cliente da Brucker Printers, preencha:
    - **Nome:** Nome da empresa do cliente
-   - **Email:** Email de contato
-   - **Telefone:** Telefone de contato
+   - **Email:** Email de contato (recebera notificacoes sobre chamados)
+   - **Telefone:** Telefone de contato (formato: (51) 99999-9999)
 3. O sistema gera automaticamente um **codigo de acesso** (ex: `BRK-A1B2C3D4`)
 4. **ENVIE esse codigo para o cliente** - e com ele que o cliente faz login
 
-### 10.2 Cadastrar Impressoras
+### 11.2 Cadastrar Impressoras
 
-Na secao "Impressoras", para cada impressora de cada cliente:
+Na aba "Impressoras", para cada impressora de cada cliente:
 
 1. Clique em **"Nova Impressora"**
 2. Preencha:
@@ -987,22 +1253,22 @@ Na secao "Impressoras", para cada impressora de cada cliente:
    - **Numero de Serie:** O numero unico da impressora
    - **Tipo de Contrato:** "Locacao" ou "Venda"
 
-### 10.3 Cadastrar Tecnicos
+### 11.3 Cadastrar Tecnicos
 
-Na secao "Tecnicos":
+Na aba "Tecnicos":
 
 1. Clique em **"Novo Tecnico"**
 2. Preencha:
    - **Nome:** Nome completo
    - **Email:** Email do tecnico (sera usado para login no app)
-   - **WhatsApp:** Numero com DDD (para notificacoes)
+   - **WhatsApp:** Numero com DDD (para notificacoes, formato: (51) 99999-9999)
    - **Senha:** Senha para login no app
 3. Envie o email e senha para o tecnico
 4. Oriente o tecnico a **baixar o app** e fazer login
 
 ---
 
-## 11. Fluxo Completo: Como Tudo Funciona no Dia a Dia
+## 12. Fluxo Completo: Como Tudo Funciona no Dia a Dia
 
 Aqui esta o fluxo completo de como o sistema funciona na pratica:
 
@@ -1012,65 +1278,94 @@ Aqui esta o fluxo completo de como o sistema funciona na pratica:
 PASSO 1: CLIENTE ABRE O CHAMADO
 ==========================================
 1. Cliente acessa bruckerprinters.com.br
-2. Clica no botao "Abrir Chamado" no topo do site
+2. Clica no link "Area do Cliente" no topo do site
 3. E redirecionado para chamados.bruckerprinters.com.br/cliente
 4. Digita seu codigo de acesso (ex: BRK-A1B2C3D4)
 5. No dashboard, clica em "Abrir Chamado"
 6. Seleciona a impressora com problema
 7. Escolhe o tipo: Corretivo (conserto) ou Preventivo (manutencao)
 8. Escolhe a urgencia:
-   - Normal: prazo de 24 horas
-   - Alta: prazo de 16 horas
-   - Critica: prazo de 8 horas
+   - Normal: prazo de 24 horas uteis
+   - Alta: prazo de 24 horas uteis (marcado como prioritario)
+   - Critica: prazo de 24 horas uteis (marcado como urgente)
 9. Descreve o problema
 10. Envia o chamado
     >> Numero do chamado gerado automaticamente (ex: #1001)
-    >> SLA calculado automaticamente
-    >> Admins recebem notificacao push
+    >> SLA calculado automaticamente em HORARIO COMERCIAL
+       (08:00-18:00 de segunda a sexta, fuso America/Sao_Paulo)
+    >> Admins recebem notificacao PUSH no celular
+    >> Admins recebem notificacao por EMAIL
 
 PASSO 2: ADMIN ATRIBUI UM TECNICO
 ==========================================
-1. Admin ve a notificacao no app OU acessa o painel web
+1. Admin ve a notificacao no app, no email, OU acessa o painel web
 2. Abre o chamado #1001
 3. Verifica os detalhes do problema
 4. Atribui o chamado para um tecnico disponivel
+   >> Status muda para "ATRIBUIDO"
    >> Tecnico recebe notificacao PUSH no app
+   >> Tecnico recebe EMAIL de atribuicao
    >> Tecnico recebe mensagem no WHATSAPP (se Twilio configurado)
-   >> Status muda para "Em Atendimento"
 
-PASSO 3: TECNICO ATENDE O CHAMADO
+PASSO 3: TECNICO ACEITA O CHAMADO
 ==========================================
 1. Tecnico abre o app no celular
 2. Ve o chamado atribuido com todos os detalhes
-3. Vai ate o cliente resolver o problema
-4. Se precisar de peca:
-   - Muda status para "Aguardando Peca"
+3. Clica no botao "ACEITAR" para confirmar que vai atender
+   >> Status muda para "EM ATENDIMENTO"
+   >> Cliente recebe email informando que o tecnico aceitou
+
+PASSO 4: TECNICO ATENDE O CHAMADO
+==========================================
+1. Tecnico vai ate o cliente resolver o problema
+2. Se precisar de peca:
+   - Muda status para "AGUARDANDO PECA"
    - O SLA e PAUSADO automaticamente
-   - Quando a peca chega, muda de volta para "Em Atendimento"
+   - Quando a peca chega, muda de volta para "EM ATENDIMENTO"
    - O SLA e RETOMADO de onde parou
-5. Apos resolver, clica em "Finalizar e Gerar Relatorio"
-6. Preenche o relatorio:
+3. Apos resolver, clica em "Finalizar e Gerar Relatorio"
+4. Preenche o relatorio:
    - O que foi feito
    - Pecas utilizadas
    - Tempo gasto (em minutos)
-7. Envia o relatorio
-   >> Chamado muda para "Concluido" automaticamente
+5. Envia o relatorio
+   >> Chamado muda para "CONCLUIDO" automaticamente
    >> Relatorio fica vinculado ao chamado
+   >> Cliente recebe EMAIL com convite para avaliar o atendimento
 
-PASSO 4: ACOMPANHAMENTO
+PASSO 5: CLIENTE AVALIA O ATENDIMENTO
+==========================================
+1. Cliente recebe email dizendo que o chamado foi concluido
+2. Acessa o painel web e encontra o chamado concluido
+3. Clica para avaliar:
+   - Da uma nota de 1 a 5 estrelas
+   - Escreve um comentario (opcional)
+4. Envia a avaliacao
+   >> A avaliacao fica visivel para o admin no painel
+
+OPCAO: CANCELAMENTO
+==========================================
+- A qualquer momento ANTES da conclusao, o cliente pode cancelar o chamado
+- O chamado muda para status "CANCELADO"
+- Chamados cancelados nao podem ser reabertos
+
+PASSO 6: ACOMPANHAMENTO
 ==========================================
 - Cliente pode ver o status do chamado em tempo real no painel web
 - Admin pode gerar relatorios:
   - Por periodo (ex: "chamados do mes de marco")
   - Por cliente (ex: "quantos chamados a empresa X abriu")
   - Por tecnico (ex: "quantos chamados o tecnico Y resolveu")
-  - PDF de cada atendimento
+  - Por SLA (dentro/fora do prazo)
+  - Por pecas utilizadas
+  - Exportar em PDF ou Excel
+- Admin pode ver as avaliacoes na aba "Avaliacoes"
 - Tudo atualiza em tempo real (sem precisar dar F5)
 ```
 
 ---
 
-## 12. Custos Mensais Estimados
+## 13. Custos Mensais Estimados
 
 ### Cenario 1: Custo Minimo (comecando)
 
@@ -1080,6 +1375,7 @@ PASSO 4: ACOMPANHAMENTO
 | Render (Starter) | ~R$ 35 | $7/mes - API sempre ligada |
 | Vercel (Hobby) | R$ 0 | Gratuito para projetos pessoais |
 | Expo (Free) | R$ 0 | 30 builds/mes |
+| Email (Gmail) | R$ 0 | Usando App Password (ate ~500 emails/dia) |
 | Dominio | ~R$ 40/ano | Ja existente |
 | **TOTAL** | **~R$ 35/mes** | |
 
@@ -1090,6 +1386,7 @@ PASSO 4: ACOMPANHAMENTO
 | Supabase (Free) | R$ 0 | |
 | Render (Starter) | ~R$ 35 | |
 | Vercel (Hobby) | R$ 0 | |
+| Email (Gmail) | R$ 0 | |
 | Twilio WhatsApp | ~R$ 25 | ~100 mensagens/mes |
 | Apple Developer | ~R$ 42 | $99/ano dividido por 12 |
 | Google Play | R$ 0 | $25 taxa unica (ja paga) |
@@ -1102,15 +1399,16 @@ PASSO 4: ACOMPANHAMENTO
 | Supabase (Pro) | ~R$ 125 | $25/mes - 8GB banco + mais recursos |
 | Render (Standard) | ~R$ 125 | $25/mes - mais performance |
 | Vercel (Pro) | ~R$ 100 | $20/mes - se precisar de mais banda |
+| Email SMTP profissional | ~R$ 50 | Se volume alto de emails |
 | Twilio WhatsApp | ~R$ 100+ | Variavel conforme uso |
 | Apple Developer | ~R$ 42 | |
-| **TOTAL** | **~R$ 492/mes** | |
+| **TOTAL** | **~R$ 542/mes** | |
 
 ---
 
-## 13. Manutencao e Monitoramento
+## 14. Manutencao e Monitoramento
 
-### 13.1 Monitorar a API
+### 14.1 Monitorar a API
 
 - **Render Dashboard:** https://dashboard.render.com
   - Verifique os logs para erros
@@ -1118,14 +1416,14 @@ PASSO 4: ACOMPANHAMENTO
 - **Health Check:** Acesse `https://SUA-URL-API/api/health` periodicamente
 - O Render faz restart automatico se o servico cair
 
-### 13.2 Monitorar o Banco de Dados
+### 14.2 Monitorar o Banco de Dados
 
 - **Supabase Dashboard:** https://supabase.com/dashboard
   - Monitore o tamanho do banco (limite free: 500MB)
   - Verifique os logs de autenticacao
   - Acompanhe o uso de requisicoes
 
-### 13.3 Atualizar o App
+### 14.3 Atualizar o App
 
 Quando precisar fazer alteracoes no app:
 
@@ -1144,7 +1442,7 @@ Quando precisar fazer alteracoes no app:
    ```
 5. A revisao e mais rapida para atualizacoes (~1-2 dias)
 
-### 13.4 Atualizar a API e o Painel Web
+### 14.4 Atualizar a API e o Painel Web
 
 Se o codigo esta no GitHub, basta fazer push:
 
@@ -1157,7 +1455,7 @@ git push origin main
 - **Render:** Detecta o push e faz redeploy automatico da API
 - **Vercel:** Detecta o push e faz redeploy automatico do painel web
 
-### 13.5 Backups
+### 14.5 Backups
 
 O Supabase faz backups automaticos do banco de dados:
 - **Free plan:** Backups diarios retidos por 7 dias
@@ -1167,11 +1465,17 @@ Para fazer backup manual:
 1. No Supabase, va em **"Database"** > **"Backups"**
 2. Clique em **"Download backup"**
 
+### 14.6 Monitorar Emails
+
+- Verifique periodicamente se os emails estao sendo entregues
+- Se usar Gmail, monitore a cota em https://myaccount.google.com
+- Emails que caem no spam: peca aos destinatarios para marcar como "Nao e spam"
+
 ---
 
-## 14. Problemas Comuns e Solucoes
+## 15. Problemas Comuns e Solucoes
 
-### "O botao Abrir Chamado nao abre nada"
+### "O link Area do Cliente nao abre nada"
 **Causa:** O link ainda aponta para `localhost:5173`
 **Solucao:** Edite o `index.html` do site e troque para a URL de producao
 
@@ -1181,7 +1485,7 @@ Para fazer backup manual:
 
 ### "A API retorna erro 500"
 **Causa:** Alguma variavel de ambiente esta faltando ou incorreta
-**Solucao:** Verifique no Render se todas as variaveis de ambiente estao configuradas
+**Solucao:** Verifique no Render se TODAS as variaveis de ambiente estao configuradas (sao 17 no total!)
 
 ### "O app demora muito para carregar a primeira vez"
 **Causa:** No plano Free do Render, o servidor desliga apos 15 min
@@ -1189,30 +1493,56 @@ Para fazer backup manual:
 
 ### "Notificacao push nao chega"
 **Causa:** Push token nao registrado
-**Solucao:** O tecnico precisa abrir o app e aceitar a permissao de notificacoes. Depois, faca logout e login novamente.
+**Solucao:** O tecnico/admin precisa abrir o app e aceitar a permissao de notificacoes. Depois, faca logout e login novamente.
 
 ### "WhatsApp nao envia mensagem"
 **Causa:** Credenciais Twilio incorretas ou sandbox nao ativado
 **Solucao:** Verifique as credenciais no Render. No sandbox, o tecnico precisa enviar a mensagem de opt-in primeiro.
 
+### "Email de notificacao nao chega"
+**Causa:** Variaveis SMTP incorretas, App Password invalida, ou email caiu no spam
+**Solucao:**
+1. Verifique se TODAS as 6 variaveis SMTP estao configuradas no Render
+2. Verifique se a App Password do Gmail esta correta (sem espacos extras)
+3. Peca ao destinatario para verificar a pasta de spam/lixo eletronico
+4. Se usar Gmail, confirme que a verificacao em duas etapas esta ativa
+
+### "Tecnico nao ve o botao Aceitar"
+**Causa:** O chamado precisa estar com status "Atribuido" para mostrar o botao
+**Solucao:** Verifique no painel admin se o chamado esta realmente com status "Atribuido". Se estiver "Aberto", o admin precisa atribuir um tecnico primeiro.
+
+### "Cliente nao consegue avaliar o chamado"
+**Causa:** O chamado precisa estar com status "Concluido" e so pode ser avaliado uma vez
+**Solucao:**
+1. Verifique se o chamado esta realmente concluido
+2. Se ja foi avaliado, nao e possivel avaliar novamente (uma avaliacao por chamado)
+
 ### "App rejeitado pela Apple"
 **Causas mais comuns:**
-1. Falta de politica de privacidade → Crie uma pagina no site
-2. Screenshots nao correspondem ao app → Tire novas screenshots
-3. Credenciais de teste invalidas → Crie um tecnico de teste
-4. App crasha → Verifique a URL da API no eas.json
+1. Falta de politica de privacidade --> Crie uma pagina no site
+2. Screenshots nao correspondem ao app --> Tire novas screenshots
+3. Credenciais de teste invalidas --> Crie um tecnico de teste ativo
+4. App crasha --> Verifique a URL da API no eas.json
 
 ### "Realtime nao atualiza automaticamente"
-**Causa:** Realtime nao ativado no Supabase
-**Solucao:** Va em Database > Replication e ative para as tabelas `chamados` e `chamado_atualizacoes`
+**Causa:** Realtime nao ativado para todas as tabelas no Supabase
+**Solucao:** Va em Database > Replication e ative para as 3 tabelas: `chamados`, `chamado_atualizacoes` e `avaliacoes`
 
 ### "Cliente nao consegue logar com o codigo"
-**Causa:** Codigo de acesso incorreto
-**Solucao:** No painel admin, va em Clientes, encontre o cliente e verifique/regenere o codigo
+**Causa:** Codigo de acesso incorreto ou com letras minusculas
+**Solucao:** O codigo e em letras maiusculas (ex: BRK-A1B2C3D4). No painel admin, va em Clientes, encontre o cliente e verifique/regenere o codigo.
+
+### "Erro de CORS (mensagem no console do navegador)"
+**Causa:** A URL do frontend nao esta na variavel FRONTEND_URL da API
+**Solucao:** No Render, edite a variavel `FRONTEND_URL` e inclua a URL exata do frontend (sem barra no final). Para multiplas URLs, separe por virgula.
+
+### "Push notification nao funciona para admins"
+**Causa:** Coluna `push_token` nao existe na tabela `admins`
+**Solucao:** Execute no SQL Editor do Supabase: `ALTER TABLE admins ADD COLUMN IF NOT EXISTS push_token TEXT;`
 
 ---
 
-## 15. Glossario de Termos Tecnicos
+## 16. Glossario de Termos Tecnicos
 
 | Termo | O que significa |
 |-------|----------------|
@@ -1225,9 +1555,12 @@ Para fazer backup manual:
 | **CNAME** | Tipo de registro DNS que aponta um dominio para outro |
 | **SSL/HTTPS** | Certificado de seguranca que faz o cadeado verde aparecer no navegador |
 | **JWT** | "JSON Web Token" - um "cartao de acesso digital" que identifica quem esta logado |
-| **SLA** | "Service Level Agreement" - o prazo maximo para resolver um chamado |
+| **SLA** | "Service Level Agreement" - o prazo maximo para resolver um chamado. No sistema, e calculado em horario comercial (08-18h, seg-sex) |
 | **Realtime** | Atualizacao automatica da tela sem precisar dar F5 |
 | **Push Notification** | Notificacao que aparece no celular mesmo com o app fechado |
+| **SMTP** | "Simple Mail Transfer Protocol" - protocolo usado para enviar emails. E o que permite o sistema mandar emails automaticos |
+| **App Password** | Senha especial do Gmail para apps externos (diferente da senha normal da conta). Necessaria para o sistema enviar emails via Gmail |
+| **Avaliacao** | Nota de 1 a 5 estrelas que o cliente da apos um chamado ser concluido, com comentario opcional |
 | **Supabase** | Servico de banco de dados na nuvem (onde os dados sao guardados) |
 | **Render** | Servico de hospedagem de servidores (onde a API roda) |
 | **Vercel** | Servico de hospedagem de sites/apps web (onde o painel roda) |
@@ -1238,6 +1571,7 @@ Para fazer backup manual:
 | **cPanel** | Painel de controle de hospedagem de sites (onde o site atual esta) |
 | **FTP** | Protocolo para transferir arquivos para o servidor |
 | **Repositorio (GitHub)** | Onde o codigo-fonte fica armazenado na nuvem |
+| **CORS** | "Cross-Origin Resource Sharing" - regra de seguranca que define quais sites podem acessar a API. Configurado automaticamente pela variavel FRONTEND_URL |
 
 ---
 
@@ -1245,32 +1579,49 @@ Para fazer backup manual:
 
 Use esta lista para acompanhar seu progresso:
 
-- [ ] **Banco de Dados**
-  - [ ] Tabelas criadas no Supabase
-  - [ ] Realtime ativado
+- [ ] **Banco de Dados (Supabase)**
+  - [ ] Migration base executada (migration.sql) - 7 tabelas iniciais
+  - [ ] Migration V2 executada (migration_v2.sql) - avaliacoes, configuracoes, etc.
+  - [ ] Coluna `push_token` adicionada na tabela `admins` (ALTER TABLE manual)
+  - [ ] Total de 9 tabelas verificadas no Table Editor
+  - [ ] Realtime ativado para `chamados`, `chamado_atualizacoes` e `avaliacoes`
   - [ ] Admin criado no Supabase Auth
   - [ ] Admin inserido na tabela admins
+  - [ ] Chaves anotadas (URL, Anon Key, Service Role Key)
 
-- [ ] **API Backend**
+- [ ] **API Backend (Render/Railway)**
   - [ ] Codigo no GitHub
   - [ ] Deploy no Render (ou Railway)
-  - [ ] Variaveis de ambiente configuradas
-  - [ ] Health check respondendo OK
+  - [ ] Variaveis do Supabase configuradas (3 variaveis)
+  - [ ] Variavel JWT_SECRET configurada
+  - [ ] Variaveis do servidor configuradas (PORT, NODE_ENV, FRONTEND_URL)
+  - [ ] Variaveis de email SMTP configuradas (6 variaveis)
+  - [ ] Variaveis do Twilio configuradas (3 variaveis, opcional)
+  - [ ] Health check respondendo OK (`/api/health`)
   - [ ] Dominio personalizado (opcional): `api.bruckerprinters.com.br`
 
-- [ ] **Painel Web**
+- [ ] **Painel Web (Vercel)**
   - [ ] Deploy na Vercel
-  - [ ] Variaveis de ambiente configuradas
+  - [ ] Variaveis de ambiente configuradas (VITE_API_URL, VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY)
   - [ ] Dominio personalizado: `chamados.bruckerprinters.com.br`
+  - [ ] FRONTEND_URL atualizado no Render com a URL final
   - [ ] Login admin funcionando
   - [ ] Login cliente funcionando
 
 - [ ] **Site Institucional**
-  - [ ] Botao "Abrir Chamado" atualizado com URL de producao
-  - [ ] Registros DNS criados para subdominios
+  - [ ] Link "Area do Cliente" atualizado com URL de producao
+  - [ ] Registros DNS criados para subdominios (chamados, api)
   - [ ] Pagina de politica de privacidade criada
 
-- [ ] **WhatsApp (Twilio)**
+- [ ] **Notificacoes por Email (SMTP)**
+  - [ ] Verificacao em duas etapas ativada no Gmail
+  - [ ] App Password criada
+  - [ ] 6 variaveis SMTP configuradas no Render
+  - [ ] Teste de email: novo chamado gera email para admins
+  - [ ] Teste de email: mudanca de status gera email para cliente
+  - [ ] Teste de email: atribuicao gera email para tecnico
+
+- [ ] **WhatsApp (Twilio) - OPCIONAL**
   - [ ] Conta Twilio criada
   - [ ] Credenciais configuradas no Render
   - [ ] Teste de envio funcionando
@@ -1299,12 +1650,24 @@ Use esta lista para acompanhar seu progresso:
   - [ ] Codigos de acesso enviados aos clientes
   - [ ] Credenciais enviadas aos tecnicos
 
-- [ ] **Testes**
-  - [ ] Fluxo completo de abertura de chamado testado
-  - [ ] Atribuicao de tecnico testada
-  - [ ] Notificacoes push testadas
-  - [ ] Relatorio de atendimento testado
-  - [ ] Atualizacao em tempo real testada
+- [ ] **Testes Completos**
+  - [ ] API respondendo (health check)
+  - [ ] Login admin no painel web
+  - [ ] Login cliente no painel web
+  - [ ] Abertura de chamado pelo cliente
+  - [ ] Atribuicao de tecnico pelo admin
+  - [ ] Aceite do chamado pelo tecnico (status "Atribuido" -> "Em Atendimento")
+  - [ ] Mudanca de status para "Aguardando Peca" (SLA pausa)
+  - [ ] Retorno para "Em Atendimento" (SLA retoma)
+  - [ ] Conclusao do chamado com relatorio
+  - [ ] Cancelamento de chamado pelo cliente
+  - [ ] Avaliacao do atendimento pelo cliente (1-5 estrelas)
+  - [ ] Notificacoes por email funcionando
+  - [ ] Notificacoes push funcionando
+  - [ ] Atualizacao em tempo real (Realtime) funcionando
+  - [ ] Exclusao de clientes/impressoras/tecnicos
+  - [ ] Alteracao de senha (admin e tecnico)
+  - [ ] Esqueci minha senha
 
 ---
 

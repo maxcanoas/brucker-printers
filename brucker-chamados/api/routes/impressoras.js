@@ -11,6 +11,7 @@ router.get('/', autenticarAdmin, impressoraController.listar);
 router.get('/cliente/:cliente_id', autenticarAdmin, impressoraController.listarPorCliente);
 router.post('/', autenticarAdmin, impressoraController.criar);
 router.put('/:id', autenticarAdmin, impressoraController.atualizar);
-router.delete('/:id', autenticarAdmin, impressoraController.desativar);
+router.put('/:id/desativar', autenticarAdmin, impressoraController.desativar);
+router.put('/:id/reativar', autenticarAdmin, impressoraController.reativar);
 
 module.exports = router;

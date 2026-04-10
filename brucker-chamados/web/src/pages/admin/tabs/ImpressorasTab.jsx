@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import api from '../../../lib/api';
 import toast from 'react-hot-toast';
-import { Printer, PlusCircle, Trash2 } from 'lucide-react';
+import { Printer, PlusCircle, PowerOff, RefreshCw, Edit3 } from 'lucide-react';
 import ModalNovaImpressora from '../modals/ModalNovaImpressora';
+import ModalEditarImpressora from '../modals/ModalEditarImpressora';
 import { useTheme } from '../../../contexts/ThemeContext';
 
 export default function ImpressorasTab() {
@@ -10,6 +11,7 @@ export default function ImpressorasTab() {
   const [impressoras, setImpressoras] = useState([]);
   const [clientes, setClientes] = useState([]);
   const [modalNova, setModalNova] = useState(false);
+  const [modalEditar, setModalEditar] = useState(null);
 
   const cardStyle = {
     backgroundColor: theme.card, borderRadius: '12px', border: `1px solid ${theme.border}`, padding: '24px'
@@ -20,14 +22,24 @@ export default function ImpressorasTab() {
     cursor: 'pointer', fontFamily: "'Barlow', sans-serif"
   };
 
-  const excluirImpressora = async (imp) => {
-    if (!confirm(`Excluir a impressora "${imp.modelo}" (S/N: ${imp.numero_serie})?`)) return;
+  const desativarImpressora = async (imp) => {
+    if (!confirm(`Desativar a impressora "${imp.modelo}" (S/N: ${imp.numero_serie})?`)) return;
     try {
-      await api.delete(`/impressoras/${imp.id}`);
-      toast.success('Impressora excluída!');
+      await api.put(`/impressoras/${imp.id}/desativar`);
+      toast.success('Impressora desativada!');
       api.get('/impressoras').then(r => setImpressoras(r.data));
     } catch {
-      toast.error('Erro ao excluir impressora');
+      toast.error('Erro ao desativar impressora');
+    }
+  };
+
+  const reativarImpressora = async (imp) => {
+    try {
+      await api.put(`/impressoras/${imp.id}/reativar`);
+      toast.success('Impressora reativada!');
+      api.get('/impressoras').then(r => setImpressoras(r.data));
+    } catch {
+      toast.error('Erro ao reativar impressora');
     }
   };
 
@@ -67,13 +79,32 @@ export default function ImpressorasTab() {
               }}>
                 {imp.ativo ? 'Ativa' : 'Inativa'}
               </span>
-              <button onClick={() => excluirImpressora(imp)} className="btn-secondary" style={{
-                padding: '6px 10px', backgroundColor: theme.accentBg, border: 'none',
-                borderRadius: '6px', color: theme.accent, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px',
-                fontFamily: "'Barlow', sans-serif"
-              }}>
-                <Trash2 size={12} /> Excluir
-              </button>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <button onClick={() => setModalEditar(imp)} className="btn-secondary" style={{
+                  padding: '6px 10px', backgroundColor: theme.accentBg, border: 'none',
+                  borderRadius: '6px', color: theme.accent, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px',
+                  fontFamily: "'Barlow', sans-serif"
+                }}>
+                  <Edit3 size={12} /> Editar
+                </button>
+                {imp.ativo ? (
+                  <button onClick={() => desativarImpressora(imp)} className="btn-secondary" style={{
+                    padding: '6px 10px', backgroundColor: theme.accentBg, border: 'none',
+                    borderRadius: '6px', color: theme.accent, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px',
+                    fontFamily: "'Barlow', sans-serif"
+                  }}>
+                    <PowerOff size={12} /> Desativar
+                  </button>
+                ) : (
+                  <button onClick={() => reativarImpressora(imp)} className="btn-secondary" style={{
+                    padding: '6px 10px', backgroundColor: 'rgba(61,158,107,0.15)', border: 'none',
+                    borderRadius: '6px', color: '#3D9E6B', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px',
+                    fontFamily: "'Barlow', sans-serif"
+                  }}>
+                    <RefreshCw size={12} /> Reativar
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         ))}
@@ -85,6 +116,16 @@ export default function ImpressorasTab() {
         onClose={() => setModalNova(false)}
         onCriada={() => {
           setModalNova(false);
+          api.get('/impressoras').then(r => setImpressoras(r.data));
+        }}
+      />
+
+      <ModalEditarImpressora
+        impressora={modalEditar}
+        clientes={clientes}
+        onClose={() => setModalEditar(null)}
+        onAtualizado={() => {
+          setModalEditar(null);
           api.get('/impressoras').then(r => setImpressoras(r.data));
         }}
       />
