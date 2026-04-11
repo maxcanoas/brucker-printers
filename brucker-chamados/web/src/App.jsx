@@ -6,6 +6,8 @@ import LoginCliente from './pages/cliente/LoginCliente';
 import DashboardCliente from './pages/cliente/DashboardCliente';
 import LoginAdmin from './pages/admin/LoginAdmin';
 import DashboardAdmin from './pages/admin/DashboardAdmin';
+import LoginTecnico from './pages/tecnico/LoginTecnico';
+import DashboardTecnico from './pages/tecnico/DashboardTecnico';
 import RedefinirSenha from './pages/RedefinirSenha';
 
 function RotaProtegida({ tipo, children }) {
@@ -61,6 +63,12 @@ function App() {
             <Route path="/admin" element={<LoginAdmin />} />
             <Route path="/admin/dashboard" element={
               <RotaProtegida tipo="admin"><DashboardAdmin /></RotaProtegida>
+            } />
+
+            {/* Técnico (temporário) */}
+            <Route path="/tecnico" element={<LoginTecnico />} />
+            <Route path="/tecnico/dashboard" element={
+              <RotaProtegida tipo="tecnico"><DashboardTecnico /></RotaProtegida>
             } />
 
             {/* Redefinir Senha */}

@@ -17,9 +17,17 @@ api.interceptors.response.use(
   (error) => {
     const isLoginRoute = error.config?.url?.includes('/auth/');
     if (error.response?.status === 401 && !isLoginRoute) {
+      let destino = '/cliente';
+      try {
+        const usuarioSalvo = JSON.parse(localStorage.getItem('usuario') || 'null');
+        if (usuarioSalvo?.tipo === 'tecnico') destino = '/tecnico';
+        else if (usuarioSalvo?.tipo === 'admin') destino = '/admin';
+      } catch {
+        // fallback para /cliente
+      }
       localStorage.removeItem('token');
       localStorage.removeItem('usuario');
-      window.location.href = '/cliente';
+      window.location.href = destino;
     }
     return Promise.reject(error);
   }

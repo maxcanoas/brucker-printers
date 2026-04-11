@@ -169,6 +169,22 @@ export default function LoginCliente() {
         >
           Acesso Administrativo
         </Link>
+
+        <Link
+          to="/tecnico"
+          style={{
+            display: 'block',
+            textAlign: 'center',
+            color: theme.textSecondary,
+            fontSize: '12px',
+            marginTop: '8px',
+            textDecoration: 'none',
+            fontFamily: "'Barlow', sans-serif",
+            opacity: 0.6
+          }}
+        >
+          Área do Técnico
+        </Link>
       </div>
     </div>
   );

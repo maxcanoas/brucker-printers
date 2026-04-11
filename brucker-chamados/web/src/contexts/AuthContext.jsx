@@ -32,6 +32,14 @@ export function AuthProvider({ children }) {
     return data;
   };
 
+  const loginTecnico = async (email, senha) => {
+    const { data } = await api.post('/auth/tecnico/login', { email, senha });
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('usuario', JSON.stringify({ ...data.tecnico, tipo: 'tecnico' }));
+    setUsuario({ ...data.tecnico, tipo: 'tecnico' });
+    return data;
+  };
+
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('usuario');
@@ -39,7 +47,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ usuario, carregando, loginCliente, loginAdmin, logout }}>
+    <AuthContext.Provider value={{ usuario, carregando, loginCliente, loginAdmin, loginTecnico, logout }}>
       {children}
     </AuthContext.Provider>
   );
