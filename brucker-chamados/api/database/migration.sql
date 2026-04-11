@@ -1,6 +1,6 @@
 -- ============================================
 -- Brucker Printers - Sistema de Chamados
--- Migration Supabase
+-- Migration Consolidada (Supabase)
 -- ============================================
 
 -- Habilitar extensões necessárias
@@ -38,7 +38,18 @@ CREATE TABLE tecnicos (
   nome VARCHAR(255) NOT NULL,
   email VARCHAR(255) UNIQUE NOT NULL,
   whatsapp VARCHAR(20),
+  push_token TEXT,
   ativo BOOLEAN DEFAULT TRUE,
+  criado_em TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Administradores
+CREATE TABLE admins (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES auth.users(id),
+  nome VARCHAR(255) NOT NULL,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  push_token TEXT,
   criado_em TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -55,7 +66,8 @@ CREATE TABLE chamados (
   tipo VARCHAR(20) NOT NULL CHECK (tipo IN ('preventivo', 'corretivo')),
   urgencia VARCHAR(20) NOT NULL DEFAULT 'normal' CHECK (urgencia IN ('normal', 'alta', 'critica')),
   descricao TEXT NOT NULL,
-  status VARCHAR(30) NOT NULL DEFAULT 'aberto' CHECK (status IN ('aberto', 'em_atendimento', 'aguardando_peca', 'concluido', 'cancelado')),
+  fotos JSONB DEFAULT '[]'::jsonb,
+  status VARCHAR(30) NOT NULL DEFAULT 'aberto' CHECK (status IN ('aberto', 'atribuido', 'em_atendimento', 'aguardando_peca', 'concluido', 'cancelado')),
   sla_horas INTEGER DEFAULT 24,
   sla_vence_em TIMESTAMPTZ,
   sla_pausado_em TIMESTAMPTZ,
@@ -86,13 +98,22 @@ CREATE TABLE relatorios_atendimento (
   criado_em TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Tabela de administradores
-CREATE TABLE admins (
+-- Avaliações dos chamados
+CREATE TABLE avaliacoes (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES auth.users(id),
-  nome VARCHAR(255) NOT NULL,
-  email VARCHAR(255) UNIQUE NOT NULL,
-  criado_em TIMESTAMPTZ DEFAULT NOW()
+  chamado_id UUID NOT NULL REFERENCES chamados(id) ON DELETE CASCADE,
+  cliente_id UUID NOT NULL REFERENCES clientes(id),
+  nota INTEGER NOT NULL CHECK (nota >= 1 AND nota <= 5),
+  comentario TEXT,
+  criado_em TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(chamado_id)
+);
+
+-- Configurações do sistema (horário comercial, etc.)
+CREATE TABLE configuracoes (
+  chave VARCHAR(100) PRIMARY KEY,
+  valor JSONB NOT NULL,
+  atualizado_em TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- ============================================
@@ -107,24 +128,15 @@ CREATE INDEX idx_chamados_status ON chamados(status);
 CREATE INDEX idx_chamados_sla ON chamados(sla_vence_em);
 CREATE INDEX idx_atualizacoes_chamado ON chamado_atualizacoes(chamado_id);
 CREATE INDEX idx_relatorios_chamado ON relatorios_atendimento(chamado_id);
+CREATE INDEX idx_avaliacoes_chamado ON avaliacoes(chamado_id);
+CREATE INDEX idx_avaliacoes_cliente ON avaliacoes(cliente_id);
 
 -- ============================================
 -- FUNCTIONS & TRIGGERS
 -- ============================================
 
--- Calcular SLA ao criar chamado
-CREATE OR REPLACE FUNCTION calcular_sla()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.sla_vence_em := NEW.criado_em + (NEW.sla_horas || ' hours')::INTERVAL;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER tr_calcular_sla
-  BEFORE INSERT ON chamados
-  FOR EACH ROW
-  EXECUTE FUNCTION calcular_sla();
+-- NOTA: A lógica de cálculo de SLA com horário comercial é feita na camada de
+-- aplicação (Node.js), não em triggers SQL — é complexa demais para triggers.
 
 -- Atualizar timestamp ao modificar chamado
 CREATE OR REPLACE FUNCTION atualizar_timestamp()
@@ -140,33 +152,6 @@ CREATE TRIGGER tr_atualizar_timestamp
   FOR EACH ROW
   EXECUTE FUNCTION atualizar_timestamp();
 
--- Gerenciar pausa/retomada do SLA
-CREATE OR REPLACE FUNCTION gerenciar_sla_pausa()
-RETURNS TRIGGER AS $$
-BEGIN
-  -- Pausar SLA quando status muda para aguardando_peca
-  IF NEW.status = 'aguardando_peca' AND OLD.status != 'aguardando_peca' THEN
-    NEW.sla_pausado_em := NOW();
-  END IF;
-
-  -- Retomar SLA quando sai de aguardando_peca
-  IF OLD.status = 'aguardando_peca' AND NEW.status != 'aguardando_peca' AND OLD.sla_pausado_em IS NOT NULL THEN
-    NEW.sla_tempo_pausado := COALESCE(OLD.sla_tempo_pausado, 0) +
-      EXTRACT(EPOCH FROM (NOW() - OLD.sla_pausado_em))::INTEGER / 60;
-    NEW.sla_vence_em := OLD.sla_vence_em +
-      ((EXTRACT(EPOCH FROM (NOW() - OLD.sla_pausado_em))::INTEGER / 60) || ' minutes')::INTERVAL;
-    NEW.sla_pausado_em := NULL;
-  END IF;
-
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER tr_gerenciar_sla_pausa
-  BEFORE UPDATE ON chamados
-  FOR EACH ROW
-  EXECUTE FUNCTION gerenciar_sla_pausa();
-
 -- ============================================
 -- ROW LEVEL SECURITY (RLS)
 -- ============================================
@@ -178,10 +163,11 @@ ALTER TABLE chamado_atualizacoes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE relatorios_atendimento ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tecnicos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE admins ENABLE ROW LEVEL SECURITY;
+ALTER TABLE avaliacoes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE configuracoes ENABLE ROW LEVEL SECURITY;
 
 -- Policies para service_role (API backend usa service_role key)
 -- O backend controla o acesso via lógica de aplicação
-
 CREATE POLICY "service_role_full_access" ON clientes FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "service_role_full_access" ON impressoras FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "service_role_full_access" ON chamados FOR ALL USING (true) WITH CHECK (true);
@@ -189,6 +175,8 @@ CREATE POLICY "service_role_full_access" ON chamado_atualizacoes FOR ALL USING (
 CREATE POLICY "service_role_full_access" ON relatorios_atendimento FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "service_role_full_access" ON tecnicos FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "service_role_full_access" ON admins FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "service_role_full_access" ON avaliacoes FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "service_role_full_access" ON configuracoes FOR ALL USING (true) WITH CHECK (true);
 
 -- ============================================
 -- REALTIME
@@ -196,10 +184,15 @@ CREATE POLICY "service_role_full_access" ON admins FOR ALL USING (true) WITH CHE
 
 ALTER PUBLICATION supabase_realtime ADD TABLE chamados;
 ALTER PUBLICATION supabase_realtime ADD TABLE chamado_atualizacoes;
+ALTER PUBLICATION supabase_realtime ADD TABLE avaliacoes;
 
 -- ============================================
 -- DADOS INICIAIS (seed)
 -- ============================================
+
+INSERT INTO configuracoes (chave, valor) VALUES
+  ('horario_comercial', '{"inicio": "08:00", "fim": "18:00", "dias": [1,2,3,4,5], "timezone": "America/Sao_Paulo"}'::jsonb)
+ON CONFLICT (chave) DO NOTHING;
 
 -- Admin padrão (criar user no Supabase Auth primeiro)
 -- INSERT INTO admins (nome, email) VALUES ('Luciano', 'luciano@bruckerprinters.com.br');
