@@ -96,7 +96,8 @@ exports.esqueciSenha = async (req, res) => {
     }
 
     const nome = (admin || tecnico).nome;
-    const redirectUrl = `${process.env.FRONTEND_URL}/redefinir-senha`;
+    const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:5173').split(',')[0].trim();
+    const redirectUrl = `${frontendUrl}/redefinir-senha`;
 
     // Gera o link de recovery via Supabase Admin API (sem enviar e-mail pelo Supabase)
     const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
