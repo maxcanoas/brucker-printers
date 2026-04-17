@@ -15,13 +15,17 @@ const transporter = nodemailer.createTransport({
 });
 
 async function enviarEmail(para, assunto, html) {
+  console.log('[email] Tentando enviar para', para, '| assunto:', assunto,
+    '| from:', process.env.SMTP_FROM || process.env.SMTP_USER);
   try {
-    await transporter.sendMail({
+    const info = await transporter.sendMail({
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to: para,
       subject: assunto,
       html,
     });
+    console.log('[email] OK enviado para', para, '| messageId:', info.messageId,
+      '| accepted:', info.accepted, '| rejected:', info.rejected, '| response:', info.response);
   } catch (error) {
     console.error('[email] Falha ao enviar para', para, '| assunto:', assunto,
       '| code:', error.code, '| response:', error.response, '| msg:', error.message);
