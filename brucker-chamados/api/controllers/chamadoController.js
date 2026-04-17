@@ -1,7 +1,7 @@
 const supabase = require('../services/supabase');
 const { notificarTecnico, notificarStatusChamado, notificarAdminWhatsApp, notificarClienteConcluidoWhatsApp } = require('../services/whatsapp');
 const { notificarTecnicoPush, notificarStatusPush, notificarNovoChamado } = require('../services/notifications');
-const { notificarNovoChamadoEmail, notificarClienteStatusEmail, notificarTecnicoAtribuidoEmail, notificarChamadoConcluidoEmail } = require('../services/email');
+const { notificarNovoChamadoEmail, notificarAdminsStatusEmail, notificarClienteStatusEmail, notificarTecnicoAtribuidoEmail, notificarChamadoConcluidoEmail } = require('../services/email');
 const { calcularSlaVenceEm, enriquecerSla, recalcularSlaAposResumo } = require('../services/businessHours');
 
 exports.criarChamado = async (req, res) => {
@@ -333,7 +333,9 @@ exports.atribuirTecnico = async (req, res) => {
       notificarTecnicoAtribuidoEmail(tecnico, chamado, chamado.clientes),
     ]).catch(e => console.error('Erro ao notificar técnico:', e));
 
-    // Notificar cliente por email (fire-and-forget)
+    // Notificar admin e cliente por email (fire-and-forget)
+    notificarAdminsStatusEmail(chamado, 'atribuido', chamado.clientes)
+      .catch(e => console.error('Erro ao notificar admins sobre atribuição:', e));
     if (chamado.clientes) {
       notificarClienteStatusEmail(chamado.clientes, chamado, 'atribuido')
         .catch(e => console.error('Erro ao notificar cliente:', e));
@@ -394,9 +396,10 @@ exports.aceitarChamado = async (req, res) => {
       usuario_tipo: 'tecnico'
     });
 
-    // Notificar admin via push e cliente via email (fire-and-forget)
+    // Notificar admin via push e email, cliente via email (fire-and-forget)
     Promise.all([
       notificarStatusPush(data, 'em_atendimento'),
+      notificarAdminsStatusEmail(data, 'em_atendimento', data.clientes),
       data.clientes ? notificarClienteStatusEmail(data.clientes, data, 'em_atendimento') : Promise.resolve(),
     ]).catch(e => console.error('Erro ao notificar sobre aceite:', e));
 
@@ -445,8 +448,10 @@ exports.cancelarChamado = async (req, res) => {
     });
 
     // Notificar admin e técnico (fire-and-forget)
-    notificarStatusPush(data, 'cancelado')
-      .catch(e => console.error('Erro ao notificar sobre cancelamento:', e));
+    Promise.all([
+      notificarStatusPush(data, 'cancelado'),
+      notificarAdminsStatusEmail(data, 'cancelado', data.clientes),
+    ]).catch(e => console.error('Erro ao notificar sobre cancelamento:', e));
 
     res.json(data);
   } catch (error) {
@@ -535,6 +540,10 @@ exports.atualizarStatus = async (req, res) => {
     // Notificar via Push (fire-and-forget)
     notificarStatusPush(data, status)
       .catch(e => console.error('Erro ao enviar push notification:', e));
+
+    // Notificar admins por email (fire-and-forget)
+    notificarAdminsStatusEmail(data, status, data.clientes)
+      .catch(e => console.error('Erro ao notificar admins sobre status:', e));
 
     // Notificar cliente por email sobre mudança de status (fire-and-forget)
     if (data.clientes) {

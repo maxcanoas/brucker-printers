@@ -135,6 +135,68 @@ async function notificarNovoChamadoEmail(chamado, cliente) {
   }
 }
 
+// Notificar admins sobre mudança de status de chamado
+async function notificarAdminsStatusEmail(chamado, novoStatus, cliente) {
+  try {
+    const { data: admins } = await supabase
+      .from('admins')
+      .select('email')
+      .not('email', 'is', null);
+
+    const emailsAdmins = (admins || []).map(a => a.email).filter(Boolean);
+
+    const emailsFixos = process.env.NOTIFY_EMAILS
+      ? process.env.NOTIFY_EMAILS.split(',').map(e => e.trim()).filter(Boolean)
+      : [];
+
+    const emails = [...new Set([...emailsAdmins, ...emailsFixos])];
+    if (emails.length === 0) return;
+
+    const cor = statusCor[novoStatus] || '#333';
+    const nomeCliente = cliente?.nome || chamado.clientes?.nome || 'N/A';
+    const assunto = `Chamado #${chamado.numero} — ${statusTexto[novoStatus] || novoStatus}`;
+
+    const html = wrapEmail(`
+      <div style="background-color: #111111; padding: 20px; border-radius: 8px 8px 0 0; border-top: 4px solid ${cor};">
+        <h2 style="margin: 0; color: #ffffff;">Atualização de Chamado</h2>
+      </div>
+      <div style="border: 1px solid #e5e7eb; border-top: none; padding: 20px; border-radius: 0 0 8px 8px;">
+        <div style="background: ${cor}20; border-left: 4px solid ${cor}; padding: 12px 16px; margin: 0 0 16px 0; border-radius: 4px;">
+          <p style="margin: 0; font-size: 18px; font-weight: bold; color: ${cor};">
+            ${statusTexto[novoStatus] || novoStatus}
+          </p>
+        </div>
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="padding: 6px 0; font-weight: bold; color: #555;">Chamado:</td>
+            <td style="padding: 6px 0;">#${chamado.numero}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; font-weight: bold; color: #555;">Cliente:</td>
+            <td style="padding: 6px 0;">${nomeCliente}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; font-weight: bold; color: #555;">Tipo:</td>
+            <td style="padding: 6px 0;">${tipoTexto[chamado.tipo] || chamado.tipo}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; font-weight: bold; color: #555;">Urgência:</td>
+            <td style="padding: 6px 0;">${urgenciaTexto[chamado.urgencia] || chamado.urgencia}</td>
+          </tr>
+        </table>
+        <p style="color: #6b7280; font-size: 12px; margin-top: 16px;">
+          Acesse o painel administrativo para mais detalhes.
+        </p>
+      </div>
+    `);
+
+    const promises = emails.map(email => enviarEmail(email, assunto, html));
+    await Promise.all(promises);
+  } catch (error) {
+    console.error('Erro ao notificar admins sobre status:', error);
+  }
+}
+
 // Notificar cliente sobre mudança de status
 async function notificarClienteStatusEmail(cliente, chamado, novoStatus) {
   if (!cliente?.email) return;
@@ -307,6 +369,7 @@ async function enviarEmailRedefinicaoSenha(email, nome, link) {
 module.exports = {
   enviarEmail,
   notificarNovoChamadoEmail,
+  notificarAdminsStatusEmail,
   notificarClienteStatusEmail,
   notificarTecnicoAtribuidoEmail,
   notificarChamadoConcluidoEmail,
