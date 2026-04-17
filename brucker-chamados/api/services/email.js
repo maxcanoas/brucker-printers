@@ -23,7 +23,8 @@ async function enviarEmail(para, assunto, html) {
       html,
     });
   } catch (error) {
-    console.error('Erro ao enviar e-mail:', error);
+    console.error('[email] Falha ao enviar para', para, '| assunto:', assunto,
+      '| code:', error.code, '| response:', error.response, '| msg:', error.message);
   }
 }
 
@@ -131,7 +132,8 @@ async function notificarNovoChamadoEmail(chamado, cliente) {
     const promises = emails.map(email => enviarEmail(email, assunto, html));
     await Promise.all(promises);
   } catch (error) {
-    console.error('Erro ao notificar admins por e-mail:', error);
+    console.error('[email] Falha em notificarNovoChamadoEmail | chamado:', chamado?.numero,
+      '| code:', error.code, '| msg:', error.message);
   }
 }
 
@@ -193,7 +195,8 @@ async function notificarAdminsStatusEmail(chamado, novoStatus, cliente) {
     const promises = emails.map(email => enviarEmail(email, assunto, html));
     await Promise.all(promises);
   } catch (error) {
-    console.error('Erro ao notificar admins sobre status:', error);
+    console.error('[email] Falha em notificarAdminsStatusEmail | chamado:', chamado?.numero,
+      '| status:', novoStatus, '| code:', error.code, '| msg:', error.message);
   }
 }
 
