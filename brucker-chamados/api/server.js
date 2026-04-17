@@ -15,6 +15,10 @@ const adminRoutes = require('./routes/admin');
 
 const app = express();
 
+// Render (e outros PaaS) rodam atrás de proxy — confiar em 1 hop para que
+// express-rate-limit e similares identifiquem o IP real do cliente.
+app.set('trust proxy', 1);
+
 // Middleware global
 app.use(helmet());
 
