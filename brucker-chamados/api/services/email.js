@@ -70,21 +70,24 @@ function wrapEmail(conteudo) {
   `;
 }
 
+// Resolve lista de destinatários admin. Se NOTIFY_EMAILS estiver definido,
+// ele é a única fonte; caso contrário, usa os e-mails da tabela admins.
+async function listarDestinatariosAdmin() {
+  if (process.env.NOTIFY_EMAILS) {
+    return process.env.NOTIFY_EMAILS
+      .split(',').map(e => e.trim()).filter(Boolean);
+  }
+  const { data: admins } = await supabase
+    .from('admins')
+    .select('email')
+    .not('email', 'is', null);
+  return (admins || []).map(a => a.email).filter(Boolean);
+}
+
 // Notificar admins sobre novo chamado (já existia)
 async function notificarNovoChamadoEmail(chamado, cliente) {
   try {
-    const { data: admins } = await supabase
-      .from('admins')
-      .select('email')
-      .not('email', 'is', null);
-
-    const emailsAdmins = (admins || []).map(a => a.email).filter(Boolean);
-
-    const emailsFixos = process.env.NOTIFY_EMAILS
-      ? process.env.NOTIFY_EMAILS.split(',').map(e => e.trim()).filter(Boolean)
-      : [];
-
-    const emails = [...new Set([...emailsAdmins, ...emailsFixos])];
+    const emails = await listarDestinatariosAdmin();
     if (emails.length === 0) return;
 
     const assunto = `Novo chamado #${chamado.numero} - ${urgenciaTexto[chamado.urgencia] || chamado.urgencia}`;
@@ -140,18 +143,7 @@ async function notificarNovoChamadoEmail(chamado, cliente) {
 // Notificar admins sobre mudança de status de chamado
 async function notificarAdminsStatusEmail(chamado, novoStatus, cliente) {
   try {
-    const { data: admins } = await supabase
-      .from('admins')
-      .select('email')
-      .not('email', 'is', null);
-
-    const emailsAdmins = (admins || []).map(a => a.email).filter(Boolean);
-
-    const emailsFixos = process.env.NOTIFY_EMAILS
-      ? process.env.NOTIFY_EMAILS.split(',').map(e => e.trim()).filter(Boolean)
-      : [];
-
-    const emails = [...new Set([...emailsAdmins, ...emailsFixos])];
+    const emails = await listarDestinatariosAdmin();
     if (emails.length === 0) return;
 
     const cor = statusCor[novoStatus] || '#333';
