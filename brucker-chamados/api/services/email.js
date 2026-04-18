@@ -275,6 +275,50 @@ async function notificarTecnicoAtribuidoEmail(tecnico, chamado, cliente) {
   await enviarEmail(tecnico.email, assunto, html);
 }
 
+// Confirmar ao cliente que o chamado dele foi aberto com sucesso
+async function notificarClienteChamadoAbertoEmail(cliente, chamado) {
+  if (!cliente?.email) return;
+
+  const assunto = `Chamado #${chamado.numero} aberto com sucesso`;
+
+  const html = wrapEmail(`
+    <div style="background-color: #111111; padding: 20px; border-radius: 8px 8px 0 0; border-top: 4px solid #4D8EF5;">
+      <h2 style="margin: 0; color: #ffffff;">Chamado Aberto</h2>
+    </div>
+    <div style="border: 1px solid #e5e7eb; border-top: none; padding: 20px; border-radius: 0 0 8px 8px;">
+      <p style="font-size: 16px;">Olá, <strong>${cliente.nome}</strong>!</p>
+      <p>Seu chamado foi aberto com sucesso e já está na fila de atendimento. Você receberá novos e-mails a cada mudança de status.</p>
+      <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+        <tr>
+          <td style="padding: 6px 0; font-weight: bold; color: #555;">Número:</td>
+          <td style="padding: 6px 0;">#${chamado.numero}</td>
+        </tr>
+        <tr>
+          <td style="padding: 6px 0; font-weight: bold; color: #555;">Tipo:</td>
+          <td style="padding: 6px 0;">${tipoTexto[chamado.tipo] || chamado.tipo}</td>
+        </tr>
+        <tr>
+          <td style="padding: 6px 0; font-weight: bold; color: #555;">Urgência:</td>
+          <td style="padding: 6px 0;">${urgenciaTexto[chamado.urgencia] || chamado.urgencia}</td>
+        </tr>
+        <tr>
+          <td style="padding: 6px 0; font-weight: bold; color: #555;">SLA:</td>
+          <td style="padding: 6px 0;">${chamado.sla_horas}h</td>
+        </tr>
+        <tr>
+          <td style="padding: 6px 0; font-weight: bold; color: #555; vertical-align: top;">Descrição:</td>
+          <td style="padding: 6px 0;">${chamado.descricao || 'Sem descrição'}</td>
+        </tr>
+      </table>
+      <p style="color: #6b7280; font-size: 13px; margin-top: 16px;">
+        Acompanhe o andamento no portal com seu código de acesso.
+      </p>
+    </div>
+  `);
+
+  await enviarEmail(cliente.email, assunto, html);
+}
+
 // Notificar cliente sobre conclusão do chamado (com convite para avaliar)
 async function notificarChamadoConcluidoEmail(cliente, chamado) {
   if (!cliente?.email) return;
@@ -370,6 +414,7 @@ module.exports = {
   notificarNovoChamadoEmail,
   notificarAdminsStatusEmail,
   notificarClienteStatusEmail,
+  notificarClienteChamadoAbertoEmail,
   notificarTecnicoAtribuidoEmail,
   notificarChamadoConcluidoEmail,
   notificarRelatorioEmail,

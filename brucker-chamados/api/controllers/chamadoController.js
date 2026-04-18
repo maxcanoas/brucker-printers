@@ -1,7 +1,7 @@
 const supabase = require('../services/supabase');
 const { notificarTecnico, notificarStatusChamado, notificarAdminWhatsApp, notificarClienteConcluidoWhatsApp } = require('../services/whatsapp');
 const { notificarTecnicoPush, notificarStatusPush, notificarNovoChamado } = require('../services/notifications');
-const { notificarNovoChamadoEmail, notificarAdminsStatusEmail, notificarClienteStatusEmail, notificarTecnicoAtribuidoEmail, notificarChamadoConcluidoEmail } = require('../services/email');
+const { notificarNovoChamadoEmail, notificarAdminsStatusEmail, notificarClienteStatusEmail, notificarClienteChamadoAbertoEmail, notificarTecnicoAtribuidoEmail, notificarChamadoConcluidoEmail } = require('../services/email');
 const { calcularSlaVenceEm, enriquecerSla, recalcularSlaAposResumo } = require('../services/businessHours');
 
 exports.criarChamado = async (req, res) => {
@@ -93,10 +93,10 @@ exports.criarChamado = async (req, res) => {
       usuario_tipo: 'cliente'
     });
 
-    // Notificar admins via Push, Email e WhatsApp (fire-and-forget)
+    // Notificar admins via Push, Email e WhatsApp + confirmar abertura ao cliente (fire-and-forget)
     supabase
       .from('clientes')
-      .select('nome')
+      .select('nome, email')
       .eq('id', req.usuario.id)
       .single()
       .then(({ data: cliente }) => {
@@ -104,7 +104,8 @@ exports.criarChamado = async (req, res) => {
           notificarNovoChamado(data, cliente),
           notificarNovoChamadoEmail(data, cliente),
           notificarAdminWhatsApp(data, cliente, 'novo_chamado'),
-        ]).catch(e => console.error('Erro ao notificar admins:', e));
+          notificarClienteChamadoAbertoEmail(cliente, data),
+        ]).catch(e => console.error('Erro ao notificar sobre novo chamado:', e));
       })
       .catch(e => console.error('Erro ao buscar cliente para notificação:', e));
 
@@ -447,10 +448,11 @@ exports.cancelarChamado = async (req, res) => {
       usuario_tipo: 'cliente'
     });
 
-    // Notificar admin e técnico (fire-and-forget)
+    // Notificar admin, técnico e cliente (fire-and-forget)
     Promise.all([
       notificarStatusPush(data, 'cancelado'),
       notificarAdminsStatusEmail(data, 'cancelado', data.clientes),
+      data.clientes ? notificarClienteStatusEmail(data.clientes, data, 'cancelado') : Promise.resolve(),
     ]).catch(e => console.error('Erro ao notificar sobre cancelamento:', e));
 
     res.json(data);
