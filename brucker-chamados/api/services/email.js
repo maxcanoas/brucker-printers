@@ -14,15 +14,17 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-async function enviarEmail(para, assunto, html) {
+async function enviarEmail(para, assunto, html, attachments) {
   console.log('[email] Tentando enviar para', para, '| assunto:', assunto,
-    '| from:', process.env.SMTP_FROM || process.env.SMTP_USER);
+    '| from:', process.env.SMTP_FROM || process.env.SMTP_USER,
+    '| anexos:', attachments?.length || 0);
   try {
     const info = await transporter.sendMail({
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to: para,
       subject: assunto,
       html,
+      ...(attachments && attachments.length ? { attachments } : {}),
     });
     console.log('[email] OK enviado para', para, '| messageId:', info.messageId,
       '| accepted:', info.accepted, '| rejected:', info.rejected, '| response:', info.response);
@@ -197,7 +199,7 @@ async function notificarAdminsStatusEmail(chamado, novoStatus, cliente) {
 }
 
 // Notificar cliente sobre mudança de status
-async function notificarClienteStatusEmail(cliente, chamado, novoStatus) {
+async function notificarClienteStatusEmail(cliente, chamado, novoStatus, pdfBuffer) {
   if (!cliente?.email) return;
 
   const cor = statusCor[novoStatus] || '#333';
@@ -231,7 +233,13 @@ async function notificarClienteStatusEmail(cliente, chamado, novoStatus) {
     </div>
   `);
 
-  await enviarEmail(cliente.email, assunto, html);
+  const attachments = pdfBuffer ? [{
+    filename: `chamado-${chamado.numero}-relatorio.pdf`,
+    content: pdfBuffer,
+    contentType: 'application/pdf',
+  }] : undefined;
+
+  await enviarEmail(cliente.email, assunto, html, attachments);
 }
 
 // Notificar técnico quando atribuído a um chamado
@@ -320,7 +328,7 @@ async function notificarClienteChamadoAbertoEmail(cliente, chamado) {
 }
 
 // Notificar cliente sobre conclusão do chamado (com convite para avaliar)
-async function notificarChamadoConcluidoEmail(cliente, chamado) {
+async function notificarChamadoConcluidoEmail(cliente, chamado, pdfBuffer) {
   if (!cliente?.email) return;
 
   const assunto = `Chamado #${chamado.numero} concluído — Avalie o atendimento`;
@@ -341,14 +349,23 @@ async function notificarChamadoConcluidoEmail(cliente, chamado) {
         <strong>Avalie o atendimento!</strong> Acesse o portal com seu código de acesso,
         abra o chamado concluído e deixe sua avaliação. Sua opinião é muito importante para nós.
       </p>
+      ${pdfBuffer ? `<p style="color: #6b7280; font-size: 13px; margin-top: 12px;">
+        Em anexo, o relatório completo do atendimento em PDF.
+      </p>` : ''}
     </div>
   `);
 
-  await enviarEmail(cliente.email, assunto, html);
+  const attachments = pdfBuffer ? [{
+    filename: `chamado-${chamado.numero}-relatorio.pdf`,
+    content: pdfBuffer,
+    contentType: 'application/pdf',
+  }] : undefined;
+
+  await enviarEmail(cliente.email, assunto, html, attachments);
 }
 
 // Notificar cliente sobre criação do relatório de atendimento
-async function notificarRelatorioEmail(cliente, chamado) {
+async function notificarRelatorioEmail(cliente, chamado, pdfBuffer) {
   if (!cliente?.email) return;
 
   const assunto = `Relatório de atendimento — Chamado #${chamado.numero}`;
@@ -360,13 +377,20 @@ async function notificarRelatorioEmail(cliente, chamado) {
     <div style="border: 1px solid #e5e7eb; border-top: none; padding: 20px; border-radius: 0 0 8px 8px;">
       <p style="font-size: 16px;">Olá, <strong>${cliente.nome}</strong>!</p>
       <p>O relatório de atendimento do chamado <strong>#${chamado.numero}</strong> foi gerado.</p>
+      ${pdfBuffer ? `<p>Em anexo, você encontra o PDF com os detalhes do atendimento: descrição do serviço, peças utilizadas, duração, avaliação e assinaturas.</p>` : ''}
       <p style="color: #6b7280; font-size: 13px; margin-top: 16px;">
         Acesse o portal com seu código de acesso para visualizar os detalhes.
       </p>
     </div>
   `);
 
-  await enviarEmail(cliente.email, assunto, html);
+  const attachments = pdfBuffer ? [{
+    filename: `chamado-${chamado.numero}-relatorio.pdf`,
+    content: pdfBuffer,
+    contentType: 'application/pdf',
+  }] : undefined;
+
+  await enviarEmail(cliente.email, assunto, html, attachments);
 }
 
 // E-mail de redefinição de senha (admin ou técnico)

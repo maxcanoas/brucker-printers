@@ -1,5 +1,6 @@
 const supabase = require('../services/supabase');
 const { gerarRelatorioPDF } = require('../services/pdf');
+const { gerarPdfAtendimentoPorChamado } = require('../services/chamadoPdf');
 const { notificarRelatorioEmail } = require('../services/email');
 const { notificarStatusPush } = require('../services/notifications');
 const { notificarClienteConcluidoWhatsApp } = require('../services/whatsapp');
@@ -70,8 +71,12 @@ exports.criar = async (req, res) => {
         .single();
 
       if (chamadoCompleto?.clientes) {
+        const pdfBuffer = await gerarPdfAtendimentoPorChamado(chamado_id).catch(err => {
+          console.error('Erro ao gerar PDF de atendimento:', err);
+          return null;
+        });
         await Promise.all([
-          notificarRelatorioEmail(chamadoCompleto.clientes, chamadoCompleto),
+          notificarRelatorioEmail(chamadoCompleto.clientes, chamadoCompleto, pdfBuffer),
           notificarStatusPush(chamadoCompleto, 'concluido'),
           notificarClienteConcluidoWhatsApp(chamadoCompleto.clientes.telefone, chamadoCompleto),
         ]);

@@ -3,6 +3,7 @@ const { notificarTecnico, notificarStatusChamado, notificarAdminWhatsApp, notifi
 const { notificarTecnicoPush, notificarStatusPush, notificarNovoChamado } = require('../services/notifications');
 const { notificarNovoChamadoEmail, notificarAdminsStatusEmail, notificarClienteStatusEmail, notificarClienteChamadoAbertoEmail, notificarTecnicoAtribuidoEmail, notificarChamadoConcluidoEmail } = require('../services/email');
 const { calcularSlaVenceEm, enriquecerSla, recalcularSlaAposResumo } = require('../services/businessHours');
+const { gerarPdfAtendimentoPorChamado, gerarPdfHistoricoPorChamado } = require('../services/chamadoPdf');
 
 exports.criarChamado = async (req, res) => {
   try {
@@ -449,11 +450,19 @@ exports.cancelarChamado = async (req, res) => {
     });
 
     // Notificar admin, técnico e cliente (fire-and-forget)
-    Promise.all([
-      notificarStatusPush(data, 'cancelado'),
-      notificarAdminsStatusEmail(data, 'cancelado', data.clientes),
-      data.clientes ? notificarClienteStatusEmail(data.clientes, data, 'cancelado') : Promise.resolve(),
-    ]).catch(e => console.error('Erro ao notificar sobre cancelamento:', e));
+    (async () => {
+      const pdfBuffer = data.clientes
+        ? await gerarPdfHistoricoPorChamado(data.numero).catch(err => {
+            console.error('Erro ao gerar PDF histórico:', err);
+            return null;
+          })
+        : null;
+      await Promise.all([
+        notificarStatusPush(data, 'cancelado'),
+        notificarAdminsStatusEmail(data, 'cancelado', data.clientes),
+        data.clientes ? notificarClienteStatusEmail(data.clientes, data, 'cancelado', pdfBuffer) : Promise.resolve(),
+      ]);
+    })().catch(e => console.error('Erro ao notificar sobre cancelamento:', e));
 
     res.json(data);
   } catch (error) {
@@ -550,10 +559,24 @@ exports.atualizarStatus = async (req, res) => {
     // Notificar cliente por email sobre mudança de status (fire-and-forget)
     if (data.clientes) {
       if (status === 'concluido') {
-        Promise.all([
-          notificarChamadoConcluidoEmail(data.clientes, data),
-          notificarClienteConcluidoWhatsApp(data.clientes.telefone, data),
-        ]).catch(e => console.error('Erro ao notificar cliente:', e));
+        (async () => {
+          const pdfBuffer = await gerarPdfAtendimentoPorChamado(data.id).catch(err => {
+            console.error('Erro ao gerar PDF de atendimento:', err);
+            return null;
+          });
+          await Promise.all([
+            notificarChamadoConcluidoEmail(data.clientes, data, pdfBuffer),
+            notificarClienteConcluidoWhatsApp(data.clientes.telefone, data),
+          ]);
+        })().catch(e => console.error('Erro ao notificar cliente:', e));
+      } else if (status === 'cancelado') {
+        (async () => {
+          const pdfBuffer = await gerarPdfHistoricoPorChamado(data.numero).catch(err => {
+            console.error('Erro ao gerar PDF histórico:', err);
+            return null;
+          });
+          await notificarClienteStatusEmail(data.clientes, data, status, pdfBuffer);
+        })().catch(e => console.error('Erro ao notificar cliente:', e));
       } else {
         notificarClienteStatusEmail(data.clientes, data, status)
           .catch(e => console.error('Erro ao notificar cliente:', e));
