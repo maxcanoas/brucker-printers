@@ -367,7 +367,7 @@ function desenharRodape(doc) {
 }
 
 // ============ PDF individual (chamado único) ============
-function gerarRelatorioPDF({ chamado, relatorio, cliente, tecnico, impressora, atualizacoes = [], avaliacao = null }) {
+function gerarRelatorioPDF({ chamado, relatorio, cliente, tecnico, impressora, atualizacoes = [], avaliacao = null, incluirAssinaturas = true }) {
   return new Promise((resolve, reject) => {
     try {
       const doc = new PDFDocument({ margin: MARGIN, size: 'A4' });
@@ -383,7 +383,7 @@ function gerarRelatorioPDF({ chamado, relatorio, cliente, tecnico, impressora, a
       desenharCabecalhoPrincipal(doc, chamado);
       renderer.desenharSecaoChamado(
         { chamado, cliente, tecnico, impressora, atualizacoes, relatorio, avaliacao },
-        { incluirAssinaturas: true }
+        { incluirAssinaturas }
       );
       desenharRodape(doc);
 

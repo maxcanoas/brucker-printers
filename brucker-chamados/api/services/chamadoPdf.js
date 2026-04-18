@@ -35,6 +35,7 @@ async function gerarPdfAtendimentoPorChamado(chamadoId) {
     impressora: ch.impressoras,
     atualizacoes: ch.chamado_atualizacoes || [],
     avaliacao,
+    incluirAssinaturas: false,
   });
 }
 
