@@ -1,5 +1,9 @@
 const ExcelJS = require('exceljs');
 
+const TZ_BR = 'America/Sao_Paulo';
+const fmtDateTimeBR = (d) => d ? new Date(d).toLocaleString('pt-BR', { timeZone: TZ_BR }) : '-';
+const fmtDataBR = (d) => d ? new Date(d).toLocaleDateString('pt-BR', { timeZone: TZ_BR }) : '-';
+
 const BRAND = {
   primary: 'FF0D1117',
   primarySoft: 'FF1F2937',
@@ -144,7 +148,7 @@ async function gerarRelatorioPeriodoExcel(resumo, chamados) {
       cliente: c.clientes?.nome || '-',
       tecnico: c.tecnicos?.nome || '-',
       descricao: (c.descricao || '').substring(0, 100),
-      criado_em: new Date(c.criado_em).toLocaleString('pt-BR'),
+      criado_em: fmtDateTimeBR(c.criado_em),
       sla_status: slaStatus,
     });
   });
@@ -245,8 +249,8 @@ async function gerarRelatorioSlaExcel(dados) {
       tecnico: c.tecnicos?.nome || '-',
       urgencia: c.urgencia,
       sla_status: c.sla_cumprido ? 'Cumprido' : 'Estourado',
-      criado_em: new Date(c.criado_em).toLocaleString('pt-BR'),
-      concluido_em: new Date(c.atualizado_em).toLocaleString('pt-BR'),
+      criado_em: fmtDateTimeBR(c.criado_em),
+      concluido_em: fmtDateTimeBR(c.atualizado_em),
     });
   });
   aplicarEstiloCelulas(ws, 2);
@@ -318,7 +322,7 @@ function escreverTituloInstitucional(ws, titulo, ncols) {
 
   ws.mergeCells(`A2:${last}2`);
   const sub = ws.getCell('A2');
-  sub.value = `Gerado em ${new Date().toLocaleString('pt-BR')}`;
+  sub.value = `Gerado em ${fmtDateTimeBR(new Date())}`;
   sub.font = { italic: true, color: { argb: 'FFFFFFFF' }, size: 10 };
   sub.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: BRAND.primarySoft } };
   sub.alignment = { horizontal: 'right', vertical: 'middle' };
@@ -335,7 +339,7 @@ function escreverBlocoFiltros(ws, filtros, ncols, startRow) {
   };
   const fmtData = (iso) => {
     if (!iso) return null;
-    try { return new Date(iso).toLocaleDateString('pt-BR'); } catch { return iso; }
+    try { return new Date(iso).toLocaleDateString('pt-BR', { timeZone: TZ_BR }); } catch { return iso; }
   };
 
   const ativos = [];

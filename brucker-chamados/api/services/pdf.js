@@ -37,13 +37,14 @@ const statusTexto = {
 };
 
 // ============ Formatadores ============
+const TZ_BR = 'America/Sao_Paulo';
 function fmtDateTime(d) {
   if (!d) return '-';
-  return new Date(d).toLocaleString('pt-BR');
+  return new Date(d).toLocaleString('pt-BR', { timeZone: TZ_BR });
 }
 function fmtData(d) {
   if (!d) return '-';
-  return new Date(d).toLocaleDateString('pt-BR');
+  return new Date(d).toLocaleDateString('pt-BR', { timeZone: TZ_BR });
 }
 function fmtDuracao(min) {
   if (!min && min !== 0) return '-';
