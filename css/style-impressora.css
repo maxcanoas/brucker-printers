@@ -91,6 +91,16 @@
             color: var(--secondary-orange);
         }
 
+        .nav-link--subtle {
+            color: var(--gray-500);
+            font-size: 0.85rem;
+            font-weight: 400;
+        }
+
+        .nav-link--subtle:hover {
+            color: var(--secondary-red);
+        }
+
         .btn-header {
             background: var(--secondary-red);
             color: var(--white);
