@@ -10,19 +10,38 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.bruckerprinters.chamados"
+      "bundleIdentifier": "com.bruckerprinters.chamados",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "O app precisa acessar suas fotos para anexar imagens aos chamados de suporte tecnico.",
+        "NSCameraUsageDescription": "O app usa a camera para tirar fotos dos equipamentos e anexar aos chamados de suporte tecnico."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#0D1117"
       },
       "package": "com.bruckerprinters.chamados",
+      "versionCode": 1,
       "newArchEnabled": false
     },
     "plugins": [
       "expo-router",
-      "expo-asset"
+      "expo-asset",
+      [
+        "expo-notifications",
+        {
+          "color": "#E84C1E"
+        }
+      ]
     ],
-    "scheme": "brucker-chamados"
+    "scheme": "brucker-chamados",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "3521080b-6f1a-4f15-9b37-4a62d6d25c03"
+      }
+    },
+    "owner": "bruckerprinters"
   }
 }
