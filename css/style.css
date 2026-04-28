@@ -1027,6 +1027,10 @@ img {
 
 .footer-links {
     margin: var(--spacing-sm) 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--spacing-lg);
 }
 
 .footer-links a {
