@@ -370,6 +370,25 @@
             transform: translateY(-2px);
         }
 
+        .footer-links {
+            margin: 1rem 0;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 2rem;
+        }
+
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.5);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color 0.2s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--white);
+        }
+
         .footer-bottom {
             padding-top: 1rem;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
