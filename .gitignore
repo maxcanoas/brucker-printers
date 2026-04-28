@@ -5,3 +5,15 @@ node_modules
 *.log
 .DS_Store
 Thumbs.db
+
+# Documentacao interna e propostas comerciais (nao versionar)
+/CUSTOS-SERVICOS.md
+/DEPLOY-MOBILE-LOJAS.md
+/DEPLOY-WEB-HOSTGATOR.md
+/DEPLOY-WEB-PASSO-A-PASSO.md
+/GUIA-IMPLANTACAO-COMPLETO.md
+/PERGUNTAS-CLIENTE.md
+/PROPOSTA-MANUTENCAO-MENSAL.md
+/PROPOSTA-MANUTENCAO.md
+/Relatorio_Tecnico_Brucker_Printers.docx
+/Relatorio_Tecnico_Brucker_Printers.pdf
