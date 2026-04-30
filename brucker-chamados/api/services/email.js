@@ -1,54 +1,37 @@
-const dns = require('dns');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 const supabase = require('./supabase');
 
-// Render nao tem rota IPv6 de saida (ENETUNREACH em smtp.gmail.com).
-// setDefaultResultOrder nao bastou (Node antigo ou cache do socket interno),
-// entao monkey-patch dns.lookup para sempre devolver A (IPv4).
-const _origLookup = dns.lookup.bind(dns);
-dns.lookup = (hostname, options, cb) => {
-  if (typeof options === 'function') { cb = options; options = {}; }
-  const opts = typeof options === 'number' ? { family: 4 } : { ...options, family: 4 };
-  return _origLookup(hostname, opts, cb);
-};
-if (typeof dns.setDefaultResultOrder === 'function') {
-  dns.setDefaultResultOrder('ipv4first');
-}
-
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT) || 587,
-  secure: Number(process.env.SMTP_PORT) === 465,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false,
-  },
-  family: 4,
-  connectionTimeout: 10000,
-  greetingTimeout: 10000,
-  socketTimeout: 15000,
-});
+// Render bloqueia portas SMTP outbound (ETIMEDOUT em 587 e 465 mesmo com IPv4),
+// entao usamos Resend via HTTPS 443.
+const resend = new Resend(process.env.RESEND_API_KEY);
+const FROM = process.env.SMTP_FROM || 'Brucker Chamados <onboarding@resend.dev>';
 
 async function enviarEmail(para, assunto, html, attachments) {
   console.log('[email] Tentando enviar para', para, '| assunto:', assunto,
-    '| from:', process.env.SMTP_FROM || process.env.SMTP_USER,
-    '| anexos:', attachments?.length || 0);
+    '| from:', FROM, '| anexos:', attachments?.length || 0);
   try {
-    const info = await transporter.sendMail({
-      from: process.env.SMTP_FROM || process.env.SMTP_USER,
-      to: para,
+    const payload = {
+      from: FROM,
+      to: Array.isArray(para) ? para : [para],
       subject: assunto,
       html,
-      ...(attachments && attachments.length ? { attachments } : {}),
-    });
-    console.log('[email] OK enviado para', para, '| messageId:', info.messageId,
-      '| accepted:', info.accepted, '| rejected:', info.rejected, '| response:', info.response);
+    };
+    if (attachments && attachments.length) {
+      payload.attachments = attachments.map(a => ({
+        filename: a.filename,
+        content: Buffer.isBuffer(a.content) ? a.content : Buffer.from(a.content),
+      }));
+    }
+    const { data, error } = await resend.emails.send(payload);
+    if (error) {
+      console.error('[email] Falha ao enviar para', para, '| assunto:', assunto,
+        '| name:', error.name, '| msg:', error.message);
+      return;
+    }
+    console.log('[email] OK enviado para', para, '| id:', data?.id);
   } catch (error) {
     console.error('[email] Falha ao enviar para', para, '| assunto:', assunto,
-      '| code:', error.code, '| response:', error.response, '| msg:', error.message);
+      '| msg:', error.message);
   }
 }
 
@@ -441,14 +424,19 @@ async function enviarEmailRedefinicaoSenha(email, nome, link) {
     </div>
   `);
 
-  // Não usa enviarEmail() porque ele engole erros — aqui precisamos propagar
-  // a falha para o controller responder corretamente ao usuário.
-  await transporter.sendMail({
-    from: process.env.SMTP_FROM || process.env.SMTP_USER,
-    to: email,
+  // Nao usa enviarEmail() porque ele engole erros — aqui precisamos propagar
+  // a falha para o controller responder corretamente ao usuario.
+  const { error } = await resend.emails.send({
+    from: FROM,
+    to: [email],
     subject: assunto,
     html,
   });
+  if (error) {
+    const err = new Error(error.message || 'Falha ao enviar e-mail');
+    err.name = error.name;
+    throw err;
+  }
 }
 
 module.exports = {
