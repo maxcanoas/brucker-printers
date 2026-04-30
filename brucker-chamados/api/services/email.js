@@ -2,8 +2,15 @@ const dns = require('dns');
 const nodemailer = require('nodemailer');
 const supabase = require('./supabase');
 
-// Render resolve smtp.gmail.com como IPv6 mas nao tem rota de saida (ENETUNREACH).
-// Forca o resolver do Node a priorizar A (IPv4) sobre AAAA.
+// Render nao tem rota IPv6 de saida (ENETUNREACH em smtp.gmail.com).
+// setDefaultResultOrder nao bastou (Node antigo ou cache do socket interno),
+// entao monkey-patch dns.lookup para sempre devolver A (IPv4).
+const _origLookup = dns.lookup.bind(dns);
+dns.lookup = (hostname, options, cb) => {
+  if (typeof options === 'function') { cb = options; options = {}; }
+  const opts = typeof options === 'number' ? { family: 4 } : { ...options, family: 4 };
+  return _origLookup(hostname, opts, cb);
+};
 if (typeof dns.setDefaultResultOrder === 'function') {
   dns.setDefaultResultOrder('ipv4first');
 }
