@@ -1,5 +1,12 @@
+const dns = require('dns');
 const nodemailer = require('nodemailer');
 const supabase = require('./supabase');
+
+// Render resolve smtp.gmail.com como IPv6 mas nao tem rota de saida (ENETUNREACH).
+// Forca o resolver do Node a priorizar A (IPv4) sobre AAAA.
+if (typeof dns.setDefaultResultOrder === 'function') {
+  dns.setDefaultResultOrder('ipv4first');
+}
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
