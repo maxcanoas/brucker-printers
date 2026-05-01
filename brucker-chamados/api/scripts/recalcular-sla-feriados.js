@@ -6,6 +6,16 @@
 // Carrega .env automaticamente (mesmo padrao do server.js).
 
 require('dotenv').config();
+
+const url = process.env.SUPABASE_URL;
+const key = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY;
+console.log('[recalc] SUPABASE_URL:', url ? url.replace(/(https:\/\/)([^.]+)/, '$1***') : '(VAZIO)');
+console.log('[recalc] SUPABASE_KEY:', key ? `(definida, ${key.length} chars)` : '(VAZIO)');
+if (!url || !key) {
+  console.error('[recalc] FATAL: faltam SUPABASE_URL e/ou SUPABASE_SERVICE_KEY no .env');
+  process.exit(1);
+}
+
 const supabase = require('../services/supabase');
 const { calcularSlaVenceEm } = require('../services/businessHours');
 
@@ -17,7 +27,7 @@ async function main() {
     .not('status', 'in', '(concluido,cancelado)');
 
   if (error) {
-    console.error('[recalc] Falha ao buscar chamados:', error.message);
+    console.error('[recalc] Falha ao buscar chamados:', JSON.stringify(error, null, 2));
     process.exit(1);
   }
 
