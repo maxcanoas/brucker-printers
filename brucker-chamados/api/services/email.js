@@ -1,34 +1,61 @@
-const { Resend } = require('resend');
 const supabase = require('./supabase');
 
 // Render bloqueia portas SMTP outbound (ETIMEDOUT em 587 e 465 mesmo com IPv4),
-// entao usamos Resend via HTTPS 443.
-const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM = process.env.SMTP_FROM || 'Brucker Chamados <onboarding@resend.dev>';
+// entao usamos Brevo via API HTTPS (api.brevo.com). Migrado do Resend porque
+// dominio bruckerprinters.com.br ainda nao verificado no Resend (DNS no
+// Cloudflare via HostGator, sem acesso direto).
+const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
+const BREVO_API_KEY = process.env.BREVO_API_KEY;
+const FROM_RAW = process.env.SMTP_FROM || 'Brucker Chamados <bruckerparts@gmail.com>';
+
+// Parse "Nome <email@dominio>" -> { name, email }
+function parseFrom(raw) {
+  const m = raw.match(/^\s*(.+?)\s*<\s*([^>]+)\s*>\s*$/);
+  if (m) return { name: m[1], email: m[2] };
+  return { name: 'Brucker Chamados', email: raw.trim() };
+}
+const FROM = parseFrom(FROM_RAW);
 
 async function enviarEmail(para, assunto, html, attachments) {
   console.log('[email] Tentando enviar para', para, '| assunto:', assunto,
-    '| from:', FROM, '| anexos:', attachments?.length || 0);
+    '| from:', `${FROM.name} <${FROM.email}>`, '| anexos:', attachments?.length || 0);
+  if (!BREVO_API_KEY) {
+    console.error('[email] BREVO_API_KEY nao configurada — abortando envio');
+    return;
+  }
   try {
+    const destinatarios = (Array.isArray(para) ? para : [para])
+      .filter(Boolean)
+      .map(e => ({ email: e }));
     const payload = {
-      from: FROM,
-      to: Array.isArray(para) ? para : [para],
+      sender: FROM,
+      to: destinatarios,
       subject: assunto,
-      html,
+      htmlContent: html,
     };
     if (attachments && attachments.length) {
-      payload.attachments = attachments.map(a => ({
-        filename: a.filename,
-        content: Buffer.isBuffer(a.content) ? a.content : Buffer.from(a.content),
+      payload.attachment = attachments.map(a => ({
+        name: a.filename,
+        content: (Buffer.isBuffer(a.content) ? a.content : Buffer.from(a.content)).toString('base64'),
       }));
     }
-    const { data, error } = await resend.emails.send(payload);
-    if (error) {
+    const resp = await fetch(BREVO_API_URL, {
+      method: 'POST',
+      headers: {
+        'api-key': BREVO_API_KEY,
+        'content-type': 'application/json',
+        'accept': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+    if (!resp.ok) {
+      const body = await resp.text();
       console.error('[email] Falha ao enviar para', para, '| assunto:', assunto,
-        '| name:', error.name, '| msg:', error.message);
+        '| status:', resp.status, '| body:', body);
       return;
     }
-    console.log('[email] OK enviado para', para, '| id:', data?.id);
+    const data = await resp.json();
+    console.log('[email] OK enviado para', para, '| id:', data?.messageId);
   } catch (error) {
     console.error('[email] Falha ao enviar para', para, '| assunto:', assunto,
       '| msg:', error.message);
@@ -426,16 +453,26 @@ async function enviarEmailRedefinicaoSenha(email, nome, link) {
 
   // Nao usa enviarEmail() porque ele engole erros — aqui precisamos propagar
   // a falha para o controller responder corretamente ao usuario.
-  const { error } = await resend.emails.send({
-    from: FROM,
-    to: [email],
-    subject: assunto,
-    html,
+  if (!BREVO_API_KEY) {
+    throw new Error('BREVO_API_KEY nao configurada');
+  }
+  const resp = await fetch(BREVO_API_URL, {
+    method: 'POST',
+    headers: {
+      'api-key': BREVO_API_KEY,
+      'content-type': 'application/json',
+      'accept': 'application/json',
+    },
+    body: JSON.stringify({
+      sender: FROM,
+      to: [{ email }],
+      subject: assunto,
+      htmlContent: html,
+    }),
   });
-  if (error) {
-    const err = new Error(error.message || 'Falha ao enviar e-mail');
-    err.name = error.name;
-    throw err;
+  if (!resp.ok) {
+    const body = await resp.text();
+    throw new Error(`Brevo ${resp.status}: ${body}`);
   }
 }
 
