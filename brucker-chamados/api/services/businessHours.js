@@ -1,4 +1,14 @@
 const supabase = require('./supabase');
+const { ehFeriado } = require('./feriados');
+
+// Predicado central de "dia util" — combina dias da semana configurados
+// com a lista de feriados nacionais. Recebe a Date ja em horario local.
+function ehDiaUtil(local, config) {
+  const diaSemana = local.getDay();
+  if (!config.dias.includes(diaSemana)) return false;
+  if (ehFeriado(local)) return false;
+  return true;
+}
 
 // Cache da configuração de horário comercial
 let configCache = null;
@@ -50,8 +60,7 @@ async function isHorarioComercial(date) {
   const config = await getConfig();
   const local = toTimezone(date, config.timezone);
 
-  const diaSemana = local.getDay(); // 0=dom, 1=seg, ..., 6=sab
-  if (!config.dias.includes(diaSemana)) return false;
+  if (!ehDiaUtil(local, config)) return false;
 
   const [hInicio, mInicio] = config.inicio.split(':').map(Number);
   const [hFim, mFim] = config.fim.split(':').map(Number);
@@ -81,9 +90,8 @@ async function calcularSlaVenceEm(criadoEm, slaHoras) {
   // Iterar dia a dia contando apenas minutos úteis
   for (let i = 0; i < 365 && minutosRestantes > 0; i++) {
     const local = toTimezone(cursor, config.timezone);
-    const diaSemana = local.getDay();
 
-    if (config.dias.includes(diaSemana)) {
+    if (ehDiaUtil(local, config)) {
       const minutosAtual = local.getHours() * 60 + local.getMinutes();
 
       // Determinar início e fim do período útil NESTE dia a partir do cursor
@@ -146,9 +154,8 @@ async function calcularMinutosUteis(dataInicio, dataFim) {
 
   for (let i = 0; i < 365 && cursor < fim; i++) {
     const local = toTimezone(cursor, config.timezone);
-    const diaSemana = local.getDay();
 
-    if (config.dias.includes(diaSemana)) {
+    if (ehDiaUtil(local, config)) {
       const minutosAtual = local.getHours() * 60 + local.getMinutes();
       const inicioUtil = Math.max(minutosAtual, minutosInicio);
       const fimUtil = minutosFim;
@@ -243,9 +250,8 @@ async function recalcularSlaAposResumo(chamado) {
 
   for (let i = 0; i < 365 && minutosParaAdicionar > 0; i++) {
     const local = toTimezone(cursor, config.timezone);
-    const diaSemana = local.getDay();
 
-    if (config.dias.includes(diaSemana)) {
+    if (ehDiaUtil(local, config)) {
       const minutosAtual = local.getHours() * 60 + local.getMinutes();
       const inicioUtil = Math.max(minutosAtual, minutosInicioConfig);
       const fimUtil = minutosFimConfig;
