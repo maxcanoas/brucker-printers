@@ -11,12 +11,22 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://brucker-api.onrender.com/api",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://srwodqpzrnfqgktzimjy.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNyd29kcXB6cm5mcWdrdHppbWp5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMTIyOTYsImV4cCI6MjA5MTc4ODI5Nn0.fnIEhDVsC0A4TQWyaZYuY9c4ACvt_NI9ubr7O18FkEQ"
       }
     },
     "production": {
       "autoIncrement": true,
       "android": {
         "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://brucker-api.onrender.com/api",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://srwodqpzrnfqgktzimjy.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNyd29kcXB6cm5mcWdrdHppbWp5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMTIyOTYsImV4cCI6MjA5MTc4ODI5Nn0.fnIEhDVsC0A4TQWyaZYuY9c4ACvt_NI9ubr7O18FkEQ"
       }
     }
   },

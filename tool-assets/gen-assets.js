@@ -5,7 +5,7 @@ const path = require('path');
 
 const SRC = path.resolve(__dirname, '../brucker-chamados/mobile/assets/logo-icon-square.png');
 const OUT = path.resolve(__dirname, '../brucker-chamados/mobile/assets');
-const BG = { r: 13, g: 17, b: 23, alpha: 1 }; // #0D1117
+const BG = { r: 255, g: 255, b: 255, alpha: 1 }; // #FFFFFF — fundo branco para destacar preto/vermelho/amarelo da logo
 
 async function run() {
   // 1) icon.png — 1024x1024, SEM alpha (Apple rejeita alpha)

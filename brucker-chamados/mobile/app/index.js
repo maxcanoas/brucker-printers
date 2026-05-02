@@ -7,6 +7,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import api from '../lib/api';
+
+const API_URL_DEBUG = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001/api';
 import { useTheme } from '../contexts/ThemeContext';
 import { registrarPushNotifications } from '../lib/notifications';
 
@@ -84,10 +86,16 @@ export default function LoginScreen() {
         router.replace('/home');
       }
     } catch (err) {
-      const msg = perfil === 'cliente'
-        ? 'Código de acesso inválido'
-        : 'Credenciais inválidas';
-      Alert.alert('Erro', err.response?.data?.error || msg);
+      let msg;
+      if (err.response) {
+        msg = err.response.data?.error
+          || (perfil === 'cliente' ? 'Código de acesso inválido' : 'Credenciais inválidas');
+      } else if (err.request) {
+        msg = `Sem resposta do servidor (${API_URL_DEBUG}). Verifique sua conexão ou se o backend está no ar.`;
+      } else {
+        msg = `Erro de configuração: ${err.message}`;
+      }
+      Alert.alert('Erro', msg);
     } finally {
       setCarregando(false);
     }
