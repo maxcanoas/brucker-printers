@@ -1,7 +1,7 @@
 const supabase = require('../services/supabase');
 const { gerarRelatorioPDF } = require('../services/pdf');
 const { gerarPdfAtendimentoPorChamado } = require('../services/chamadoPdf');
-const { notificarRelatorioEmail } = require('../services/email');
+const { notificarAdminsStatusEmail, notificarChamadoConcluidoEmail } = require('../services/email');
 const { notificarStatusPush } = require('../services/notifications');
 const { notificarClienteConcluidoWhatsApp } = require('../services/whatsapp');
 
@@ -76,7 +76,8 @@ exports.criar = async (req, res) => {
           return null;
         });
         await Promise.all([
-          notificarRelatorioEmail(chamadoCompleto.clientes, chamadoCompleto, pdfBuffer),
+          notificarAdminsStatusEmail(chamadoCompleto, 'concluido', chamadoCompleto.clientes),
+          notificarChamadoConcluidoEmail(chamadoCompleto.clientes, chamadoCompleto, pdfBuffer),
           notificarStatusPush(chamadoCompleto, 'concluido'),
           notificarClienteConcluidoWhatsApp(chamadoCompleto.clientes.telefone, chamadoCompleto),
         ]);

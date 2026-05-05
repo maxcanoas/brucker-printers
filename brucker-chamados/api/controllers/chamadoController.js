@@ -266,6 +266,10 @@ exports.atualizarChamado = async (req, res) => {
         usuario_tipo: 'admin'
       });
 
+      // Notificar admins por email (fire-and-forget)
+      notificarAdminsStatusEmail(data, status, data.clientes)
+        .catch(e => console.error('Erro ao notificar admins sobre status:', e));
+
       // Notificar cliente por email sobre mudança de status (fire-and-forget)
       if (data.clientes) {
         notificarClienteStatusEmail(data.clientes, data, status)
