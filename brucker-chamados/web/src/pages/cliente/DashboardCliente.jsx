@@ -278,9 +278,7 @@ function ModalAbrirChamado({ isOpen, onClose, impressoras, onCriado, theme, inpu
       if (form.impressora_id) formData.append('impressora_id', form.impressora_id);
       fotos.forEach(f => formData.append('fotos', f));
 
-      await api.post('/chamados', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      await api.post('/chamados', formData);
       toast.success('Chamado aberto com sucesso!');
       setForm({ numero_serie: '', impressora_id: '', modelo: '', tipo: 'corretivo', urgencia: 'normal', descricao: '' });
       setFotos([]);
