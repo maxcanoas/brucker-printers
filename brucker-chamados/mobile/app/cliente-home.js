@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl,
-  Alert, TextInput, Modal, ScrollView, ActivityIndicator, Image
+  Alert, TextInput, Modal, ScrollView, ActivityIndicator, Image,
+  KeyboardAvoidingView, Platform
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -227,6 +228,7 @@ export default function ClienteHomeScreen() {
 
 function ModalAbrirChamado({ visible, onClose, onCriado }) {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [form, setForm] = useState({
     numero_serie: '', impressora_id: '', modelo: '',
@@ -289,9 +291,16 @@ function ModalAbrirChamado({ visible, onClose, onCriado }) {
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <ScrollView showsVerticalScrollIndicator={false}>
+      <KeyboardAvoidingView
+        style={styles.modalOverlay}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <View style={[styles.modalContent, { paddingBottom: 24 + Math.max(insets.bottom, 12) }]}>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ paddingBottom: 16 }}
+          >
             <Text style={styles.modalTitle}>Abrir Chamado</Text>
 
             <Text style={styles.formLabel}>Número de Série</Text>
@@ -394,7 +403,7 @@ function ModalAbrirChamado({ visible, onClose, onCriado }) {
             </TouchableOpacity>
           </ScrollView>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
