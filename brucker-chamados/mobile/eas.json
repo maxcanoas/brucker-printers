@@ -23,6 +23,7 @@
       "android": {
         "buildType": "app-bundle"
       },
+      "ios": {},
       "env": {
         "EXPO_PUBLIC_API_URL": "https://brucker-api.onrender.com/api",
         "EXPO_PUBLIC_SUPABASE_URL": "https://srwodqpzrnfqgktzimjy.supabase.co",
@@ -31,6 +32,16 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "android": {
+        "serviceAccountKeyPath": "./google-service-account.json",
+        "track": "internal"
+      },
+      "ios": {
+        "appleId": "dev@bruckerprinters.com.br",
+        "ascAppId": "PREENCHER_APOS_CRIAR_APP_NO_APP_STORE_CONNECT",
+        "appleTeamId": "PREENCHER_TEAM_ID_APPLE_DEVELOPER"
+      }
+    }
   }
 }

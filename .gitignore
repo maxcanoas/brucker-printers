@@ -5,6 +5,9 @@ node_modules
 *.log
 .DS_Store
 Thumbs.db
+*.apk
+*.aab
+google-service-account.json
 
 # Documentacao interna e propostas comerciais (nao versionar)
 /CUSTOS-SERVICOS.md

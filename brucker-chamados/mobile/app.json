@@ -40,6 +40,12 @@
         {
           "color": "#E84C1E"
         }
+      ],
+      [
+        "./plugins/with-adi-registration",
+        {
+          "snippet": "CQ34VOJQANF2SAAAAAAAAAAAAA"
+        }
       ]
     ],
     "scheme": "brucker-chamados",
