@@ -3,6 +3,10 @@
     "name": "Brucker Chamados",
     "slug": "brucker-chamados",
     "version": "1.0.0",
+    "runtimeVersion": { "policy": "appVersion" },
+    "updates": {
+      "url": "https://u.expo.dev/3521080b-6f1a-4f15-9b37-4a62d6d25c03"
+    },
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "icon": "./assets/icon.png",
