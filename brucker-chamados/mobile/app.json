@@ -5,7 +5,8 @@
     "version": "1.0.0",
     "runtimeVersion": { "policy": "appVersion" },
     "updates": {
-      "url": "https://u.expo.dev/3521080b-6f1a-4f15-9b37-4a62d6d25c03"
+      "url": "https://u.expo.dev/3521080b-6f1a-4f15-9b37-4a62d6d25c03",
+      "fallbackToCacheTimeout": 30000
     },
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
@@ -33,7 +34,6 @@
         "backgroundColor": "#FFFFFF"
       },
       "package": "com.bruckerprinters.chamados",
-      "versionCode": 1,
       "newArchEnabled": false
     },
     "plugins": [
