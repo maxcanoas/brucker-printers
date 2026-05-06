@@ -3,6 +3,7 @@ import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator,
   KeyboardAvoidingView, ScrollView, Platform, Image
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
@@ -30,6 +31,7 @@ export default function LoginScreen() {
   const [emailRecuperacao, setEmailRecuperacao] = useState('');
   const [enviando, setEnviando] = useState(false);
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   useEffect(() => {
@@ -131,7 +133,7 @@ export default function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: Math.max(insets.bottom, 12) + 20 }]}
         keyboardShouldPersistTaps="handled"
         bounces={false}
       >

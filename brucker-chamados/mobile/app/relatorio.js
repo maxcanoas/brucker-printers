@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import api from '../lib/api';
 import { useTheme } from '../contexts/ThemeContext';
@@ -10,6 +11,7 @@ export default function RelatorioScreen() {
   const { colors } = useTheme();
   const { chamado_id, numero } = useLocalSearchParams();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [form, setForm] = useState({
     descricao_servico: '',
@@ -46,7 +48,7 @@ export default function RelatorioScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom, 12) + 24 }]}>
       <View style={styles.card}>
         <Text style={styles.title}>Relatório de Atendimento</Text>
         <Text style={styles.subtitle}>Chamado #{numero}</Text>

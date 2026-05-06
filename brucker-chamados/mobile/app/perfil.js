@@ -3,6 +3,7 @@ import {
   View, Text, ScrollView, StyleSheet, ActivityIndicator,
   TouchableOpacity, TextInput, Alert, Modal as RNModal
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import api from '../lib/api';
 import { useTheme } from '../contexts/ThemeContext';
@@ -15,6 +16,7 @@ const THEME_OPTIONS = [
 
 export default function PerfilScreen() {
   const { colors, preference, setPreference } = useTheme();
+  const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const [perfil, setPerfil] = useState(null);
@@ -37,7 +39,7 @@ export default function PerfilScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom, 12) + 24 }]}>
       {/* Perfil */}
       <View style={styles.card}>
         <Text style={styles.nome}>{perfil.nome}</Text>

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl, Alert
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import api from '../lib/api';
@@ -17,6 +18,7 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [filtro, setFiltro] = useState('ativos');
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const carregarDados = useCallback(async () => {
@@ -118,7 +120,7 @@ export default function HomeScreen() {
         data={chamados}
         keyExtractor={item => item.id}
         renderItem={renderChamado}
-        contentContainerStyle={styles.lista}
+        contentContainerStyle={[styles.lista, { paddingBottom: Math.max(insets.bottom, 12) + 24 }]}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />}
         ListEmptyComponent={
           <EmptyState

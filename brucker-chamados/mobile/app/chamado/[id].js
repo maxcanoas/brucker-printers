@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, Image, Linking
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../../lib/api';
@@ -24,6 +25,7 @@ export default function ChamadoDetalhe() {
   const [enviandoAvaliacao, setEnviandoAvaliacao] = useState(false);
   const router = useRouter();
   const scrollRef = useRef(null);
+  const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   useEffect(() => {
@@ -167,7 +169,7 @@ export default function ChamadoDetalhe() {
     <ScrollView
       ref={scrollRef}
       style={{ flex: 1 }}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom, 12) + 24 }]}
       keyboardShouldPersistTaps="handled"
     >
       {/* Header info */}
