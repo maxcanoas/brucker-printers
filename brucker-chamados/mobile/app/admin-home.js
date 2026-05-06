@@ -1270,7 +1270,7 @@ function ModalNovoCliente({ visible, onClose, onCriado }) {
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide">
+    <Modal visible={visible} transparent animationType="slide" statusBarTranslucent>
       <KeyboardAvoidingView style={styles.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={[styles.modalContent, { paddingBottom: Math.max(insets.bottom, 12) + 24 }]}>
           <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
@@ -1355,7 +1355,7 @@ function ModalEditarCliente({ cliente, onClose, onAtualizado }) {
   };
 
   return (
-    <Modal visible={!!cliente} transparent animationType="slide">
+    <Modal visible={!!cliente} transparent animationType="slide" statusBarTranslucent>
       <KeyboardAvoidingView style={styles.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={[styles.modalContent, { paddingBottom: Math.max(insets.bottom, 12) + 24 }]}>
           <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
@@ -1433,7 +1433,7 @@ function ModalDetalheCliente({ cliente, onClose, onAtualizado }) {
   const codigoAtual = detalhes?.codigo_acesso || cliente?.codigo_acesso;
 
   return (
-    <Modal visible={!!cliente} transparent animationType="slide">
+    <Modal visible={!!cliente} transparent animationType="slide" statusBarTranslucent>
       <KeyboardAvoidingView style={styles.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={[styles.modalContent, { maxHeight: '85%', paddingBottom: Math.max(insets.bottom, 12) + 24 }]}>
           <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
@@ -1552,7 +1552,7 @@ function ModalNovaImpressora({ visible, clientes, onClose, onCriada }) {
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide">
+    <Modal visible={visible} transparent animationType="slide" statusBarTranslucent>
       <KeyboardAvoidingView style={styles.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={[styles.modalContent, { maxHeight: '85%', paddingBottom: Math.max(insets.bottom, 12) + 24 }]}>
           <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
@@ -1630,7 +1630,7 @@ function ModalNovoTecnico({ visible, onClose, onCriado }) {
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide">
+    <Modal visible={visible} transparent animationType="slide" statusBarTranslucent>
       <KeyboardAvoidingView style={styles.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={[styles.modalContent, { paddingBottom: Math.max(insets.bottom, 12) + 24 }]}>
           <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
@@ -1688,7 +1688,7 @@ function ModalEditarTecnico({ tecnico, onClose, onAtualizado }) {
   };
 
   return (
-    <Modal visible={!!tecnico} transparent animationType="slide">
+    <Modal visible={!!tecnico} transparent animationType="slide" statusBarTranslucent>
       <KeyboardAvoidingView style={styles.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={[styles.modalContent, { paddingBottom: Math.max(insets.bottom, 12) + 24 }]}>
           <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
