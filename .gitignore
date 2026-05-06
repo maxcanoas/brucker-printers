@@ -9,6 +9,9 @@ Thumbs.db
 *.aab
 google-service-account.json
 
+# Artefatos do EAS Update (regenerados a cada `eas update`)
+brucker-chamados/mobile/dist/
+
 # Documentacao interna e propostas comerciais (nao versionar)
 /CUSTOS-SERVICOS.md
 /DEPLOY-MOBILE-LOJAS.md
