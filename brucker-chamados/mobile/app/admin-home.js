@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl,
   Alert, TextInput, Modal, ScrollView, ActivityIndicator, Clipboard, Platform,
-  Dimensions
+  Dimensions, KeyboardAvoidingView
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -1233,6 +1233,7 @@ function EmptyState({ text }) {
 // ═══════════════════════════════════════════
 function ModalNovoCliente({ visible, onClose, onCriado }) {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [form, setForm] = useState({ nome: '', email: '', telefone: '' });
   const [salvando, setSalvando] = useState(false);
@@ -1270,8 +1271,9 @@ function ModalNovoCliente({ visible, onClose, onCriado }) {
 
   return (
     <Modal visible={visible} transparent animationType="slide">
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
+      <KeyboardAvoidingView style={styles.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <View style={[styles.modalContent, { paddingBottom: Math.max(insets.bottom, 12) + 24 }]}>
+          <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <Text style={styles.modalTitle}>{clienteCriado ? 'Cliente Criado!' : 'Novo Cliente'}</Text>
 
           {clienteCriado ? (
@@ -1315,8 +1317,9 @@ function ModalNovoCliente({ visible, onClose, onCriado }) {
               </TouchableOpacity>
             </View>
           )}
+          </ScrollView>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -1326,6 +1329,7 @@ function ModalNovoCliente({ visible, onClose, onCriado }) {
 // ═══════════════════════════════════════════
 function ModalEditarCliente({ cliente, onClose, onAtualizado }) {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [form, setForm] = useState({ nome: '', email: '', telefone: '' });
   const [salvando, setSalvando] = useState(false);
@@ -1352,8 +1356,9 @@ function ModalEditarCliente({ cliente, onClose, onAtualizado }) {
 
   return (
     <Modal visible={!!cliente} transparent animationType="slide">
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
+      <KeyboardAvoidingView style={styles.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <View style={[styles.modalContent, { paddingBottom: Math.max(insets.bottom, 12) + 24 }]}>
+          <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <Text style={styles.modalTitle}>Editar Cliente</Text>
           <Text style={styles.formLabel}>Nome *</Text>
           <TextInput style={styles.formInput} value={form.nome} onChangeText={v => setForm(f => ({ ...f, nome: v }))} />
@@ -1368,8 +1373,9 @@ function ModalEditarCliente({ cliente, onClose, onAtualizado }) {
           <TouchableOpacity onPress={onClose} style={{ marginTop: 12, alignItems: 'center' }}>
             <Text style={{ color: colors.textSecondary, fontSize: 14 }}>Cancelar</Text>
           </TouchableOpacity>
+          </ScrollView>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -1379,6 +1385,7 @@ function ModalEditarCliente({ cliente, onClose, onAtualizado }) {
 // ═══════════════════════════════════════════
 function ModalDetalheCliente({ cliente, onClose, onAtualizado }) {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [detalhes, setDetalhes] = useState(null);
   const [chamados, setChamados] = useState([]);
@@ -1427,9 +1434,9 @@ function ModalDetalheCliente({ cliente, onClose, onAtualizado }) {
 
   return (
     <Modal visible={!!cliente} transparent animationType="slide">
-      <View style={styles.modalOverlay}>
-        <View style={[styles.modalContent, { maxHeight: '85%' }]}>
-          <ScrollView showsVerticalScrollIndicator={false}>
+      <KeyboardAvoidingView style={styles.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <View style={[styles.modalContent, { maxHeight: '85%', paddingBottom: Math.max(insets.bottom, 12) + 24 }]}>
+          <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
             <Text style={styles.modalTitle}>{cliente?.nome}</Text>
 
             {/* Código de acesso */}
@@ -1501,7 +1508,7 @@ function ModalDetalheCliente({ cliente, onClose, onAtualizado }) {
             </TouchableOpacity>
           </ScrollView>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -1511,6 +1518,7 @@ function ModalDetalheCliente({ cliente, onClose, onAtualizado }) {
 // ═══════════════════════════════════════════
 function ModalNovaImpressora({ visible, clientes, onClose, onCriada }) {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [form, setForm] = useState({ cliente_id: '', modelo: '', numero_serie: '', tipo_contrato: 'locacao' });
   const [salvando, setSalvando] = useState(false);
@@ -1545,9 +1553,9 @@ function ModalNovaImpressora({ visible, clientes, onClose, onCriada }) {
 
   return (
     <Modal visible={visible} transparent animationType="slide">
-      <View style={styles.modalOverlay}>
-        <View style={[styles.modalContent, { maxHeight: '85%' }]}>
-          <ScrollView showsVerticalScrollIndicator={false}>
+      <KeyboardAvoidingView style={styles.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <View style={[styles.modalContent, { maxHeight: '85%', paddingBottom: Math.max(insets.bottom, 12) + 24 }]}>
+          <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
             <Text style={styles.modalTitle}>Nova Impressora</Text>
 
             <Text style={styles.formLabel}>Cliente *</Text>
@@ -1588,7 +1596,7 @@ function ModalNovaImpressora({ visible, clientes, onClose, onCriada }) {
             </TouchableOpacity>
           </ScrollView>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -1598,6 +1606,7 @@ function ModalNovaImpressora({ visible, clientes, onClose, onCriada }) {
 // ═══════════════════════════════════════════
 function ModalNovoTecnico({ visible, onClose, onCriado }) {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [form, setForm] = useState({ nome: '', email: '', senha: '', whatsapp: '' });
   const [salvando, setSalvando] = useState(false);
@@ -1622,8 +1631,9 @@ function ModalNovoTecnico({ visible, onClose, onCriado }) {
 
   return (
     <Modal visible={visible} transparent animationType="slide">
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
+      <KeyboardAvoidingView style={styles.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <View style={[styles.modalContent, { paddingBottom: Math.max(insets.bottom, 12) + 24 }]}>
+          <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <Text style={styles.modalTitle}>Novo Técnico</Text>
           <Text style={styles.formLabel}>Nome *</Text>
           <TextInput style={styles.formInput} value={form.nome} onChangeText={v => setForm(f => ({ ...f, nome: v }))} placeholder="Nome completo" placeholderTextColor={colors.textSecondary} />
@@ -1640,8 +1650,9 @@ function ModalNovoTecnico({ visible, onClose, onCriado }) {
           <TouchableOpacity onPress={onClose} style={{ marginTop: 12, alignItems: 'center' }}>
             <Text style={{ color: colors.textSecondary, fontSize: 14 }}>Cancelar</Text>
           </TouchableOpacity>
+          </ScrollView>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -1651,6 +1662,7 @@ function ModalNovoTecnico({ visible, onClose, onCriado }) {
 // ═══════════════════════════════════════════
 function ModalEditarTecnico({ tecnico, onClose, onAtualizado }) {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [form, setForm] = useState({ nome: '', whatsapp: '', ativo: true });
   const [salvando, setSalvando] = useState(false);
@@ -1677,8 +1689,9 @@ function ModalEditarTecnico({ tecnico, onClose, onAtualizado }) {
 
   return (
     <Modal visible={!!tecnico} transparent animationType="slide">
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
+      <KeyboardAvoidingView style={styles.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <View style={[styles.modalContent, { paddingBottom: Math.max(insets.bottom, 12) + 24 }]}>
+          <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <Text style={styles.modalTitle}>Editar Técnico</Text>
           <Text style={styles.formLabel}>Nome *</Text>
           <TextInput style={styles.formInput} value={form.nome} onChangeText={v => setForm(f => ({ ...f, nome: v }))} />
@@ -1706,8 +1719,9 @@ function ModalEditarTecnico({ tecnico, onClose, onAtualizado }) {
           <TouchableOpacity onPress={onClose} style={{ marginTop: 12, alignItems: 'center' }}>
             <Text style={{ color: colors.textSecondary, fontSize: 14 }}>Cancelar</Text>
           </TouchableOpacity>
+          </ScrollView>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
