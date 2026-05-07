@@ -259,6 +259,9 @@ function ModalAbrirChamado({ visible, onClose, onCriado }) {
   };
 
   const handleSubmit = async () => {
+    if (!form.numero_serie.trim()) {
+      return Alert.alert('Atenção', 'Informe o número de série da impressora');
+    }
     if (!form.descricao.trim()) {
       return Alert.alert('Atenção', 'Descreva o problema');
     }
@@ -303,7 +306,7 @@ function ModalAbrirChamado({ visible, onClose, onCriado }) {
           >
             <Text style={styles.modalTitle}>Abrir Chamado</Text>
 
-            <Text style={styles.formLabel}>Número de Série</Text>
+            <Text style={styles.formLabel}>Número de Série *</Text>
             <TextInput
               style={styles.formInput}
               value={form.numero_serie}

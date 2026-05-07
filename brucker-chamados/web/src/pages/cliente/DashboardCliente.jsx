@@ -265,6 +265,10 @@ function ModalAbrirChamado({ isOpen, onClose, impressoras, onCriado, theme, inpu
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!form.numero_serie.trim()) {
+      toast.error('Informe o número de série da impressora');
+      return;
+    }
     if (!form.descricao.trim()) {
       toast.error('Descreva o problema');
       return;
@@ -295,7 +299,7 @@ function ModalAbrirChamado({ isOpen, onClose, impressoras, onCriado, theme, inpu
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: '16px' }}>
           <label style={{ color: theme.textSecondary, fontSize: '13px', display: 'block', marginBottom: '6px' }}>
-            Número de Série da Impressora
+            Número de Série da Impressora *
           </label>
           <input
             value={form.numero_serie}
