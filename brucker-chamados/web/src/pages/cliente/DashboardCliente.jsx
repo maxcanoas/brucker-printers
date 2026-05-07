@@ -269,6 +269,10 @@ function ModalAbrirChamado({ isOpen, onClose, impressoras, onCriado, theme, inpu
       toast.error('Informe o número de série da impressora');
       return;
     }
+    if (!form.impressora_id) {
+      toast.error('Número de série não cadastrado. Verifique com o administrador.');
+      return;
+    }
     if (!form.descricao.trim()) {
       toast.error('Descreva o problema');
       return;
@@ -313,8 +317,8 @@ function ModalAbrirChamado({ isOpen, onClose, impressoras, onCriado, theme, inpu
             </p>
           )}
           {form.numero_serie.length >= 3 && !form.modelo && (
-            <p style={{ color: '#C9A227', fontSize: '13px', marginTop: '4px' }}>
-              Impressora não encontrada. Você ainda pode abrir o chamado.
+            <p style={{ color: '#C0392B', fontSize: '13px', marginTop: '4px' }}>
+              Número de série não cadastrado. Verifique com o administrador.
             </p>
           )}
         </div>

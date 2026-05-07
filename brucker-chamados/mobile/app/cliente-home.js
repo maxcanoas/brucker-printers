@@ -262,6 +262,9 @@ function ModalAbrirChamado({ visible, onClose, onCriado }) {
     if (!form.numero_serie.trim()) {
       return Alert.alert('Atenção', 'Informe o número de série da impressora');
     }
+    if (!form.impressora_id) {
+      return Alert.alert('Atenção', 'Número de série não cadastrado. Verifique com o administrador.');
+    }
     if (!form.descricao.trim()) {
       return Alert.alert('Atenção', 'Descreva o problema');
     }
@@ -319,8 +322,8 @@ function ModalAbrirChamado({ visible, onClose, onCriado }) {
                 Impressora: {form.modelo}
               </Text>
             ) : form.numero_serie.length >= 3 ? (
-              <Text style={{ color: colors.yellow, fontSize: 12, marginTop: -8, marginBottom: 12 }}>
-                Não encontrada — você ainda pode abrir
+              <Text style={{ color: colors.red, fontSize: 12, marginTop: -8, marginBottom: 12 }}>
+                Número de série não cadastrado. Verifique com o administrador.
               </Text>
             ) : null}
 

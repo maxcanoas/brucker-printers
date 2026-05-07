@@ -13,6 +13,10 @@ exports.criarChamado = async (req, res) => {
       return res.status(400).json({ error: 'Tipo e descrição são obrigatórios' });
     }
 
+    if (!impressora_id) {
+      return res.status(400).json({ error: 'Impressora é obrigatória — informe o número de série' });
+    }
+
     if (!['preventivo', 'corretivo'].includes(tipo)) {
       return res.status(400).json({ error: 'Tipo deve ser preventivo ou corretivo' });
     }
@@ -26,17 +30,15 @@ exports.criarChamado = async (req, res) => {
     }
 
     // Verificar se a impressora pertence ao cliente
-    if (impressora_id) {
-      const { data: imp } = await supabase
-        .from('impressoras')
-        .select('id, cliente_id')
-        .eq('id', impressora_id)
-        .eq('cliente_id', req.usuario.id)
-        .single();
+    const { data: imp } = await supabase
+      .from('impressoras')
+      .select('id, cliente_id')
+      .eq('id', impressora_id)
+      .eq('cliente_id', req.usuario.id)
+      .single();
 
-      if (!imp) {
-        return res.status(400).json({ error: 'Impressora não encontrada ou não pertence a este cliente' });
-      }
+    if (!imp) {
+      return res.status(400).json({ error: 'Impressora não encontrada ou não pertence a este cliente' });
     }
 
     // Upload de fotos para Supabase Storage (opcional)
