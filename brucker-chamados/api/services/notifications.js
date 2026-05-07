@@ -68,16 +68,16 @@ async function notificarTecnicoPush(tecnico, chamado, cliente) {
   return enviarPushNotification(tecnico.push_token, titulo, corpo, dados);
 }
 
-async function notificarStatusPush(chamado, novoStatus) {
-  const statusTexto = {
-    aberto: 'Aberto',
-    atribuido: 'Atribuído',
-    em_atendimento: 'Em Atendimento',
-    aguardando_peca: 'Aguardando Peça',
-    concluido: 'Concluído',
-    cancelado: 'Cancelado',
-  };
+const STATUS_TEXTO = {
+  aberto: 'Aberto',
+  atribuido: 'Atribuído',
+  em_atendimento: 'Em Atendimento',
+  aguardando_peca: 'Aguardando Peça',
+  concluido: 'Concluído',
+  cancelado: 'Cancelado',
+};
 
+async function notificarStatusPush(chamado, novoStatus) {
   // Notificar técnico sobre mudança de status
   if (chamado.tecnico_id) {
     const { data: tecnico } = await supabase
@@ -90,7 +90,7 @@ async function notificarStatusPush(chamado, novoStatus) {
       await enviarPushNotification(
         tecnico.push_token,
         `Chamado #${chamado.numero} atualizado`,
-        `Status: ${statusTexto[novoStatus] || novoStatus}`,
+        `Status: ${STATUS_TEXTO[novoStatus] || novoStatus}`,
         { chamado_id: chamado.id, tipo: 'status_atualizado' }
       );
     }
@@ -99,9 +99,41 @@ async function notificarStatusPush(chamado, novoStatus) {
   // Notificar admins sobre mudança de status
   await notificarAdminsPush(
     `Chamado #${chamado.numero} atualizado`,
-    `Status: ${statusTexto[novoStatus] || novoStatus}`,
+    `Status: ${STATUS_TEXTO[novoStatus] || novoStatus}`,
     { chamado_id: chamado.id, tipo: 'status_atualizado' }
   );
+}
+
+async function notificarClientePush(cliente, chamado, novoStatus) {
+  if (!cliente?.id) return;
+
+  // Buscar push_token caso não venha embutido no objeto cliente
+  let pushToken = cliente.push_token;
+  if (!pushToken) {
+    const { data } = await supabase
+      .from('clientes')
+      .select('push_token')
+      .eq('id', cliente.id)
+      .single();
+    pushToken = data?.push_token;
+  }
+
+  if (!pushToken) return;
+
+  const titulo = `Chamado #${chamado.numero} — ${STATUS_TEXTO[novoStatus] || novoStatus}`;
+  const corpoPorStatus = {
+    atribuido: 'Um técnico foi designado para o seu chamado.',
+    em_atendimento: 'O técnico iniciou o atendimento.',
+    aguardando_peca: 'O atendimento está aguardando a chegada de uma peça.',
+    concluido: 'Seu chamado foi concluído. Avalie o atendimento.',
+    cancelado: 'Seu chamado foi cancelado.',
+  };
+  const corpo = corpoPorStatus[novoStatus] || `Status: ${STATUS_TEXTO[novoStatus] || novoStatus}`;
+
+  return enviarPushNotification(pushToken, titulo, corpo, {
+    chamado_id: chamado.id,
+    tipo: 'status_atualizado',
+  });
 }
 
 module.exports = {
@@ -110,4 +142,5 @@ module.exports = {
   notificarNovoChamado,
   notificarTecnicoPush,
   notificarStatusPush,
+  notificarClientePush,
 };

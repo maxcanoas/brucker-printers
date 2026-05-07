@@ -2,7 +2,7 @@ const supabase = require('../services/supabase');
 const { gerarRelatorioPDF } = require('../services/pdf');
 const { gerarPdfAtendimentoPorChamado } = require('../services/chamadoPdf');
 const { notificarAdminsStatusEmail, notificarChamadoConcluidoEmail } = require('../services/email');
-const { notificarStatusPush } = require('../services/notifications');
+const { notificarStatusPush, notificarClientePush } = require('../services/notifications');
 const { notificarClienteConcluidoWhatsApp } = require('../services/whatsapp');
 
 exports.criar = async (req, res) => {
@@ -79,6 +79,7 @@ exports.criar = async (req, res) => {
           notificarAdminsStatusEmail(chamadoCompleto, 'concluido', chamadoCompleto.clientes),
           notificarChamadoConcluidoEmail(chamadoCompleto.clientes, chamadoCompleto, pdfBuffer),
           notificarStatusPush(chamadoCompleto, 'concluido'),
+          notificarClientePush(chamadoCompleto.clientes, chamadoCompleto, 'concluido'),
           notificarClienteConcluidoWhatsApp(chamadoCompleto.clientes.telefone, chamadoCompleto),
         ]);
       }

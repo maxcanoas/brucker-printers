@@ -17,6 +17,7 @@ CREATE TABLE clientes (
   codigo_acesso VARCHAR(20) UNIQUE NOT NULL,
   email VARCHAR(255),
   telefone VARCHAR(20),
+  push_token TEXT,
   criado_em TIMESTAMPTZ DEFAULT NOW()
 );
 

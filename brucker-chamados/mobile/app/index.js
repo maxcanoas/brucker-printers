@@ -69,6 +69,7 @@ export default function LoginScreen() {
         await AsyncStorage.setItem('token', data.token);
         await AsyncStorage.setItem('userTipo', 'cliente');
         await AsyncStorage.setItem('cliente', JSON.stringify(data.cliente));
+        await registrarPushNotifications();
         router.replace('/cliente-home');
       } else if (perfil === 'admin') {
         const res = await api.post('/auth/admin/login', { email, senha });

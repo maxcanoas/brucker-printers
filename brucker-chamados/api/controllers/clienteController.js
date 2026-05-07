@@ -97,6 +97,27 @@ exports.getDashboard = async (req, res) => {
   }
 };
 
+exports.registrarPushToken = async (req, res) => {
+  try {
+    const { push_token } = req.body;
+    if (!push_token) {
+      return res.status(400).json({ error: 'push_token é obrigatório' });
+    }
+
+    const { data, error } = await supabase
+      .from('clientes')
+      .update({ push_token })
+      .eq('id', req.usuario.id)
+      .select('id, nome')
+      .single();
+
+    if (error) throw error;
+    res.json({ message: 'Push token registrado', cliente: data });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao registrar push token' });
+  }
+};
+
 // Admin
 exports.listarClientes = async (req, res) => {
   try {

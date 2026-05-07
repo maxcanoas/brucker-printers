@@ -63,7 +63,16 @@ export async function registrarPushNotifications() {
     const userTipo = await AsyncStorage.getItem('userTipo');
 
     if (authToken) {
-      const endpoint = userTipo === 'admin' ? '/admin/push-token' : '/tecnicos/me/push-token';
+      const endpointPorTipo = {
+        admin: '/admin/push-token',
+        cliente: '/clientes/me/push-token',
+        tecnico: '/tecnicos/me/push-token',
+      };
+      const endpoint = endpointPorTipo[userTipo];
+      if (!endpoint) {
+        console.log(`Push notifications: tipo de usuário desconhecido (${userTipo})`);
+        return null;
+      }
       await api.post(endpoint, { push_token: pushToken });
       console.log(`Push token registrado (${userTipo}):`, pushToken);
     }

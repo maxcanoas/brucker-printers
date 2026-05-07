@@ -1,6 +1,6 @@
 const supabase = require('../services/supabase');
 const { notificarTecnico, notificarStatusChamado, notificarAdminWhatsApp, notificarClienteConcluidoWhatsApp } = require('../services/whatsapp');
-const { notificarTecnicoPush, notificarStatusPush, notificarNovoChamado } = require('../services/notifications');
+const { notificarTecnicoPush, notificarStatusPush, notificarNovoChamado, notificarClientePush } = require('../services/notifications');
 const { notificarNovoChamadoEmail, notificarAdminsStatusEmail, notificarClienteStatusEmail, notificarClienteChamadoAbertoEmail, notificarTecnicoAtribuidoEmail, notificarChamadoConcluidoEmail } = require('../services/email');
 const { calcularSlaVenceEm, enriquecerSla, recalcularSlaAposResumo } = require('../services/businessHours');
 const { gerarPdfAtendimentoPorChamado, gerarPdfHistoricoPorChamado } = require('../services/chamadoPdf');
@@ -270,10 +270,12 @@ exports.atualizarChamado = async (req, res) => {
       notificarAdminsStatusEmail(data, status, data.clientes)
         .catch(e => console.error('Erro ao notificar admins sobre status:', e));
 
-      // Notificar cliente por email sobre mudança de status (fire-and-forget)
+      // Notificar cliente por email e push sobre mudança de status (fire-and-forget)
       if (data.clientes) {
         notificarClienteStatusEmail(data.clientes, data, status)
           .catch(e => console.error('Erro ao notificar cliente:', e));
+        notificarClientePush(data.clientes, data, status)
+          .catch(e => console.error('Erro ao enviar push pro cliente:', e));
       }
     }
 
@@ -345,6 +347,8 @@ exports.atribuirTecnico = async (req, res) => {
     if (chamado.clientes) {
       notificarClienteStatusEmail(chamado.clientes, chamado, 'atribuido')
         .catch(e => console.error('Erro ao notificar cliente:', e));
+      notificarClientePush(chamado.clientes, chamado, 'atribuido')
+        .catch(e => console.error('Erro ao enviar push pro cliente:', e));
     }
 
     await enriquecerSla(chamado);
@@ -407,6 +411,7 @@ exports.aceitarChamado = async (req, res) => {
       notificarStatusPush(data, 'em_atendimento'),
       notificarAdminsStatusEmail(data, 'em_atendimento', data.clientes),
       data.clientes ? notificarClienteStatusEmail(data.clientes, data, 'em_atendimento') : Promise.resolve(),
+      data.clientes ? notificarClientePush(data.clientes, data, 'em_atendimento') : Promise.resolve(),
     ]).catch(e => console.error('Erro ao notificar sobre aceite:', e));
 
     await enriquecerSla(data);
@@ -465,6 +470,7 @@ exports.cancelarChamado = async (req, res) => {
         notificarStatusPush(data, 'cancelado'),
         notificarAdminsStatusEmail(data, 'cancelado', data.clientes),
         data.clientes ? notificarClienteStatusEmail(data.clientes, data, 'cancelado', pdfBuffer) : Promise.resolve(),
+        data.clientes ? notificarClientePush(data.clientes, data, 'cancelado') : Promise.resolve(),
       ]);
     })().catch(e => console.error('Erro ao notificar sobre cancelamento:', e));
 
@@ -560,8 +566,11 @@ exports.atualizarStatus = async (req, res) => {
     notificarAdminsStatusEmail(data, status, data.clientes)
       .catch(e => console.error('Erro ao notificar admins sobre status:', e));
 
-    // Notificar cliente por email sobre mudança de status (fire-and-forget)
+    // Notificar cliente por email/push sobre mudança de status (fire-and-forget)
     if (data.clientes) {
+      notificarClientePush(data.clientes, data, status)
+        .catch(e => console.error('Erro ao enviar push pro cliente:', e));
+
       if (status === 'concluido') {
         (async () => {
           const pdfBuffer = await gerarPdfAtendimentoPorChamado(data.id).catch(err => {

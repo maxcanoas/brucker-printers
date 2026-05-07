@@ -8,6 +8,7 @@ router.get('/me', autenticarCliente, clienteController.getPerfilCliente);
 router.get('/me/chamados', autenticarCliente, clienteController.getMeusChamados);
 router.get('/me/impressoras', autenticarCliente, clienteController.getMinhasImpressoras);
 router.get('/me/dashboard', autenticarCliente, clienteController.getDashboard);
+router.post('/me/push-token', autenticarCliente, clienteController.registrarPushToken);
 
 // Admin: gestão de clientes
 router.get('/', autenticarAdmin, clienteController.listarClientes);
