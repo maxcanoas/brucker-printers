@@ -3,7 +3,9 @@
     "name": "Brucker Chamados",
     "slug": "brucker-chamados",
     "version": "1.0.0",
-    "runtimeVersion": { "policy": "appVersion" },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "updates": {
       "url": "https://u.expo.dev/3521080b-6f1a-4f15-9b37-4a62d6d25c03",
       "fallbackToCacheTimeout": 30000
@@ -25,7 +27,8 @@
       "buildNumber": "1",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "O app precisa acessar suas fotos para anexar imagens aos chamados de suporte tecnico.",
-        "NSCameraUsageDescription": "O app usa a camera para tirar fotos dos equipamentos e anexar aos chamados de suporte tecnico."
+        "NSCameraUsageDescription": "O app usa a camera para tirar fotos dos equipamentos e anexar aos chamados de suporte tecnico.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
