@@ -15,7 +15,7 @@ function formatarTelefone(valor) {
 
 export default function ModalEditarTecnico({ tecnico, onClose, onAtualizado }) {
   const { theme } = useTheme();
-  const [form, setForm] = useState({ nome: '', whatsapp: '', ativo: true });
+  const [form, setForm] = useState({ nome: '', email: '', whatsapp: '', ativo: true });
   const [salvando, setSalvando] = useState(false);
 
   const inputStyle = {
@@ -32,20 +32,28 @@ export default function ModalEditarTecnico({ tecnico, onClose, onAtualizado }) {
 
   useEffect(() => {
     if (tecnico) {
-      setForm({ nome: tecnico.nome || '', whatsapp: tecnico.whatsapp || '', ativo: tecnico.ativo !== false });
+      setForm({ nome: tecnico.nome || '', email: tecnico.email || '', whatsapp: tecnico.whatsapp || '', ativo: tecnico.ativo !== false });
     }
   }, [tecnico]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.nome) { toast.error('Nome é obrigatório'); return; }
+    if (!form.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      toast.error('E-mail inválido');
+      return;
+    }
+    const emailMudou = form.email !== tecnico.email;
     setSalvando(true);
     try {
       await api.put(`/tecnicos/${tecnico.id}`, form);
       toast.success('Técnico atualizado!');
+      if (emailMudou) {
+        toast('Técnico precisará logar com o novo e-mail', { icon: 'ℹ️', duration: 5000 });
+      }
       onAtualizado();
-    } catch {
-      toast.error('Erro ao atualizar técnico');
+    } catch (err) {
+      toast.error(err?.response?.data?.error || 'Erro ao atualizar técnico');
     } finally {
       setSalvando(false);
     }
@@ -60,8 +68,8 @@ export default function ModalEditarTecnico({ tecnico, onClose, onAtualizado }) {
             <input value={form.nome} onChange={(e) => setForm(f => ({ ...f, nome: e.target.value }))} style={inputStyle} />
           </div>
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ color: theme.textSecondary, fontSize: '13px', display: 'block', marginBottom: '6px' }}>E-mail</label>
-            <input value={tecnico.email} disabled style={{ ...inputStyle, opacity: 0.5 }} />
+            <label style={{ color: theme.textSecondary, fontSize: '13px', display: 'block', marginBottom: '6px' }}>E-mail *</label>
+            <input value={form.email} onChange={(e) => setForm(f => ({ ...f, email: e.target.value }))} style={inputStyle} />
           </div>
           <div style={{ marginBottom: '16px' }}>
             <label style={{ color: theme.textSecondary, fontSize: '13px', display: 'block', marginBottom: '6px' }}>WhatsApp</label>

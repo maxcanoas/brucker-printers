@@ -64,6 +64,38 @@ exports.atualizar = async (req, res) => {
   try {
     const { nome, email, whatsapp, ativo } = req.body;
 
+    const { data: atual, error: erroBusca } = await supabase
+      .from('tecnicos')
+      .select('email, user_id')
+      .eq('id', req.params.id)
+      .single();
+
+    if (erroBusca || !atual) {
+      return res.status(404).json({ error: 'Técnico não encontrado' });
+    }
+
+    const emailMudou = email && email !== atual.email;
+
+    if (emailMudou) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return res.status(400).json({ error: 'Formato de e-mail inválido' });
+      }
+
+      const { error: erroAuth } = await supabase.auth.admin.updateUserById(
+        atual.user_id,
+        { email, email_confirm: true }
+      );
+
+      if (erroAuth) {
+        return res.status(400).json({ error: 'Erro ao atualizar e-mail: ' + erroAuth.message });
+      }
+
+      const { error: erroSignOut } = await supabase.auth.admin.signOut(atual.user_id);
+      if (erroSignOut) {
+        console.error('Falha ao invalidar sessões do técnico:', erroSignOut.message);
+      }
+    }
+
     const { data, error } = await supabase
       .from('tecnicos')
       .update({ nome, email, whatsapp, ativo })
@@ -71,7 +103,12 @@ exports.atualizar = async (req, res) => {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      if (emailMudou) {
+        return res.status(500).json({ error: 'E-mail foi atualizado no login, mas falhou ao salvar no cadastro. Tente novamente.' });
+      }
+      throw error;
+    }
     res.json(data);
   } catch (error) {
     res.status(500).json({ error: 'Erro ao atualizar técnico' });
