@@ -37,7 +37,8 @@
         "backgroundColor": "#FFFFFF"
       },
       "package": "com.bruckerprinters.chamados",
-      "newArchEnabled": false
+      "newArchEnabled": false,
+      "googleServicesFile": "./google-services.json"
     },
     "plugins": [
       "expo-router",
