@@ -11,6 +11,7 @@ node_modules
 dist
 dist-ssr
 *.local
+*.zip
 
 # Arquivos .env (mantem apenas o .env.example versionado)
 .env
