@@ -38,6 +38,7 @@
       },
       "package": "com.bruckerprinters.chamados",
       "newArchEnabled": false,
+      "allowBackup": false,
       "googleServicesFile": "./google-services.json"
     },
     "plugins": [
