@@ -304,7 +304,7 @@ function ModalAbrirChamado({ visible, onClose, onCriado }) {
     <Modal visible={visible} animationType="slide" transparent>
       <KeyboardAvoidingView
         style={styles.modalOverlay}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={[styles.modalContent, { paddingBottom: 24 + Math.max(insets.bottom, 12) }]}>
           <ScrollView
