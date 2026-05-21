@@ -22,12 +22,17 @@ async function enviarPushNotification(pushToken, titulo, corpo, dados = {}) {
     });
 
     const result = await response.json();
+    const tokenTail = pushToken.slice(-10);
     if (result.data?.status === 'error') {
-      console.error('Expo push error:', result.data.message);
+      console.error(`[push] ERRO | titulo: "${titulo}" | token: ...${tokenTail} | msg: ${result.data.message}`);
+    } else if (result.data?.status === 'ok') {
+      console.log(`[push] OK | titulo: "${titulo}" | token: ...${tokenTail} | ticket: ${result.data.id}`);
+    } else {
+      console.log(`[push] resposta inesperada | titulo: "${titulo}" | token: ...${tokenTail} | result: ${JSON.stringify(result)}`);
     }
     return result;
   } catch (error) {
-    console.error('Erro ao enviar push notification:', error);
+    console.error(`[push] EXCEPTION | titulo: "${titulo}" | erro: ${error.message}`);
   }
 }
 
