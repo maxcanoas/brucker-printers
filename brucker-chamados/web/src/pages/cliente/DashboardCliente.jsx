@@ -245,32 +245,18 @@ export default function DashboardCliente() {
 
 function ModalAbrirChamado({ isOpen, onClose, impressoras, onCriado, theme, inputStyle, btnPrimary }) {
   const [form, setForm] = useState({
-    numero_serie: '', impressora_id: '', modelo: '',
+    impressora_id: '', modelo: '',
     tipo: 'corretivo', urgencia: 'normal', descricao: ''
   });
   const [carregando, setCarregando] = useState(false);
   const [fotos, setFotos] = useState([]);
 
-  const buscarImpressora = async (serie) => {
-    setForm(f => ({ ...f, numero_serie: serie, impressora_id: '', modelo: '' }));
-    if (serie.length < 3) return;
-
-    try {
-      const { data } = await api.get(`/impressoras/buscar/${serie}`);
-      setForm(f => ({ ...f, impressora_id: data.id, modelo: data.modelo }));
-    } catch {
-      // Impressora não encontrada
-    }
-  };
+  const semImpressoras = !impressoras || impressoras.length === 0;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.numero_serie.trim()) {
-      toast.error('Informe o número de série da impressora');
-      return;
-    }
     if (!form.impressora_id) {
-      toast.error('Número de série não cadastrado. Verifique com o administrador.');
+      toast.error('Selecione uma impressora');
       return;
     }
     if (!form.descricao.trim()) {
@@ -288,7 +274,7 @@ function ModalAbrirChamado({ isOpen, onClose, impressoras, onCriado, theme, inpu
 
       await api.post('/chamados', formData);
       toast.success('Chamado aberto com sucesso!');
-      setForm({ numero_serie: '', impressora_id: '', modelo: '', tipo: 'corretivo', urgencia: 'normal', descricao: '' });
+      setForm({ impressora_id: '', modelo: '', tipo: 'corretivo', urgencia: 'normal', descricao: '' });
       setFotos([]);
       onCriado();
     } catch {
@@ -303,23 +289,28 @@ function ModalAbrirChamado({ isOpen, onClose, impressoras, onCriado, theme, inpu
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: '16px' }}>
           <label style={{ color: theme.textSecondary, fontSize: '13px', display: 'block', marginBottom: '6px' }}>
-            Número de Série da Impressora *
+            Impressora *
           </label>
-          <input
-            value={form.numero_serie}
-            onChange={(e) => buscarImpressora(e.target.value)}
-            placeholder="Digite o número de série..."
-            style={inputStyle}
-          />
-          {form.modelo && (
-            <p style={{ color: '#3D9E6B', fontSize: '13px', marginTop: '4px' }}>
-              Impressora encontrada: {form.modelo}
+          {semImpressoras ? (
+            <p style={{ color: '#C0392B', fontSize: '13px', margin: 0 }}>
+              Nenhuma impressora cadastrada. Verifique com o administrador.
             </p>
-          )}
-          {form.numero_serie.length >= 3 && !form.modelo && (
-            <p style={{ color: '#C0392B', fontSize: '13px', marginTop: '4px' }}>
-              Número de série não cadastrado. Verifique com o administrador.
-            </p>
+          ) : (
+            <select
+              value={form.impressora_id}
+              onChange={(e) => {
+                const imp = impressoras.find(i => i.id === e.target.value);
+                setForm(f => ({ ...f, impressora_id: e.target.value, modelo: imp?.modelo || '' }));
+              }}
+              style={{ ...inputStyle, cursor: 'pointer' }}
+            >
+              <option value="">Selecione a impressora...</option>
+              {impressoras.map(imp => (
+                <option key={imp.id} value={imp.id}>
+                  {imp.modelo} — {imp.numero_serie}
+                </option>
+              ))}
+            </select>
           )}
         </div>
 
@@ -373,8 +364,8 @@ function ModalAbrirChamado({ isOpen, onClose, impressoras, onCriado, theme, inpu
           />
         </div>
 
-        <LoadingButton type="submit" loading={carregando} loadingText="Abrindo..." style={{
-          ...btnPrimary, width: '100%'
+        <LoadingButton type="submit" loading={carregando} loadingText="Abrindo..." disabled={semImpressoras} style={{
+          ...btnPrimary, width: '100%', opacity: semImpressoras ? 0.5 : 1
         }}>
           Abrir Chamado
         </LoadingButton>

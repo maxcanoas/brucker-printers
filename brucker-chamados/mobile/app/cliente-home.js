@@ -226,21 +226,25 @@ export default function ClienteHomeScreen() {
         visible={modalAbrir}
         onClose={() => setModalAbrir(false)}
         onCriado={() => { setModalAbrir(false); carregar(); }}
+        impressoras={impressoras}
       />
     </View>
   );
 }
 
-function ModalAbrirChamado({ visible, onClose, onCriado }) {
+function ModalAbrirChamado({ visible, onClose, onCriado, impressoras = [] }) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [form, setForm] = useState({
-    numero_serie: '', impressora_id: '', modelo: '',
+    impressora_id: '', modelo: '', numero_serie: '',
     tipo: 'corretivo', urgencia: 'normal', descricao: ''
   });
   const [salvando, setSalvando] = useState(false);
   const [fotos, setFotos] = useState([]);
+  const [pickerAberto, setPickerAberto] = useState(false);
+
+  const semImpressoras = !impressoras || impressoras.length === 0;
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -254,21 +258,14 @@ function ModalAbrirChamado({ visible, onClose, onCriado }) {
     }
   };
 
-  const buscarImpressora = async (serie) => {
-    setForm(f => ({ ...f, numero_serie: serie, impressora_id: '', modelo: '' }));
-    if (serie.length < 3) return;
-    try {
-      const { data } = await api.get(`/impressoras/buscar/${serie}`);
-      setForm(f => ({ ...f, impressora_id: data.id, modelo: data.modelo }));
-    } catch { }
+  const selecionarImpressora = (imp) => {
+    setForm(f => ({ ...f, impressora_id: imp.id, modelo: imp.modelo, numero_serie: imp.numero_serie }));
+    setPickerAberto(false);
   };
 
   const handleSubmit = async () => {
-    if (!form.numero_serie.trim()) {
-      return Alert.alert('Atenção', 'Informe o número de série da impressora');
-    }
     if (!form.impressora_id) {
-      return Alert.alert('Atenção', 'Número de série não cadastrado. Verifique com o administrador.');
+      return Alert.alert('Atenção', 'Selecione a impressora');
     }
     if (!form.descricao.trim()) {
       return Alert.alert('Atenção', 'Descreva o problema');
@@ -290,7 +287,7 @@ function ModalAbrirChamado({ visible, onClose, onCriado }) {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       Alert.alert('Sucesso', 'Chamado aberto com sucesso!');
-      setForm({ numero_serie: '', impressora_id: '', modelo: '', tipo: 'corretivo', urgencia: 'normal', descricao: '' });
+      setForm({ impressora_id: '', modelo: '', numero_serie: '', tipo: 'corretivo', urgencia: 'normal', descricao: '' });
       setFotos([]);
       onCriado();
     } catch (err) {
@@ -314,23 +311,52 @@ function ModalAbrirChamado({ visible, onClose, onCriado }) {
           >
             <Text style={styles.modalTitle}>Abrir Chamado</Text>
 
-            <Text style={styles.formLabel}>Número de Série *</Text>
-            <TextInput
-              style={styles.formInput}
-              value={form.numero_serie}
-              onChangeText={buscarImpressora}
-              placeholder="Digite o número de série..."
-              placeholderTextColor={colors.textSecondary}
-            />
-            {form.modelo ? (
-              <Text style={{ color: colors.green, fontSize: 12, marginTop: -8, marginBottom: 12 }}>
-                Impressora: {form.modelo}
+            <Text style={styles.formLabel}>Impressora *</Text>
+            {semImpressoras ? (
+              <Text style={{ color: colors.red, fontSize: 13, marginBottom: 12 }}>
+                Nenhuma impressora cadastrada. Verifique com o administrador.
               </Text>
-            ) : form.numero_serie.length >= 3 ? (
-              <Text style={{ color: colors.red, fontSize: 12, marginTop: -8, marginBottom: 12 }}>
-                Número de série não cadastrado. Verifique com o administrador.
-              </Text>
-            ) : null}
+            ) : (
+              <TouchableOpacity
+                style={[styles.formInput, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}
+                onPress={() => setPickerAberto(true)}
+              >
+                <Text style={{ color: form.impressora_id ? colors.text : colors.textSecondary, fontSize: 14, flex: 1 }} numberOfLines={1}>
+                  {form.impressora_id
+                    ? `${form.modelo} — ${form.numero_serie}`
+                    : 'Selecione a impressora...'}
+                </Text>
+                <Feather name="chevron-down" size={18} color={colors.textSecondary} />
+              </TouchableOpacity>
+            )}
+
+            <Modal visible={pickerAberto} animationType="fade" transparent onRequestClose={() => setPickerAberto(false)}>
+              <TouchableOpacity
+                style={styles.modalOverlay}
+                activeOpacity={1}
+                onPress={() => setPickerAberto(false)}
+              >
+                <View style={[styles.modalContent, { maxHeight: '70%' }]} onStartShouldSetResponder={() => true}>
+                  <Text style={styles.modalTitle}>Selecione a impressora</Text>
+                  <ScrollView keyboardShouldPersistTaps="handled">
+                    {impressoras.map(imp => (
+                      <TouchableOpacity
+                        key={imp.id}
+                        style={{
+                          paddingVertical: 12, paddingHorizontal: 12,
+                          borderBottomWidth: 1, borderBottomColor: colors.border,
+                          backgroundColor: form.impressora_id === imp.id ? colors.bg : 'transparent',
+                        }}
+                        onPress={() => selecionarImpressora(imp)}
+                      >
+                        <Text style={{ color: colors.text, fontSize: 14, fontWeight: '600' }}>{imp.modelo}</Text>
+                        <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>SN: {imp.numero_serie}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              </TouchableOpacity>
+            </Modal>
 
             <View style={{ flexDirection: 'row', gap: 12, marginBottom: 12 }}>
               <View style={{ flex: 1 }}>
@@ -402,9 +428,9 @@ function ModalAbrirChamado({ visible, onClose, onCriado }) {
             )}
 
             <TouchableOpacity
-              style={[styles.submitBtn, salvando && { opacity: 0.7 }]}
+              style={[styles.submitBtn, (salvando || semImpressoras) && { opacity: 0.5 }]}
               onPress={handleSubmit}
-              disabled={salvando}
+              disabled={salvando || semImpressoras}
             >
               <Text style={styles.submitBtnText}>{salvando ? 'Abrindo...' : 'Abrir Chamado'}</Text>
             </TouchableOpacity>
