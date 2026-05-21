@@ -3,6 +3,7 @@ import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as Notifications from 'expo-notifications';
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
+import { emitRefresh } from '../lib/refreshBus';
 
 function RootNav() {
   const router = useRouter();
@@ -13,6 +14,7 @@ function RootNav() {
   useEffect(() => {
     notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
       console.log('Notificação recebida:', notification);
+      emitRefresh();
     });
 
     responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {

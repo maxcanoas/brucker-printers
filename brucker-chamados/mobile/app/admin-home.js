@@ -6,7 +6,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import api from '../lib/api';
@@ -14,6 +14,7 @@ import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { statusColors, statusLabels, urgenciaColors } from '../lib/theme';
 import DatePicker from '../components/DatePicker';
+import { onRefresh as onRefreshBus } from '../lib/refreshBus';
 
 function formatarTelefone(valor) {
   if (!valor) return '';
@@ -133,6 +134,10 @@ function DashboardTab({ router, onAbertosChange }) {
 
   useEffect(() => { carregar(); }, [carregar]);
 
+  useFocusEffect(useCallback(() => { carregar(); }, [carregar]));
+
+  useEffect(() => onRefreshBus(() => carregar()), [carregar]);
+
   const onRefresh = async () => { setRefreshing(true); await carregar(); setRefreshing(false); };
 
   const cards = [
@@ -196,6 +201,10 @@ function ChamadosTab({ router }) {
   }, [filtro]);
 
   useEffect(() => { carregar(); }, [carregar]);
+
+  useFocusEffect(useCallback(() => { carregar(); }, [carregar]));
+
+  useEffect(() => onRefreshBus(() => carregar()), [carregar]);
 
   const onRefresh = async () => { setRefreshing(true); await carregar(); setRefreshing(false); };
 

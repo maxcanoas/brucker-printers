@@ -7,8 +7,9 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import api from '../lib/api';
+import { onRefresh as onRefreshBus } from '../lib/refreshBus';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { statusColors, statusLabels, urgenciaColors } from '../lib/theme';
@@ -53,6 +54,10 @@ export default function ClienteHomeScreen() {
   }, []);
 
   useEffect(() => { carregar(); }, [carregar]);
+
+  useFocusEffect(useCallback(() => { carregar(); }, [carregar]));
+
+  useEffect(() => onRefreshBus(() => carregar()), [carregar]);
 
   const onRefresh = async () => {
     setRefreshing(true);

@@ -4,12 +4,13 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import api from '../lib/api';
 import { useTheme } from '../contexts/ThemeContext';
 import { getSlaInfo } from '../lib/sla';
 import { StatusBadge, UrgenciaBadge } from '../components/StatusBadge';
 import EmptyState from '../components/EmptyState';
+import { onRefresh as onRefreshBus } from '../lib/refreshBus';
 
 export default function HomeScreen() {
   const { colors } = useTheme();
@@ -38,6 +39,10 @@ export default function HomeScreen() {
   }, [filtro]);
 
   useEffect(() => { carregarDados(); }, [carregarDados]);
+
+  useFocusEffect(useCallback(() => { carregarDados(); }, [carregarDados]));
+
+  useEffect(() => onRefreshBus(() => carregarDados()), [carregarDados]);
 
   const onRefresh = async () => {
     setRefreshing(true);
