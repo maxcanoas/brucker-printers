@@ -336,7 +336,7 @@ function ModalAbrirChamado({ visible, onClose, onCriado, impressoras = [] }) {
                 activeOpacity={1}
                 onPress={() => setPickerAberto(false)}
               >
-                <View style={[styles.modalContent, { maxHeight: '70%' }]} onStartShouldSetResponder={() => true}>
+                <View style={[styles.modalContent, { maxHeight: '70%', paddingBottom: 24 + Math.max(insets.bottom, 12) }]} onStartShouldSetResponder={() => true}>
                   <Text style={styles.modalTitle}>Selecione a impressora</Text>
                   <ScrollView keyboardShouldPersistTaps="handled">
                     {impressoras.map(imp => (
