@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const supabase = require('../services/supabase');
 const { enriquecerSla } = require('../services/businessHours');
+const { enviarEmailCadastroCliente } = require('../services/email');
 
 function gerarCodigoAcesso() {
   return 'BRK' + crypto.randomBytes(4).toString('hex').toUpperCase();
@@ -175,6 +176,14 @@ exports.criarCliente = async (req, res) => {
       .single();
 
     if (error) throw error;
+
+    if (data.email) {
+      enviarEmailCadastroCliente(data).catch(err => {
+        console.error('[clienteController] Falha ao enviar e-mail de cadastro |',
+          'cliente:', data.email, '| msg:', err.message);
+      });
+    }
+
     res.status(201).json(data);
   } catch (error) {
     res.status(500).json({ error: 'Erro ao criar cliente' });

@@ -476,6 +476,49 @@ async function enviarEmailRedefinicaoSenha(email, nome, link) {
   }
 }
 
+async function enviarEmailCadastroCliente(cliente) {
+  try {
+    if (!cliente?.email) return;
+
+    const appStoreUrl = 'https://apps.apple.com/br/app/brucker-chamados/id6767193305';
+    const assunto = 'Bem-vindo à Brucker Printers — seu código de acesso';
+
+    const html = wrapEmail(`
+      <div style="background-color: #111111; padding: 20px; border-radius: 8px 8px 0 0; border-top: 4px solid #4D8EF5;">
+        <h2 style="margin: 0; color: #ffffff;">Bem-vindo à Brucker Printers</h2>
+      </div>
+      <div style="border: 1px solid #e5e7eb; border-top: none; padding: 20px; border-radius: 0 0 8px 8px;">
+        <p style="font-size: 16px;">Olá${cliente.nome ? `, <strong>${cliente.nome}</strong>` : ''}!</p>
+        <p>Seu cadastro no sistema de chamados da Brucker Printers foi criado. Use o código abaixo para acessar o app:</p>
+        <div style="text-align: center; margin: 24px 0;">
+          <div style="display: inline-block; background-color: #f3f4f6; border: 2px dashed #4D8EF5; border-radius: 8px; padding: 16px 24px;">
+            <p style="margin: 0 0 4px 0; font-size: 12px; color: #6b7280; text-transform: uppercase; letter-spacing: 1px;">Código de acesso</p>
+            <p style="margin: 0; font-family: 'Courier New', monospace; font-size: 24px; font-weight: bold; color: #111111; letter-spacing: 2px;">${cliente.codigo_acesso}</p>
+          </div>
+        </div>
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
+        <h3 style="color: #111111; margin: 0 0 8px 0;">Instalação no iPhone / iPad</h3>
+        <p style="margin: 0 0 12px 0;">
+          Em aparelhos Apple, o app <strong>só pode ser instalado pelo link abaixo</strong>:
+        </p>
+        <p style="text-align: center; margin: 16px 0;">
+          <a href="${appStoreUrl}" style="display: inline-block; background-color: #111111; color: #ffffff; font-weight: bold; padding: 12px 24px; border-radius: 6px; text-decoration: none;">
+            Abrir na App Store
+          </a>
+        </p>
+        <p style="word-break: break-all; font-size: 12px; color: #4D8EF5; text-align: center;">
+          <a href="${appStoreUrl}" style="color: #4D8EF5;">${appStoreUrl}</a>
+        </p>
+      </div>
+    `);
+
+    await enviarEmail(cliente.email, assunto, html);
+  } catch (error) {
+    console.error('[email] Falha em enviarEmailCadastroCliente | cliente:', cliente?.email,
+      '| msg:', error.message);
+  }
+}
+
 module.exports = {
   enviarEmail,
   notificarNovoChamadoEmail,
@@ -486,4 +529,5 @@ module.exports = {
   notificarChamadoConcluidoEmail,
   notificarRelatorioEmail,
   enviarEmailRedefinicaoSenha,
+  enviarEmailCadastroCliente,
 };
