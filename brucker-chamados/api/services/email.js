@@ -481,6 +481,7 @@ async function enviarEmailCadastroCliente(cliente) {
     if (!cliente?.email) return;
 
     const appStoreUrl = 'https://apps.apple.com/br/app/brucker-chamados/id6767193305';
+    const playStoreUrl = 'https://play.google.com/store/apps/details?id=com.bruckerprinters.chamados';
     const assunto = 'Bem-vindo à Brucker Printers — seu código de acesso';
 
     const html = wrapEmail(`
@@ -496,18 +497,48 @@ async function enviarEmailCadastroCliente(cliente) {
             <p style="margin: 0; font-family: 'Courier New', monospace; font-size: 24px; font-weight: bold; color: #111111; letter-spacing: 2px;">${cliente.codigo_acesso}</p>
           </div>
         </div>
+
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
-        <h3 style="color: #111111; margin: 0 0 8px 0;">Instalação no iPhone / iPad</h3>
-        <p style="margin: 0 0 12px 0;">
-          Em aparelhos Apple, o app <strong>só pode ser instalado pelo link abaixo</strong>:
+
+        <h3 style="color: #111111; margin: 0 0 12px 0; text-align: center;">Instale o aplicativo</h3>
+
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin: 0 auto;">
+          <tr>
+            <td style="width: 50%; padding: 8px; vertical-align: top; text-align: center;">
+              <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px;">
+                <p style="margin: 0 0 4px 0; font-size: 12px; color: #6b7280; text-transform: uppercase; letter-spacing: 1px;">iPhone / iPad</p>
+                <p style="margin: 0 0 12px 0; font-size: 12px; color: #dc2626; font-weight: bold;">Instalação somente por este link</p>
+                <a href="${appStoreUrl}" style="display: inline-block; background-color: #111111; color: #ffffff; font-weight: bold; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-size: 14px;">
+                  Abrir App Store
+                </a>
+              </div>
+            </td>
+            <td style="width: 50%; padding: 8px; vertical-align: top; text-align: center;">
+              <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px;">
+                <p style="margin: 0 0 4px 0; font-size: 12px; color: #6b7280; text-transform: uppercase; letter-spacing: 1px;">Android</p>
+                <p style="margin: 0 0 12px 0; font-size: 12px; color: #6b7280;">Disponível também na Play Store</p>
+                <a href="${playStoreUrl}" style="display: inline-block; background-color: #3D9E6B; color: #ffffff; font-weight: bold; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-size: 14px;">
+                  Abrir Play Store
+                </a>
+              </div>
+            </td>
+          </tr>
+        </table>
+
+        <div style="background-color: #fff7ed; border-left: 4px solid #E84C1E; padding: 12px 14px; margin: 20px 0 8px 0; border-radius: 4px;">
+          <p style="margin: 0; font-size: 13px; color: #7c2d12;">
+            <strong>Atenção iPhone / iPad:</strong> em aparelhos Apple, o app <strong>só pode ser instalado pelo link da App Store acima</strong>. Buscar por "Brucker Chamados" diretamente na loja não vai funcionar.
+          </p>
+        </div>
+
+        <p style="word-break: break-all; font-size: 11px; color: #6b7280; margin: 16px 0 4px 0;">
+          Se os botões não funcionarem, copie e cole no navegador:
         </p>
-        <p style="text-align: center; margin: 16px 0;">
-          <a href="${appStoreUrl}" style="display: inline-block; background-color: #111111; color: #ffffff; font-weight: bold; padding: 12px 24px; border-radius: 6px; text-decoration: none;">
-            Abrir na App Store
-          </a>
+        <p style="word-break: break-all; font-size: 11px; color: #4D8EF5; margin: 0 0 4px 0;">
+          iOS: <a href="${appStoreUrl}" style="color: #4D8EF5;">${appStoreUrl}</a>
         </p>
-        <p style="word-break: break-all; font-size: 12px; color: #4D8EF5; text-align: center;">
-          <a href="${appStoreUrl}" style="color: #4D8EF5;">${appStoreUrl}</a>
+        <p style="word-break: break-all; font-size: 11px; color: #4D8EF5; margin: 0;">
+          Android: <a href="${playStoreUrl}" style="color: #4D8EF5;">${playStoreUrl}</a>
         </p>
       </div>
     `);
