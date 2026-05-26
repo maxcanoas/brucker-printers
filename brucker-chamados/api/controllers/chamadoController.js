@@ -41,6 +41,26 @@ exports.criarChamado = async (req, res) => {
       return res.status(400).json({ error: 'Impressora não encontrada ou não pertence a este cliente' });
     }
 
+    // Bloquear abertura se já houver chamado em andamento pra mesma impressora
+    const { data: chamadoEmAberto, error: errBusca } = await supabase
+      .from('chamados')
+      .select('id, numero, status')
+      .eq('impressora_id', impressora_id)
+      .in('status', ['aberto', 'atribuido', 'em_atendimento', 'aguardando_peca'])
+      .limit(1)
+      .maybeSingle();
+
+    if (errBusca) {
+      return res.status(500).json({ error: 'Erro ao verificar chamados existentes' });
+    }
+
+    if (chamadoEmAberto) {
+      return res.status(409).json({
+        error: `Já existe um chamado em aberto para esta impressora (nº ${chamadoEmAberto.numero}). Aguarde o encerramento antes de abrir um novo.`,
+        chamado_existente: chamadoEmAberto,
+      });
+    }
+
     // Upload de fotos para Supabase Storage (opcional)
     let fotos = [];
     if (req.files && req.files.length > 0) {

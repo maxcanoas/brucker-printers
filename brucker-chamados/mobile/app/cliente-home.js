@@ -291,7 +291,8 @@ function ModalAbrirChamado({ visible, onClose, onCriado, impressoras = [] }) {
       setFotos([]);
       onCriado();
     } catch (err) {
-      Alert.alert('Erro', err.response?.data?.error || 'Erro ao abrir chamado');
+      const titulo = err.response?.status === 409 ? 'Chamado já existe' : 'Erro';
+      Alert.alert(titulo, err.response?.data?.error || 'Erro ao abrir chamado');
     } finally {
       setSalvando(false);
     }
