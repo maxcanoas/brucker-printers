@@ -58,6 +58,7 @@ export default function DashboardCliente() {
     }
   }, []);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { carregarDados(); }, [carregarDados]);
 
   useRealtimeChamados(usuario?.id, () => { carregarDados(); });
@@ -277,8 +278,8 @@ function ModalAbrirChamado({ isOpen, onClose, impressoras, onCriado, theme, inpu
       setForm({ impressora_id: '', modelo: '', tipo: 'corretivo', urgencia: 'normal', descricao: '' });
       setFotos([]);
       onCriado();
-    } catch {
-      toast.error('Erro ao abrir chamado');
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Erro ao abrir chamado');
     } finally {
       setCarregando(false);
     }
