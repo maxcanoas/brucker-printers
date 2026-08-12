@@ -155,8 +155,22 @@
     margin-bottom: 0.9rem;
 }
 
+/* Os quatro cards de Soluções têm textos de tamanhos diferentes, então o
+   link de aprofundamento parava numa altura diferente em cada um.
+   Como coluna flex, margin-top:auto no link consome a sobra vertical e
+   encosta todos na base — e os cards já têm a mesma altura porque o grid
+   estica os itens por padrão. */
+.solution-card {
+    display: flex;
+    flex-direction: column;
+}
+
 .solution-card ul {
-    margin-bottom: 0;
+    margin-bottom: var(--spacing-md, 1.5rem);
+}
+
+.solution-card .solution-link {
+    margin-top: auto;
 }
 
 .solution-card li {
