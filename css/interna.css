@@ -101,7 +101,9 @@
 }
 
 /* Ícones: sem fundo, sem gradiente, sem círculo. Cinza para não competir
-   com o título, que é o que a pessoa lê primeiro. */
+   com o título, que é o que a pessoa lê primeiro.
+   Centralizados na largura do card, com o texto seguindo alinhado à
+   esquerda — o ícone funciona como marca de abertura do bloco. */
 .solution-icon,
 .advantage-icon {
     width: auto;
@@ -109,7 +111,7 @@
     background: none;
     border-radius: 0;
     margin: 0 0 1rem;
-    justify-content: flex-start;
+    justify-content: center;
     color: var(--gray-500);
 }
 
@@ -126,7 +128,8 @@
     display: block;
     width: 26px;
     height: 26px;
-    margin-bottom: 0.9rem;
+    /* auto nas laterais centraliza o bloco, como nos outros dois cards. */
+    margin: 0 auto 0.9rem;
     stroke: var(--gray-500);
 }
 
