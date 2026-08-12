@@ -1,0 +1,133 @@
+# ===================================
+# BRÜCKER PRINTERS — CONFIGURAÇÃO APACHE
+# ===================================
+# Hospedagem: HostGator (Apache) com Cloudflare como proxy de DNS.
+#
+# ATENÇÃO: erro de sintaxe aqui derruba o site inteiro com HTTP 500.
+# Todo bloco está protegido por <IfModule>, então um módulo ausente é
+# ignorado em silêncio em vez de quebrar o servidor. Ao editar, teste uma
+# URL do site logo em seguida.
+#
+# Se as regras parecerem não ter efeito, o provável é AllowOverride
+# restrito na configuração do servidor — nesse caso o arquivo inteiro é
+# ignorado e é preciso pedir liberação ao suporte da HostGator.
+
+# ===================================
+# PÁGINA DE ERRO
+# ===================================
+ErrorDocument 404 /404.html
+
+# Sem isso, /imagens/ e /clientes/ devolvem a listagem do diretório.
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # ===================================
+    # HTTPS
+    # ===================================
+    # As duas condições são obrigatórias e funcionam em conjunto (AND).
+    #
+    # Com Cloudflare em modo Flexible, a conexão Cloudflare→origem é HTTP
+    # puro, então %{HTTPS} vale "off" mesmo quando o visitante está em HTTPS.
+    # Redirecionar só por %{HTTPS} criaria um laço infinito de 301.
+    # O Cloudflare informa o protocolo real em X-Forwarded-Proto; só
+    # redirecionamos quando NENHUM dos dois indica HTTPS.
+    RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+    RewriteCond %{HTTPS} !=on
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    # ===================================
+    # HOST CANÔNICO (www → sem www)
+    # ===================================
+    # O <link rel="canonical"> das páginas aponta para o domínio sem www.
+    # Servir os dois hosts com 200 divide o sinal entre duas URLs.
+    RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+    RewriteRule ^ https://%1%{REQUEST_URI} [L,R=301]
+
+    # ===================================
+    # URL CANÔNICA DAS PÁGINAS
+    # ===================================
+    # Padrão adotado: manter a extensão .html. É o formato já indexado pelo
+    # Google; trocar agora geraria um 301 em massa sem ganho de ranking.
+    # As regras abaixo apenas convergem as variantes para essa forma.
+
+    # /impressoras/ é um diretório real (guarda os .webp dos modelos e, a
+    # partir do Bloco 2, as páginas de cada modelo). Sem esta regra o Apache
+    # responderia 403 na raiz dele, já que não há index.html ali.
+    # Precisa vir antes da regra genérica de barra final.
+    RewriteRule ^impressoras/$ /impressoras.html [L,R=301]
+
+    # /index.html → /  (inclusive em subpastas: /blog/index.html → /blog/)
+    RewriteCond %{THE_REQUEST} \s/+(([^\s?]*/)?)index\.html[\s?] [NC]
+    RewriteRule ^ /%1 [L,R=301]
+
+    # /pagina/ → /pagina.html, só quando o .html existe e não há um
+    # diretório com esse nome.
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{DOCUMENT_ROOT}/$1.html -f
+    RewriteRule ^(.+?)/$ /$1.html [L,R=301]
+
+    # /pagina → /pagina.html, servido internamente (sem redirecionar), para
+    # que links sem extensão continuem funcionando.
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{DOCUMENT_ROOT}/$1.html -f
+    RewriteRule ^(.+?)/?$ /$1.html [L]
+</IfModule>
+
+# ===================================
+# COMPRESSÃO
+# ===================================
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css
+    AddOutputFilterByType DEFLATE application/javascript application/x-javascript text/javascript
+    AddOutputFilterByType DEFLATE application/json application/xml application/rss+xml
+    AddOutputFilterByType DEFLATE image/svg+xml
+    # Imagens e fontes já vêm comprimidas; recomprimir só gasta CPU.
+</IfModule>
+
+# ===================================
+# CACHE DO NAVEGADOR
+# ===================================
+<IfModule mod_expires.c>
+    ExpiresActive On
+
+    # HTML curto: o conteúdo muda e precisa ser revalidado.
+    ExpiresByType text/html "access plus 1 hour"
+
+    # CSS e JS não têm hash no nome. Um ano de cache faria uma correção
+    # demorar a chegar em quem já visitou; uma semana é o meio-termo.
+    ExpiresByType text/css "access plus 1 week"
+    ExpiresByType application/javascript "access plus 1 week"
+    ExpiresByType text/javascript "access plus 1 week"
+
+    # Imagens e ícones praticamente não mudam.
+    ExpiresByType image/webp "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+    ExpiresByType image/x-icon "access plus 1 year"
+
+    ExpiresByType application/xml "access plus 1 day"
+    ExpiresByType text/plain "access plus 1 day"
+</IfModule>
+
+# ===================================
+# TIPOS DE ARQUIVO
+# ===================================
+<IfModule mod_mime.c>
+    AddType image/webp .webp
+    AddType application/manifest+json .webmanifest
+    AddCharset UTF-8 .html .css .js .xml .txt
+</IfModule>
+
+# ===================================
+# CABEÇALHOS DE SEGURANÇA
+# ===================================
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    # Sem X-Frame-Options: use frame-ancestors se um dia houver CSP.
+</IfModule>

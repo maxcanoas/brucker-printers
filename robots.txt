@@ -1,17 +1,20 @@
-# Robots.txt para Brücker Printers
-# Atualizado em: 26/03/2026
+# Robots.txt — Brücker Printers
+# https://bruckerprinters.com.br
+#
+# Gerencie o bloqueio de páginas pela meta robots de cada página, não aqui:
+# uma URL bloqueada no robots.txt não pode ser lida pelo rastreador e, por
+# isso, um "noindex" dentro dela nunca chega a ser visto. É por essa razão
+# que a linha "Disallow: /404.html" da versão anterior foi removida — ela
+# bloqueava justamente o arquivo que declara o próprio noindex.
 
 User-agent: *
 Allow: /
+
+# Diretórios sem conteúdo indexável.
 Disallow: /admin/
 Disallow: /cgi-bin/
-Disallow: /404.html
 
-User-agent: Bingbot
-Crawl-delay: 1
+# Arquivos de trabalho que não devem aparecer em resultados de busca.
+Disallow: /scripts/
 
-# Sitemap
 Sitemap: https://bruckerprinters.com.br/sitemap.xml
-
-# Informações adicionais
-# Host: bruckerprinters.com.br

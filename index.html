@@ -4,14 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- Google Analytics (GA4) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZBKE5NWBW8"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-ZBKE5NWBW8');
-    </script>
+    <!-- Google Analytics (GA4) + Consent Mode v2 — snippet único em js/gtag-init.js -->
+    <script>(function () {
+'use strict';
+const ID_MEDICAO = 'G-ZBKE5NWBW8';
+const CHAVE_CONSENTIMENTO = 'bp_consent';
+window.dataLayer = window.dataLayer || [];
+function gtag() { dataLayer.push(arguments); }
+window.gtag = gtag;
+function lerConsentimento() {
+try {
+return localStorage.getItem(CHAVE_CONSENTIMENTO);
+} catch (erro) {
+return null;
+}
+}
+const escolhaRegistrada = lerConsentimento();
+const analiseAutorizada = escolhaRegistrada === 'aceito';
+gtag('consent', 'default', {
+ad_storage: 'denied',
+ad_user_data: 'denied',
+ad_personalization: 'denied',
+analytics_storage: analiseAutorizada ? 'granted' : 'denied',
+functionality_storage: 'granted',
+security_storage: 'granted'
+});
+const loader = document.createElement('script');
+loader.async = true;
+loader.src = 'https://www.googletagmanager.com/gtag/js?id=' + ID_MEDICAO;
+document.head.appendChild(loader);
+gtag('js', new Date());
+gtag('config', ID_MEDICAO);
+window.BP_MEDICAO = {
+idMedicao: ID_MEDICAO,
+chaveConsentimento: CHAVE_CONSENTIMENTO,
+escolhaRegistrada: escolhaRegistrada
+};
+})();</script>
 
     <!-- SEO Meta Tags -->
     <title>Brücker Printers | Venda e Locação de Impressoras Ricoh</title>
@@ -26,21 +55,32 @@
     <meta property="og:url" content="https://bruckerprinters.com.br/">
     <meta property="og:title" content="Brücker Printers | Venda e Locação de Impressoras Ricoh Corporativas">
     <meta property="og:description" content="Especialistas em venda e locação de impressoras Ricoh para gráficas. Equipamentos de alta performance com atendimento em todo Brasil.">
-    <meta property="og:image" content="https://bruckerprinters.com.br/imagens/logoTransparente.png">
+    <meta property="og:image" content="https://bruckerprinters.com.br/imagens/og-brucker-printers.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Brücker Printers — impressoras Ricoh Pro para produção gráfica: venda, locação e assistência técnica">
     <meta property="og:locale" content="pt_BR">
     <meta property="og:site_name" content="Brücker Printers">
-    
+
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:url" content="https://bruckerprinters.com.br/">
     <meta name="twitter:title" content="Brücker Printers | Venda e Locação de Impressoras Ricoh">
     <meta name="twitter:description" content="Especialistas em venda e locação de impressoras Ricoh para gráficas. Equipamentos de alta performance.">
-    <meta name="twitter:image" content="https://bruckerprinters.com.br/imagens/logoTransparente.png">
-    
-    <!-- Geo Tags -->
-    <meta name="geo.region" content="BR">
-    <meta name="geo.placename" content="Brasil">
-    
+    <meta name="twitter:image" content="https://bruckerprinters.com.br/imagens/og-brucker-printers.png">
+    <meta name="twitter:image:alt" content="Brücker Printers — impressoras Ricoh Pro para produção gráfica: venda, locação e assistência técnica">
+
+    <!-- Geo Tags — ignoradas pelo Google, mas se existem, que estejam certas.
+         BR-RS é o código ISO 3166-2 do Rio Grande do Sul; "BR" sozinho
+         apontava o país inteiro e "Brasil" não é um nome de localidade. -->
+    <meta name="geo.region" content="BR-RS">
+    <meta name="geo.placename" content="Canoas">
+
+    <!-- TODO: confirmar com o cliente — colar aqui a meta tag de verificação
+         do Google Search Console. Ela é fornecida em Search Console >
+         Adicionar propriedade > Prefixo do URL > Tag HTML, e tem o formato:
+         <meta name="google-site-verification" content="CODIGO_AQUI"> -->
+
     <!-- Favicons -->
     <link rel="icon" type="image/x-icon" href="imagens/favicon.ico">
     <link rel="icon" type="image/png" sizes="16x16" href="imagens/favicon-16x16.png">
@@ -50,150 +90,128 @@
     <link rel="icon" type="image/png" sizes="512x512" href="imagens/android-chrome-512x512.png">
     <meta name="theme-color" content="#be1622">
     
-    <link rel="alternate" hreflang="pt-BR" href="https://bruckerprinters.com.br/">
+    <!-- hreflang removido: apontava para a própria página, sem nenhuma versão
+         em outro idioma para relacionar. Autorreferência sem alternativas é
+         redundante e não produz efeito algum. -->
 
-    <link rel="stylesheet" href="css/style.min.css">
-    
-    <!-- Schema.org JSON-LD -->
+    <!-- Preload da primeira imagem do carrossel: ela é o único conteúdo
+         pesado acima da dobra e, sem isto, só começa a baixar depois que o
+         navegador termina de ler o HTML e montar o layout. -->
+    <link rel="preload" as="image" href="impressoras/ricoh-pro-c5200.webp" fetchpriority="high">
+
+    <!-- BP:CSS -->
+    <!-- CSS completo embutido, gerado a partir de css/style.min.css e
+         css/interna.min.css. Não edite aqui — edite os .css e rode:
+         node scripts/build-assets.js && os geradores.
+
+         Por que embutir tudo, e não só o crítico: a versão com crítico inline
+         + folhas assíncronas baixou o LCP de 4,3 s para 3,3 s, mas levou o CLS
+         de 0 para 0,152 — acima do limite de 0,1. Quando o CSS completo chega
+         depois da primeira pintura, todo elemento que ele estiliza se
+         reposiciona. Cobrir isso exigiria um "crítico" do tamanho do arquivo
+         inteiro. Embutido, não há segunda pintura: some o bloqueio de rede e
+         some o deslocamento.
+
+         O custo é não ter cache entre páginas. Para tráfego de busca, que
+         chega direto na página de destino e costuma ver uma só, a troca
+         compensa. -->
+    <style>*{margin:0;padding:0;box-sizing:border-box}:root{--primary-black:#000000;--primary-white:#f8f7f7;--secondary-orange:#FF8C42;--secondary-red:#be1622;--accent-yellow:#ebcc01;--light-orange:#FFF4ED;--gray-900:#1A1A1A;--gray-700:#4A4A4A;--gray-500:#6B6B6B;--gray-300:#D1D5DB;--gray-100:#F3F4F6;--white:#FFFFFF;--font-primary:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;--font-weight-normal:400;--font-weight-medium:500;--font-weight-semibold:600;--font-weight-bold:700;--spacing-xs:0.5rem;--spacing-sm:1rem;--spacing-md:1.5rem;--spacing-lg:2rem;--spacing-xl:3rem;--spacing-2xl:4rem;--spacing-3xl:6rem;--transition-fast:0.2s ease;--transition-normal:0.3s ease;--transition-slow:0.5s ease}html{scroll-behavior:smooth}body{font-family:var(--font-primary);color:var(--gray-900);line-height:1.6;overflow-x:hidden}img{max-width:100%;height:auto;display:block}.header{position:fixed;top:0;left:0;right:0;background:var(--white);box-shadow:0 2px 10px rgba(0,0,0,.1);z-index:1000;transition:box-shadow var(--transition-normal)}.header.scrolled{box-shadow:0 4px 20px rgba(0,0,0,.15)}.header-container{max-width:1400px;margin:0 auto;padding:0 var(--spacing-lg);display:flex;justify-content:space-between;align-items:center;height:80px}.logo{font-size:1.5rem;font-weight:var(--font-weight-bold);color:var(--primary-black);text-decoration:none;display:flex;align-items:center;gap:.75rem}.logo-image{height:50px;width:auto;max-width:200px;object-fit:contain}.nav{display:flex;gap:var(--spacing-lg);align-items:center}.nav-link{color:var(--gray-700);text-decoration:none;font-weight:var(--font-weight-medium);transition:color var(--transition-fast);position:relative}.nav-link:hover{color:var(--secondary-orange)}.nav-link::after{content:'';position:absolute;bottom:-5px;left:0;width:0;height:2px;background:var(--secondary-orange);transition:width var(--transition-normal)}.nav-link:hover::after{width:100%}.btn-header{background:var(--secondary-red);color:var(--white);padding:.75rem 1.5rem;border-radius:6px;text-decoration:none;font-weight:var(--font-weight-semibold);transition:all var(--transition-fast);border:2px solid var(--secondary-red)}.btn-header:hover{background:#9a111a;border-color:#9a111a;transform:translateY(-2px);box-shadow:0 4px 12px rgba(190,22,34,.3)}.nav-link--subtle{color:var(--gray-500);font-size:.85rem;font-weight:var(--font-weight-normal,400)}.nav-link--subtle:hover{color:var(--secondary-red)}.nav-link--subtle::after{display:none}.menu-toggle{display:none;flex-direction:column;gap:5px;background:0 0;border:none;cursor:pointer;padding:.5rem}.menu-toggle span{width:25px;height:3px;background:var(--gray-900);transition:all var(--transition-normal);border-radius:2px}.menu-toggle.active span:first-child{transform:rotate(45deg) translate(8px,8px)}.menu-toggle.active span:nth-child(2){opacity:0}.menu-toggle.active span:nth-child(3){transform:rotate(-45deg) translate(7px,-7px)}.hero{margin-top:80px;background:linear-gradient(135deg,var(--primary-black) 0,#2a2a2a 100%);color:var(--white);padding:var(--spacing-xl) var(--spacing-lg) var(--spacing-2xl);position:relative;overflow:hidden;min-height:calc(100vh - 80px);display:flex;align-items:center}.hero::before{content:'';position:absolute;top:0;right:0;width:50%;height:100%;background:url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><circle cx="1000" cy="200" r="300" fill="rgba(255,255,255,0.05)"/><circle cx="1100" cy="600" r="200" fill="rgba(255,255,255,0.03)"/></svg>') no-repeat center;background-size:cover;opacity:.5}.hero-container{max-width:1400px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:var(--spacing-2xl);align-items:center;position:relative;z-index:1}.hero-content h1{font-size:3.5rem;font-weight:var(--font-weight-bold);line-height:1.2;margin-bottom:var(--spacing-md)}.hero-content p{font-size:1.15rem;margin-bottom:var(--spacing-md);color:rgba(255,255,255,.9);line-height:1.8}.hero-content p:last-of-type{margin-bottom:var(--spacing-xl)}.hero-cta{display:flex;gap:var(--spacing-md);flex-wrap:wrap}.btn-primary{background:var(--secondary-orange);color:var(--white);padding:1rem 2rem;border-radius:6px;text-decoration:none;font-weight:var(--font-weight-semibold);font-size:1.1rem;transition:all var(--transition-fast);border:2px solid var(--secondary-orange);display:inline-block}.btn-primary:hover{background:#e67a30;transform:translateY(-2px);box-shadow:0 6px 20px rgba(255,140,66,.4)}.btn-secondary{background:0 0;color:var(--white);padding:1rem 2rem;border-radius:6px;text-decoration:none;font-weight:var(--font-weight-semibold);font-size:1.1rem;transition:all var(--transition-fast);border:2px solid var(--white);display:inline-block}.btn-secondary:hover{background:var(--white);color:var(--primary-black)}.hero-image{display:flex;justify-content:center;align-items:center;position:relative}.carousel{position:relative;width:100%;max-width:550px;height:400px;overflow:hidden;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,.3)}.carousel-container{display:flex;transition:transform .5s ease-in-out;height:100%}.carousel-slide{min-width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:var(--white);padding:20px}.carousel-slide img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;margin:0 auto}.carousel-btn{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.5);color:var(--white);border:none;width:45px;height:45px;border-radius:50%;cursor:pointer;font-size:1.2rem;display:flex;align-items:center;justify-content:center;transition:all var(--transition-fast);z-index:10}.carousel-btn:hover{background:rgba(0,0,0,.8);transform:translateY(-50%) scale(1.1)}.carousel-btn-prev{left:15px}.carousel-btn-next{right:15px}.carousel-indicators{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:10px;z-index:10}.carousel-indicator{width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,.5);cursor:pointer;transition:all var(--transition-fast);border:none;padding:0}.carousel-indicator.active{background:var(--white);width:30px;border-radius:6px}.section{padding:var(--spacing-3xl) var(--spacing-lg)}.section-alt{background:var(--gray-100)}.container{max-width:1400px;margin:0 auto}.section-header{text-align:center;margin-bottom:var(--spacing-2xl)}.section-subtitle{color:var(--secondary-orange);font-weight:var(--font-weight-semibold);font-size:.95rem;text-transform:uppercase;letter-spacing:1px;margin-bottom:var(--spacing-xs)}.section-title{font-size:2.5rem;font-weight:var(--font-weight-bold);color:var(--gray-900);margin-bottom:var(--spacing-md)}.section-description{font-size:1.15rem;color:var(--gray-700);max-width:700px;margin:0 auto;line-height:1.8}.about-content{display:grid;grid-template-columns:1fr 1fr;gap:var(--spacing-2xl);align-items:center}.about-text h3{font-size:1.8rem;margin-bottom:var(--spacing-md);color:var(--gray-900)}.about-text p{margin-bottom:var(--spacing-md);color:var(--gray-700);font-size:1.05rem}.about-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--spacing-lg);margin-top:var(--spacing-xl)}.stat-item{text-align:center;padding:var(--spacing-md);background:var(--light-orange);border-radius:8px}.stat-number{font-size:2.5rem;font-weight:var(--font-weight-bold);color:var(--secondary-red);display:block}.stat-label{font-size:.95rem;color:var(--gray-700);margin-top:var(--spacing-xs)}.solutions-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:var(--spacing-xl);margin-top:var(--spacing-2xl)}.solution-card{background:var(--white);padding:var(--spacing-xl);border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.08);transition:all var(--transition-normal);border:2px solid transparent}.solution-card:hover{transform:translateY(-8px);box-shadow:0 12px 40px rgba(255,140,66,.15);border-color:var(--secondary-orange)}.solution-icon{width:70px;height:70px;background:linear-gradient(135deg,var(--secondary-orange),var(--secondary-red));border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto var(--spacing-md);color:var(--white)}.solution-card h3{font-size:1.5rem;margin-bottom:var(--spacing-md);color:var(--gray-900);text-align:center}.solution-card p{color:var(--gray-700);line-height:1.8;margin-bottom:var(--spacing-md)}.solution-card ul{list-style:none;margin-bottom:var(--spacing-md)}.solution-card li{padding:var(--spacing-xs) 0;color:var(--gray-700);position:relative;padding-left:1.5rem}.solution-card li::before{content:'✓';position:absolute;left:0;color:var(--secondary-orange);font-weight:var(--font-weight-bold)}.advantages-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:var(--spacing-lg);margin-top:var(--spacing-2xl)}.advantage-item{background:var(--white);padding:var(--spacing-lg);border-radius:8px;text-align:center;transition:all var(--transition-normal)}.advantage-item:hover{transform:translateY(-5px);box-shadow:0 8px 30px rgba(0,0,0,.1)}.advantage-icon{width:60px;height:60px;background:var(--light-orange);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto var(--spacing-md);color:var(--secondary-orange)}.advantage-item h4{font-size:1.2rem;margin-bottom:var(--spacing-sm);color:var(--gray-900)}.advantage-item p{color:var(--gray-700);font-size:.95rem;line-height:1.6}.clients-section{background:var(--white);padding:var(--spacing-3xl) 0;overflow:hidden;position:relative}.clients-section::after,.clients-section::before{content:'';position:absolute;top:0;width:150px;height:100%;z-index:2;pointer-events:none}.clients-section::before{left:0;background:linear-gradient(to right,var(--white) 0,transparent 100%)}.clients-section::after{right:0;background:linear-gradient(to left,var(--white) 0,transparent 100%)}.clients-carousel-wrapper{margin-top:var(--spacing-xl);position:relative}.clients-carousel{display:flex;width:fit-content}.clients-carousel:hover .clients-track{animation-play-state:paused}.clients-track{display:flex;align-items:center;gap:4rem;padding:0 2rem;animation:scroll 40s linear infinite}.client-logo{flex-shrink:0;width:180px;height:100px;display:flex;align-items:center;justify-content:center;background:var(--white);border-radius:12px;padding:1.5rem;transition:all var(--transition-normal);box-shadow:0 2px 10px rgba(0,0,0,.05);position:relative;cursor:pointer}.client-logo:hover{transform:scale(1.05);box-shadow:0 8px 25px rgba(255,140,66,.15)}.client-logo img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain}.client-logo::before{content:attr(data-company-name);position:absolute;bottom:-45px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--gray-900);color:var(--white);padding:.5rem 1rem;border-radius:6px;font-size:.9rem;font-weight:var(--font-weight-medium);white-space:nowrap;opacity:0;pointer-events:none;transition:all var(--transition-normal);z-index:10}.client-logo::after{content:'';position:absolute;bottom:-8px;left:50%;transform:translateX(-50%) translateY(10px);width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-bottom:8px solid var(--gray-900);opacity:0;pointer-events:none;transition:all var(--transition-normal);z-index:10}.client-logo:hover::after,.client-logo:hover::before{opacity:1;transform:translateX(-50%) translateY(0)}.client-name{font-size:1.5rem;font-weight:var(--font-weight-bold);color:var(--gray-900);white-space:nowrap}@keyframes scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}.differentials-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--spacing-xl);margin-top:var(--spacing-2xl)}.differential-card{background:var(--white);padding:var(--spacing-xl);border-radius:12px;border-left:4px solid var(--secondary-orange);box-shadow:0 4px 15px rgba(0,0,0,.05);transition:all var(--transition-normal)}.differential-card:hover{box-shadow:0 8px 30px rgba(0,0,0,.12);transform:translateX(5px)}.differential-card h3{font-size:1.5rem;margin-bottom:var(--spacing-md);color:var(--gray-900);display:flex;align-items:center;gap:var(--spacing-sm)}.differential-card p{color:var(--gray-700);line-height:1.8}.faq-grid{max-width:800px;margin:var(--spacing-2xl) auto 0;display:flex;flex-direction:column;gap:var(--spacing-sm)}.faq-item{background:var(--white);border:1px solid var(--gray-300);border-radius:8px;overflow:hidden;transition:var(--transition-normal)}.faq-item:hover{border-color:var(--secondary-orange)}.faq-item[open]{border-color:var(--secondary-orange);box-shadow:0 2px 8px rgba(0,0,0,.08)}.faq-item summary{padding:var(--spacing-md) var(--spacing-lg);font-weight:var(--font-weight-semibold);font-size:1.05rem;color:var(--gray-900);cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center}.faq-item summary::-webkit-details-marker{display:none}.faq-item summary::after{content:'+';font-size:1.4rem;font-weight:var(--font-weight-bold);color:var(--secondary-orange);transition:var(--transition-fast);flex-shrink:0;margin-left:var(--spacing-sm)}.faq-item[open] summary::after{content:'−'}.faq-item p{padding:0 var(--spacing-lg) var(--spacing-md);color:var(--gray-700);line-height:1.8}.contact-container{display:grid;grid-template-columns:1fr 1fr;gap:var(--spacing-2xl);margin-top:var(--spacing-2xl)}.contact-info h3{font-size:1.8rem;margin-bottom:var(--spacing-md);color:var(--gray-900)}.contact-info p{color:var(--gray-700);margin-bottom:var(--spacing-xl);font-size:1.05rem;line-height:1.8}.contact-details{display:flex;flex-direction:column;gap:var(--spacing-md)}.contact-item{display:flex;align-items:center;gap:var(--spacing-md);padding:var(--spacing-md);background:var(--light-orange);border-radius:8px}.contact-item-icon{width:45px;height:45px;background:var(--secondary-orange);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--white);flex-shrink:0}.contact-item-text strong{display:block;color:var(--gray-900);margin-bottom:.25rem}.contact-item-text span{color:var(--gray-700);font-size:.95rem}.contact-form{background:var(--white);padding:var(--spacing-xl);border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.08)}.form-group{margin-bottom:var(--spacing-md)}.form-group label{display:block;margin-bottom:var(--spacing-xs);font-weight:var(--font-weight-medium);color:var(--gray-900)}.form-group input,.form-group textarea{width:100%;padding:.875rem;border:2px solid var(--gray-300);border-radius:6px;font-family:var(--font-primary);font-size:1rem;transition:all var(--transition-fast)}.form-group input:focus,.form-group textarea:focus{outline:0;border-color:var(--secondary-orange);box-shadow:0 0 0 3px rgba(255,140,66,.1)}.form-group textarea{resize:vertical;min-height:120px}.btn-submit{background:var(--secondary-red);color:var(--white);padding:1rem 2.5rem;border:none;border-radius:6px;font-weight:var(--font-weight-semibold);font-size:1.1rem;cursor:pointer;transition:all var(--transition-fast);width:100%}.btn-submit:hover{background:#9a111a;transform:translateY(-2px);box-shadow:0 6px 20px rgba(190,22,34,.3)}.footer{background:var(--gray-900);color:var(--white);padding:var(--spacing-lg) var(--spacing-lg) var(--spacing-md);text-align:center}.footer-content{max-width:1400px;margin:0 auto}.footer-info{margin-bottom:var(--spacing-sm)}.footer-info p{margin:var(--spacing-xs) 0;color:rgba(255,255,255,.8)}.footer-social{margin:var(--spacing-md) 0}.social-link{display:inline-flex;align-items:center;gap:.5rem;color:var(--white);text-decoration:none;font-size:1.1rem;transition:all var(--transition-fast);padding:.75rem 1.5rem;background:rgba(255,255,255,.1);border-radius:8px}.social-link:hover{background:var(--secondary-orange);transform:translateY(-2px)}.footer-links{margin:var(--spacing-sm) 0;display:flex;flex-wrap:wrap;justify-content:center;gap:var(--spacing-lg)}.footer-links a{color:rgba(255,255,255,.5);text-decoration:none;font-size:.85rem;transition:color var(--transition-fast)}.footer-links a:hover{color:var(--white)}.footer-bottom{padding-top:var(--spacing-sm);border-top:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.6);font-size:.9rem}.footer-bottom p{margin:.25rem 0}.dev-credit{margin-top:.35rem;font-size:.85rem}.dev-credit a{color:var(--secondary-orange);text-decoration:none;font-weight:var(--font-weight-medium);transition:all var(--transition-fast)}.dev-credit a:hover{color:var(--white);text-decoration:underline}@media (max-height:800px) and (min-width:769px){.hero{padding:2rem var(--spacing-lg)}.hero-content h1{font-size:2.8rem;margin-bottom:1rem}.hero-content p{font-size:1rem;margin-bottom:.75rem}.hero-content p:last-of-type{margin-bottom:1.5rem}.carousel{height:320px}.btn-primary,.btn-secondary{padding:.875rem 1.75rem;font-size:1rem}}@media (max-width:1024px){.hero-content h1{font-size:2.8rem}.section-title{font-size:2rem}.differentials-grid{grid-template-columns:1fr}.carousel{max-width:500px;height:400px}.client-logo{width:150px;height:85px}.clients-track{gap:3rem}}@media (max-width:768px){.header-container{padding:0 var(--spacing-md)}.logo-image{height:40px;max-width:160px}.nav{position:fixed;top:80px;left:0;right:0;background:var(--white);flex-direction:column;padding:var(--spacing-lg);box-shadow:0 4px 20px rgba(0,0,0,.1);transform:translateY(-100%);opacity:0;transition:all var(--transition-normal);pointer-events:none}.nav.active{transform:translateY(0);opacity:1;pointer-events:all}.menu-toggle{display:flex}.hero-container{grid-template-columns:1fr;gap:var(--spacing-xl)}.hero-content h1{font-size:2.2rem}.carousel{max-width:100%;height:350px}.about-content,.contact-container{grid-template-columns:1fr}.about-stats{grid-template-columns:1fr}.solutions-grid{grid-template-columns:1fr}.section{padding:var(--spacing-2xl) var(--spacing-md)}.clients-section{padding:var(--spacing-2xl) 0}.client-logo{width:130px;height:75px;padding:1rem}.clients-track{gap:2rem}.clients-carousel{animation:scroll 30s linear infinite}.client-logo::before{font-size:.8rem;padding:.4rem .8rem}}@media (max-width:480px){.hero-content h1{font-size:1.8rem}.section-title{font-size:1.6rem}.hero-cta{flex-direction:column}.btn-primary,.btn-secondary{width:100%;text-align:center}.logo-image{height:35px;max-width:140px}.carousel{height:280px}.carousel-slide{padding:10px}.client-logo{width:110px;height:65px}.clients-section::after,.clients-section::before{width:80px}}@media (prefers-reduced-motion:reduce){*,::after,::before{animation-duration:0s!important;animation-iteration-count:1!important;transition-duration:0s!important;scroll-behavior:auto!important}}@media print{.btn-header,.btn-primary,.btn-secondary,.carousel-btn,.carousel-indicators,.clients-carousel,.footer,.header,.menu-toggle,.nav,.whatsapp-float{display:none!important}body{background:#fff;color:#000;font-size:12pt}.hero{page-break-after:always}img{max-width:100%;page-break-inside:avoid}.differential-card,.solution-card{page-break-inside:avoid}a[href]::after{content:" (" attr(href) ")";font-size:.8em;color:#666}}.pagina-topo{padding:8rem var(--spacing-lg,2rem) var(--spacing-xl,3rem);background:var(--gray-100)}.pagina-topo .container{max-width:1400px;margin:0 auto}.pagina-topo h1{font-size:2.5rem;font-weight:var(--font-weight-bold,700);color:var(--gray-900);line-height:1.2;margin-bottom:var(--spacing-sm,1rem)}.pagina-resumo{font-size:1.15rem;color:var(--gray-700);max-width:900px;line-height:1.7}.section-subtitle{color:#B54B00}.carousel-indicator{position:relative}.carousel-indicator::after{content:"";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:24px;height:24px}.carousel-indicators{gap:14px}.carousel{aspect-ratio:550 / 400}.about-image img,.carousel-slide img{height:auto;max-width:100%}.solution-link{display:inline-block;margin-top:var(--spacing-sm,1rem);color:var(--secondary-red);font-weight:var(--font-weight-semibold,600);font-size:0.95rem;text-decoration:none;transition:color var(--transition-fast,0.2s ease)}.solution-link::after{content:" →"}.solution-link:hover{color:var(--secondary-orange);text-decoration:underline}.breadcrumb{margin-bottom:var(--spacing-md,1.5rem);font-size:0.9rem;color:var(--gray-500)}.breadcrumb ol{display:flex;flex-wrap:wrap;align-items:center;gap:0.5rem;list-style:none;margin:0;padding:0}.breadcrumb li{display:flex;align-items:center;gap:0.5rem}.breadcrumb li + li::before{content:"›";color:var(--gray-300)}.breadcrumb a{color:var(--gray-700);text-decoration:none}.breadcrumb a:hover{color:var(--secondary-orange);text-decoration:underline}.breadcrumb [aria-current="page"]{color:var(--gray-900);font-weight:var(--font-weight-semibold,600)}.tabela-wrapper{overflow-x:auto;margin-bottom:var(--spacing-lg,2rem);-webkit-overflow-scrolling:touch}.tabela-specs,.tabela-comparativa{width:100%;border-collapse:collapse;background:var(--white);font-size:0.95rem}.tabela-specs caption,.tabela-comparativa caption{text-align:left;font-weight:var(--font-weight-semibold,600);color:var(--gray-900);padding-bottom:var(--spacing-xs,0.5rem)}.tabela-specs th,.tabela-specs td,.tabela-comparativa th,.tabela-comparativa td{padding:0.85rem 1rem;text-align:left;border-bottom:1px solid var(--gray-300);vertical-align:top}.tabela-specs thead th,.tabela-comparativa thead th{background:var(--gray-900);color:var(--white);font-weight:var(--font-weight-semibold,600);border-bottom:none}.tabela-specs tbody th{width:38%;background:var(--gray-100);color:var(--gray-900);font-weight:var(--font-weight-semibold,600)}.tabela-specs .spec-grupo th{width:auto;background:var(--secondary-red);color:var(--white);font-size:0.9rem;text-transform:uppercase;letter-spacing:0.5px}.tabela-specs tbody + tbody .spec-grupo th{border-top:3px solid var(--gray-100)}.tabela-comparativa tbody tr:hover{background:var(--light-orange)}.tabela-comparativa th[scope="row"]{font-weight:var(--font-weight-semibold,600);color:var(--gray-900)}.tabela-comparativa .sem-dado{color:var(--gray-500);font-style:italic}.tabela-comparativa a{color:var(--secondary-red);font-weight:var(--font-weight-semibold,600);text-decoration:none}.tabela-comparativa a:hover{text-decoration:underline}.tabela-specs ul{margin:0;padding-left:1.1rem}.tabela-specs li{margin-bottom:0.25rem}.tabela-nota{font-size:0.875rem;color:var(--gray-500);margin-top:calc(var(--spacing-xs,0.5rem) * -1);margin-bottom:var(--spacing-lg,2rem)}.relacionados-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:var(--spacing-md,1.5rem)}.relacionado-card{display:block;padding:var(--spacing-md,1.5rem);background:var(--white);border:1px solid var(--gray-300);border-radius:8px;text-decoration:none;transition:all var(--transition-fast,0.2s ease)}.relacionado-card:hover{border-color:var(--secondary-orange);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.08)}.relacionado-card strong{display:block;color:var(--gray-900);font-size:1.1rem;margin-bottom:0.35rem}.relacionado-card span{display:block;color:var(--gray-700);font-size:0.9rem;line-height:1.5}.blog-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:var(--spacing-lg,2rem)}.blog-card{display:flex;flex-direction:column;background:var(--white);border:1px solid var(--gray-300);border-radius:12px;padding:var(--spacing-lg,2rem);transition:all var(--transition-fast,0.2s ease)}.blog-card:hover{border-color:var(--secondary-orange);box-shadow:0 6px 20px rgba(0,0,0,0.08)}.blog-card h2,.blog-card h3{font-size:1.3rem;line-height:1.35;margin-bottom:var(--spacing-xs,0.5rem)}.blog-card h2 a,.blog-card h3 a{color:var(--gray-900);text-decoration:none}.blog-card h2 a:hover,.blog-card h3 a:hover{color:var(--secondary-red)}.blog-card p{color:var(--gray-700);line-height:1.7;margin-bottom:var(--spacing-md,1.5rem);flex-grow:1}.blog-meta{font-size:0.85rem;color:var(--gray-500);margin-bottom:var(--spacing-xs,0.5rem)}.blog-link{color:var(--secondary-red);font-weight:var(--font-weight-semibold,600);text-decoration:none}.blog-link:hover{text-decoration:underline}.artigo-corpo{max-width:760px;margin:0 auto}.conteudo-texto>p,.conteudo-texto>ul,.conteudo-texto>ol,.conteudo-texto>address{max-width:860px}.conteudo-texto>p,.conteudo-texto>li{line-height:1.8;color:var(--gray-700)}.conteudo-texto>p{margin-bottom:var(--spacing-sm,1rem)}.conteudo-texto>ul,.conteudo-texto>ol{padding-left:1.5rem;margin-bottom:var(--spacing-md,1.5rem)}.conteudo-texto>ul>li,.conteudo-texto>ol>li{margin-bottom:0.5rem;line-height:1.8;color:var(--gray-700)}.conteudo-texto a{color:var(--secondary-red);text-decoration:underline}.conteudo-texto a:hover{color:var(--secondary-orange)}.conteudo-texto>h2{font-size:1.9rem;color:var(--gray-900);margin-bottom:var(--spacing-md,1.5rem)}.artigo-corpo h2{font-size:1.75rem;color:var(--gray-900);margin-top:var(--spacing-xl,3rem);margin-bottom:var(--spacing-sm,1rem);scroll-margin-top:100px}.artigo-corpo h3{font-size:1.25rem;color:var(--gray-900);margin-top:var(--spacing-lg,2rem);margin-bottom:var(--spacing-xs,0.5rem);scroll-margin-top:100px}.artigo-corpo p,.artigo-corpo li{color:var(--gray-700);line-height:1.8;margin-bottom:var(--spacing-sm,1rem)}.artigo-corpo ul,.artigo-corpo ol{padding-left:1.5rem;margin-bottom:var(--spacing-md,1.5rem)}.artigo-corpo a{color:var(--secondary-red);text-decoration:underline}.artigo-corpo strong{color:var(--gray-900)}.sumario{background:var(--gray-100);border-left:4px solid var(--secondary-orange);border-radius:0 8px 8px 0;padding:var(--spacing-md,1.5rem) var(--spacing-lg,2rem);margin-bottom:var(--spacing-xl,3rem)}.sumario h2{font-size:1rem;text-transform:uppercase;letter-spacing:1px;color:var(--gray-900);margin:0 0 var(--spacing-xs,0.5rem)}.sumario ol{margin:0;padding-left:1.25rem}.sumario li{margin-bottom:0.35rem;line-height:1.6}.sumario a{color:var(--gray-700);text-decoration:none}.sumario a:hover{color:var(--secondary-red);text-decoration:underline}.cta-bloco{text-align:center;background:var(--gray-900);color:var(--primary-white);border-radius:12px;padding:var(--spacing-xl,3rem) var(--spacing-lg,2rem)}.cta-bloco h2{color:var(--white);font-size:1.75rem;margin-bottom:var(--spacing-xs,0.5rem)}.cta-bloco p{color:var(--gray-300);max-width:640px;margin:0 auto var(--spacing-md,1.5rem);line-height:1.7}.cta-bloco .btn-cta-interna{display:inline-block;background:var(--secondary-red);color:var(--white);border:2px solid var(--secondary-red);border-radius:6px;padding:1rem 2rem;font-size:1.1rem;font-weight:var(--font-weight-semibold,600);text-decoration:none;transition:all var(--transition-fast,0.2s ease)}.cta-bloco .btn-cta-interna:hover{background:#9a111a;border-color:#9a111a;transform:translateY(-2px)}.whatsapp-float{position:fixed;right:1.25rem;bottom:1.25rem;z-index:900;display:flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:50%;background:#25d366;color:var(--white);box-shadow:0 4px 14px rgba(0,0,0,0.25);transition:transform var(--transition-fast,0.2s ease)}.whatsapp-float:hover{transform:scale(1.08)}.whatsapp-float svg{width:30px;height:30px;fill:currentColor}body.tem-cookie-banner .whatsapp-float{bottom:7.5rem}.nav-item{position:relative;display:inline-flex;align-items:center}.nav-submenu{position:absolute;top:100%;left:0;z-index:100;min-width:260px;padding:0.5rem 0;margin:0;list-style:none;background:var(--white);border:1px solid var(--gray-300);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.12);opacity:0;visibility:hidden;transform:translateY(6px);transition:opacity var(--transition-fast,0.2s ease),transform var(--transition-fast,0.2s ease),visibility var(--transition-fast,0.2s ease)}.nav-item:hover .nav-submenu,.nav-item:focus-within .nav-submenu{opacity:1;visibility:visible;transform:translateY(0)}.nav-submenu a{display:block;padding:0.6rem 1.25rem;color:var(--gray-700);font-size:0.95rem;text-decoration:none;white-space:nowrap}.nav-submenu a:hover,.nav-submenu a:focus-visible{background:var(--gray-100);color:var(--secondary-red)}.nav-submenu-separador{height:1px;margin:0.35rem 0;background:var(--gray-300)}.footer-mapa{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:var(--spacing-lg,2rem);max-width:1400px;margin:0 auto var(--spacing-lg,2rem);padding-bottom:var(--spacing-lg,2rem);text-align:left;border-bottom:1px solid rgba(255,255,255,0.12)}.footer-mapa h3{font-size:0.9rem;text-transform:uppercase;letter-spacing:1px;color:var(--secondary-orange);margin-bottom:var(--spacing-sm,1rem)}.footer-mapa ul{list-style:none;margin:0;padding:0}.footer-mapa li{margin-bottom:0.5rem}.footer-mapa a{color:var(--gray-300);font-size:0.9rem;text-decoration:none;transition:color var(--transition-fast,0.2s ease)}.footer-mapa a:hover{color:var(--white);text-decoration:underline}.footer-endereco{color:var(--gray-300);font-size:0.9rem;line-height:1.7;font-style:normal}.endereco-contato{font-style:normal;font-size:1rem;line-height:1.8;color:var(--gray-700);margin-bottom:var(--spacing-sm,1rem)}.endereco-contato strong{color:var(--gray-900)}.endereco-contato a{color:var(--secondary-red);text-decoration:underline}.endereco-contato a:hover{color:var(--secondary-orange)}.footer-endereco a{color:var(--gray-300);text-decoration:none}.footer-endereco a:hover{color:var(--white);text-decoration:underline}.erro-404{text-align:center;padding:10rem var(--spacing-lg,2rem) var(--spacing-3xl,6rem)}.erro-404 .codigo{font-size:5rem;font-weight:var(--font-weight-bold,700);line-height:1;color:var(--secondary-orange);margin-bottom:var(--spacing-sm,1rem)}.erro-404 h1{font-size:2rem;color:var(--gray-900);margin-bottom:var(--spacing-sm,1rem)}.erro-404 p{color:var(--gray-700);max-width:560px;margin:0 auto var(--spacing-lg,2rem);line-height:1.7}.erro-404-links{display:flex;flex-wrap:wrap;justify-content:center;gap:var(--spacing-sm,1rem)}@media (max-width:768px){.pagina-topo{padding:6.5rem var(--spacing-md,1.5rem) var(--spacing-lg,2rem)}.pagina-topo h1{font-size:1.85rem}.pagina-resumo{font-size:1rem}.tabela-specs,.tabela-comparativa{font-size:0.875rem}.tabela-specs th,.tabela-specs td,.tabela-comparativa th,.tabela-comparativa td{padding:0.65rem 0.75rem}.tabela-specs tbody th{width:45%}.nav{max-height:calc(100vh - 80px);overflow-y:auto;overscroll-behavior:contain}.nav-item{display:block;width:100%}.nav-item>.nav-link{display:block;padding-bottom:0.35rem}.nav-submenu a{font-size:0.9rem;color:var(--gray-500)}.nav-submenu{position:static;opacity:1;visibility:visible;transform:none;min-width:0;border:none;box-shadow:none;background:transparent;padding:0 0 0 var(--spacing-sm,1rem)}.nav-submenu a{padding:0.5rem 0;white-space:normal}.erro-404{padding:8rem var(--spacing-md,1.5rem) var(--spacing-xl,3rem)}.erro-404 .codigo{font-size:3.5rem}.footer-mapa{text-align:center}}.contact-item-text a{color:var(--gray-700);font-size:0.95rem;text-decoration:none;transition:color var(--transition-fast,0.2s ease)}.contact-item-text a:hover,.contact-item-text a:focus-visible{color:var(--secondary-orange);text-decoration:underline}.form-erro{display:block;margin-top:0.35rem;font-size:0.85rem;line-height:1.4;color:var(--secondary-red)}.form-erro:empty{display:none}.campo-invalido{border-color:var(--secondary-red) !important}.campo-invalido:focus{box-shadow:0 0 0 3px rgba(190,22,34,0.12) !important}.form-group select{width:100%;padding:0.875rem;border:2px solid var(--gray-300);border-radius:6px;font-family:var(--font-primary);font-size:1rem;background:var(--white);color:var(--gray-900);cursor:pointer;transition:all var(--transition-fast,0.2s ease)}.form-group select:focus{outline:none;border-color:var(--secondary-orange);box-shadow:0 0 0 3px rgba(255,140,66,0.1)}.btn-submit:disabled{opacity:0.65;cursor:not-allowed;transform:none}.form-status{margin-top:var(--spacing-sm,1rem);padding:0.75rem 1rem;border-radius:6px;font-size:0.95rem;line-height:1.5;border-left:4px solid transparent}.form-status:empty{display:none}.form-status--erro{background:#fdecee;color:#8a1119;border-left-color:var(--secondary-red)}.form-status--enviando{background:var(--gray-100);color:var(--gray-700);border-left-color:var(--gray-500)}.form-status--sucesso{background:var(--light-orange);color:#8a4513;border-left-color:var(--secondary-orange)}.cookie-banner{position:fixed;bottom:0;left:0;right:0;z-index:1000;display:flex;align-items:center;justify-content:center;gap:var(--spacing-lg,2rem);flex-wrap:wrap;padding:var(--spacing-md,1.5rem) var(--spacing-lg,2rem);background:var(--gray-900);color:var(--primary-white);box-shadow:0 -4px 20px rgba(0,0,0,0.25)}.cookie-banner-texto{margin:0;max-width:720px;font-size:0.95rem;line-height:1.6}.cookie-banner-texto a{color:var(--secondary-orange);text-decoration:underline}.cookie-banner-acoes{display:flex;align-items:center;gap:var(--spacing-sm,1rem);flex-shrink:0}.cookie-banner-aceitar,.cookie-banner-recusar{border-radius:6px;padding:0.6rem 1.75rem;font-family:var(--font-primary);font-size:1rem;font-weight:var(--font-weight-semibold,600);cursor:pointer;transition:all var(--transition-fast,0.2s ease)}.cookie-banner-aceitar{background:var(--secondary-red);color:var(--white);border:2px solid var(--secondary-red)}.cookie-banner-aceitar:hover{background:#9a111a;border-color:#9a111a}.cookie-banner-recusar{background:transparent;color:var(--primary-white);border:2px solid var(--gray-500)}.cookie-banner-recusar:hover{border-color:var(--primary-white);background:rgba(255,255,255,0.08)}@media (max-width:768px){.cookie-banner{gap:var(--spacing-sm,1rem);padding:var(--spacing-sm,1rem) var(--spacing-md,1.5rem);text-align:center}.cookie-banner-texto{font-size:0.875rem}.cookie-banner-acoes{width:100%;justify-content:center}}@media (prefers-reduced-motion:reduce){.cookie-banner-aceitar,.cookie-banner-recusar,.contact-item-text a,.relacionado-card,.blog-card,.nav-submenu,.whatsapp-float,.footer-mapa a,.cta-bloco .btn-cta-interna{transition:none}.relacionado-card:hover,.whatsapp-float:hover,.cta-bloco .btn-cta-interna:hover{transform:none}}@media print{.cookie-banner,.breadcrumb,.nav-submenu,.cta-bloco,.footer-mapa,.relacionados-grid{display:none}.tabela-wrapper{overflow:visible}.tabela-specs,.tabela-comparativa{page-break-inside:auto}.tabela-specs tr,.tabela-comparativa tr{page-break-inside:avoid}}</style>
+    <!-- /BP:CSS -->
     <script type="application/ld+json">
     {
-      "@context": "https://schema.org",
-      "@type": "LocalBusiness",
-      "name": "Brücker Printers",
-      "image": "https://bruckerprinters.com.br/imagens/logoTransparente.png",
-      "description": "Especialistas em venda e locação de impressoras Ricoh para gráficas e empresas corporativas",
-      "address": {
-        "@type": "PostalAddress",
-        "addressCountry": "BR",
-        "addressRegion": "Brasil"
-      },
-      "telephone": "+55-51-99737-1666",
-      "email": "contato@bruckerprinters.com.br",
-      "url": "https://bruckerprinters.com.br",
-      "priceRange": "$$",
-      "areaServed": {
-        "@type": "Country",
-        "name": "Brasil"
-      },
-      "openingHours": "Mo-Fr 08:00-18:00",
-      "sameAs": [
-        "https://www.instagram.com/bruckerprinters/"
-      ],
-      "hasOfferCatalog": {
-        "@type": "OfferCatalog",
-        "name": "Impressoras Ricoh",
-        "itemListElement": [
-          {
-            "@type": "Offer",
-            "itemOffered": {
-              "@type": "Product",
-              "name": "Ricoh Pro C5200",
-              "description": "Impressora colorida de alta performance para produção de médio volume"
-            }
-          },
-          {
-            "@type": "Offer",
-            "itemOffered": {
-              "@type": "Product",
-              "name": "Ricoh Pro C5300",
-              "description": "Impressora de produção colorida de alto desempenho"
-            }
-          },
-          {
-            "@type": "Offer",
-            "itemOffered": {
-              "@type": "Product",
-              "name": "Ricoh Pro C7200",
-              "description": "Impressora de produção colorida para alto volume"
-            }
-          },
-          {
-            "@type": "Offer",
-            "itemOffered": {
-              "@type": "Product",
-              "name": "Ricoh Pro C9200",
-              "description": "Impressora de produção profissional de altíssimo volume"
-            }
-          },
-          {
-            "@type": "Offer",
-            "itemOffered": {
-              "@type": "Product",
-              "name": "Ricoh Pro 8300",
-              "description": "Impressora monocromática de alta produção"
-            }
-          },
-          {
-            "@type": "Offer",
-            "itemOffered": {
-              "@type": "Product",
-              "name": "Ricoh MP C2004",
-              "description": "Multifuncional colorida compacta para escritórios"
-            }
-          }
-        ]
-      }
-    }
-    </script>
-
-    <!-- WebSite Schema -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebSite",
-      "name": "Brücker Printers",
-      "url": "https://bruckerprinters.com.br",
-      "description": "Venda e locação de impressoras Ricoh para gráficas e empresas",
-      "publisher": {
-        "@type": "Organization",
+        "@context": "https://schema.org",
+        "@type": "LocalBusiness",
+        "@id": "https://bruckerprinters.com.br/#organizacao",
         "name": "Brücker Printers",
-        "logo": {
-          "@type": "ImageObject",
-          "url": "https://bruckerprinters.com.br/imagens/logoTransparente.png"
-        }
-      }
+        "description": "Venda, locação e assistência técnica de impressoras Ricoh para gráficas e ambientes de produção gráfica.",
+        "url": "https://bruckerprinters.com.br",
+        "logo": "https://bruckerprinters.com.br/imagens/logoTransparente.png",
+        "image": "https://bruckerprinters.com.br/imagens/og-brucker-printers.png",
+        "telephone": "+55-51-99737-1666",
+        "email": "contato@bruckerprinters.com.br",
+        "priceRange": "$$",
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Av. Armando Fajardo, 2903 - Sala 2",
+            "addressLocality": "Canoas",
+            "addressRegion": "RS",
+            "postalCode": "92412-550",
+            "addressCountry": "BR"
+        },
+        "areaServed": {
+            "@type": "Country",
+            "name": "Brasil"
+        },
+        "openingHoursSpecification": [
+            {
+                "@type": "OpeningHoursSpecification",
+                "dayOfWeek": [
+                    "Monday",
+                    "Tuesday",
+                    "Wednesday",
+                    "Thursday",
+                    "Friday"
+                ],
+                "opens": "08:00",
+                "closes": "18:00"
+            }
+        ],
+        "sameAs": [
+            "https://www.instagram.com/bruckerprinters/"
+        ]
     }
     </script>
-
-    <!-- FAQ Schema -->
     <script type="application/ld+json">
     {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Qual a diferença entre venda e locação de impressoras Ricoh?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Na venda, você adquire o equipamento como ativo próprio, com garantia estendida disponível. Na locação, você paga uma mensalidade fixa que inclui o equipamento, manutenção preventiva e corretiva, suprimentos e possibilidade de upgrade durante o contrato."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "A Brücker Printers atende em todo o Brasil?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Sim, a Brücker Printers oferece atendimento técnico especializado em todas as regiões do Brasil, com SLA garantido de 24 a 48 horas para chamados de manutenção."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Quais modelos de impressoras Ricoh estão disponíveis?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Trabalhamos com a linha completa Ricoh Pro para produção gráfica: Pro C5200, Pro C5300, Pro C7200, Pro C9200, Pro 8300 (monocromática) e a multifuncional MP C2004 para escritórios."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "O que está incluído no contrato de locação?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "O contrato de locação inclui o equipamento, manutenção preventiva e corretiva, peças originais Ricoh, suporte técnico com SLA garantido, e franquia de páginas adaptável às necessidades do seu negócio."
-          }
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "@id": "https://bruckerprinters.com.br/#site",
+        "name": "Brücker Printers",
+        "url": "https://bruckerprinters.com.br",
+        "inLanguage": "pt-BR",
+        "publisher": {
+            "@id": "https://bruckerprinters.com.br/#organizacao"
         }
-      ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {
+                "@type": "Question",
+                "name": "Qual a diferença entre venda e locação de impressoras Ricoh?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Na venda, você adquire o equipamento como ativo próprio, com garantia estendida disponível. Na locação, você paga uma mensalidade fixa que inclui o equipamento, manutenção preventiva e corretiva, suprimentos e possibilidade de upgrade durante o contrato."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "A Brücker Printers atende em todo o Brasil?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Sim, oferecemos atendimento técnico especializado em todas as regiões do Brasil, com SLA garantido de 24 a 48 horas para chamados de manutenção."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "Quais modelos de impressoras Ricoh estão disponíveis?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Trabalhamos com a linha completa Ricoh Pro para produção gráfica: Pro C5200, Pro C5300, Pro C7200, Pro C9200, Pro 8300 (monocromática) e a multifuncional MP C2004 para escritórios."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "O que está incluído no contrato de locação?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "O contrato inclui o equipamento, manutenção preventiva e corretiva, peças originais Ricoh, suporte técnico com SLA garantido e franquia de páginas adaptável às necessidades do seu negócio."
+                }
+            }
+        ]
     }
     </script>
 </head>
@@ -201,17 +219,40 @@
     <header class="header" id="header">
         <div class="header-container">
             <a href="#home" class="logo" aria-label="Página Inicial Brücker Printers">
-                <img src="imagens/logoTransparente.png" alt="Brücker Printers - Venda e Locação de Impressoras Ricoh" class="logo-image" width="200" height="50" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
+                <img src="/imagens/logo-brucker.webp" alt="Brücker Printers - Venda e Locação de Impressoras Ricoh" class="logo-image" width="200" height="50" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
                 <span style="display: none;">Brücker Printers</span>
             </a>
             <nav class="nav" id="nav" aria-label="Navegação Principal">
-                <a href="impressoras.html" class="nav-link">Veja nossas impressoras Ricoh</a>
-                <a href="#sobre" class="nav-link">Sobre</a>
-                <a href="#solucoes" class="nav-link">Soluções</a>
-                <a href="#vantagens" class="nav-link">Vantagens</a>
-                <a href="#diferenciais" class="nav-link">Diferenciais</a>
-                <a href="http://localhost:5173/cliente" class="nav-link nav-link--subtle" target="_blank" rel="noopener noreferrer">Área do Cliente</a>
-                <a href="https://wa.me/5551997371666?text=Olá!%20Gostaria%20de%20solicitar%20um%20orçamento." class="btn-header" target="_blank" rel="noopener noreferrer">Falar no WhatsApp</a>
+                <div class="nav-item">
+                    <a href="/impressoras.html" class="nav-link">Impressoras</a>
+                    <ul class="nav-submenu" aria-label="Modelos de impressora">
+                        <li><a href="/impressoras.html"><strong>Comparar os 6 modelos</strong></a></li>
+                        <li class="nav-submenu-separador" aria-hidden="true"></li>
+                        <li><a href="/impressoras/ricoh-pro-c5200.html">Ricoh Pro C5200</a></li>
+                        <li><a href="/impressoras/ricoh-pro-c5300.html">Ricoh Pro C5300</a></li>
+                        <li><a href="/impressoras/ricoh-pro-c7200.html">Ricoh Pro C7200</a></li>
+                        <li><a href="/impressoras/ricoh-pro-c9200.html">Ricoh Pro C9200</a></li>
+                        <li><a href="/impressoras/ricoh-pro-8300.html">Ricoh Pro 8300</a></li>
+                        <li><a href="/impressoras/ricoh-mp-c2004.html">Ricoh MP C2004</a></li>
+                    </ul>
+                </div>
+                <div class="nav-item">
+                    <a href="/#solucoes" class="nav-link">Soluções</a>
+                    <ul class="nav-submenu" aria-label="Soluções">
+                        <li><a href="/locacao-de-impressoras-ricoh.html">Locação de impressoras</a></li>
+                        <li><a href="/venda-de-impressoras-ricoh.html">Venda de impressoras</a></li>
+                        <li><a href="/assistencia-tecnica-ricoh.html">Assistência técnica</a></li>
+                        <li><a href="/outsourcing-de-impressao.html">Outsourcing de impressão</a></li>
+                        <li class="nav-submenu-separador" aria-hidden="true"></li>
+                        <li><a href="/impressoras-para-graficas-porto-alegre.html">Atendimento em Porto Alegre</a></li>
+                    </ul>
+                </div>
+                <a href="/#vantagens" class="nav-link">Vantagens</a>
+                <a href="/#diferenciais" class="nav-link">Diferenciais</a>
+                <a href="/blog/" class="nav-link">Blog</a>
+                <a href="/#contato" class="nav-link">Contato</a>
+                <a href="http://localhost:5173/cliente" class="nav-link nav-link--subtle" target="_blank" rel="noopener noreferrer" data-evento="area-cliente">Área do Cliente</a>
+                <a href="https://wa.me/5551997371666?text=Ol%C3%A1!%20Gostaria%20de%20solicitar%20um%20or%C3%A7amento." class="btn-header" target="_blank" rel="noopener noreferrer" data-origem="header">Falar no WhatsApp</a>
             </nav>
             <button class="menu-toggle" id="menuToggle" aria-label="Menu de Navegação">
                 <span></span>
@@ -228,13 +269,13 @@
                 <h1>Venda e Locação de Impressoras Ricoh para Gráficas</h1>
                     <p>Com os modelos Ricoh Pro C5200, Ricoh Pro C5300, Ricoh Pro C7200, Ricoh Pro C9200, Ricoh Pro 8300 e Ricoh MP C2004, oferecemos as melhores tecnologias do mercado para ampliar sua capacidade produtiva, reduzir custos operacionais e modernizar seu parque gráfico em todas as regiões do país.</p>
                 <div class="hero-cta">
-                    <a href="https://wa.me/5551997371666?text=Olá!%20Gostaria%20de%20solicitar%20um%20orçamento." class="btn-primary" target="_blank" rel="noopener noreferrer">Solicitar Orçamento</a>
+                    <a href="https://wa.me/5551997371666?text=Olá!%20Gostaria%20de%20solicitar%20um%20orçamento." class="btn-primary" target="_blank" rel="noopener noreferrer" data-origem="hero">Solicitar Orçamento</a>
                 </div>
             </div>
             <div class="hero-image">
                 <div class="carousel">
                     <div class="carousel-container" id="carouselContainer">
-                        <div class="carousel-slide"><img src="impressoras/ricoh-pro-c5200.webp" alt="Impressora Ricoh Pro C5200 - Alta Performance para Gráficas" width="400" height="300" loading="eager"></div>
+                        <div class="carousel-slide"><img src="impressoras/ricoh-pro-c5200.webp" alt="Impressora Ricoh Pro C5200 - Alta Performance para Gráficas" width="400" height="300" loading="eager" fetchpriority="high" decoding="async"></div>
                         <div class="carousel-slide"><img src="impressoras/ricoh-pro-c5300.webp" alt="Impressora Ricoh Pro C5300 - Produção Colorida Profissional" width="400" height="300" loading="lazy"></div>
                         <div class="carousel-slide"><img src="impressoras/ricoh-pro-c7200.webp" alt="Impressora Ricoh Pro C7200 - Alto Volume de Produção" width="400" height="300" loading="lazy"></div>
                         <div class="carousel-slide"><img src="impressoras/ricoh-pro-c9200.webp" alt="Impressora Ricoh Pro C9200 - Produção Industrial" width="400" height="300" loading="lazy"></div>
@@ -289,6 +330,7 @@
                         <li>Tecnologia laser e jato de tinta</li>
                         <li>Garantia estendida disponível</li>
                     </ul>
+                    <a href="/venda-de-impressoras-ricoh.html" class="solution-link">Ver condições de venda</a>
                 </article>
                 <article class="solution-card">
                     <div class="solution-icon" aria-hidden="true">
@@ -302,6 +344,7 @@
                         <li>Manutenção e suprimentos inclusos</li>
                         <li>Franquia de páginas adaptável</li>
                     </ul>
+                    <a href="/locacao-de-impressoras-ricoh.html" class="solution-link">Como funciona a locação</a>
                 </article>
                 <article class="solution-card">
                     <div class="solution-icon" aria-hidden="true">
@@ -314,6 +357,7 @@
                         <li>Peças originais Ricoh</li>
                         <li>Atendimento em até 48 horas</li>
                     </ul>
+                    <a href="/assistencia-tecnica-ricoh.html" class="solution-link">Ver assistência técnica</a>
                 </article>
                 <article class="solution-card">
                     <div class="solution-icon" aria-hidden="true">
@@ -327,6 +371,7 @@
                         <li>Propostas personalizadas</li>
                         <li>Otimização de processos</li>
                     </ul>
+                    <a href="/outsourcing-de-impressao.html" class="solution-link">Ver outsourcing de impressão</a>
                 </article>
             </div>
         </div>
@@ -393,31 +438,40 @@
             <h2 class="section-title">Empresas que Confiam na Brücker Printers</h2>
             <p class="section-description">Atendemos gráficas, empresas e instituições de todo o Brasil com soluções profissionais de impressão.</p>
         </div>
+
+        <!-- TODO: confirmar com o cliente — depoimento ou case de cliente.
+             Os logos abaixo já são prova social real, mas logo é o formato
+             mais fraco: mostra que a empresa é cliente, não o que ela obteve.
+             Um depoimento com nome, cargo e empresa, ou um case com problema
+             e resultado, converte bastante mais.
+             Nada foi escrito aqui porque depoimento inventado é fraude — o
+             texto precisa vir do cliente, com autorização de uso. O CSS será
+             criado junto, quando o conteúdo real chegar. -->
     </div>
     
     <div class="clients-carousel-wrapper">
         <div class="clients-carousel" id="clientsCarousel">
             <div class="clients-track">
                 <div class="client-logo" data-company-name="ARTPONTOCOM Comunicação Visual">
-                    <span class="client-name"><img src="clientes/artpontocom.jpg" alt="Logo ARTPONTOCOM Comunicação Visual - Cliente Brücker Printers" width="150" height="80" loading="lazy"></span>
+                    <span class="client-name"><img src="clientes/artpontocom.webp" alt="Logo ARTPONTOCOM Comunicação Visual - Cliente Brücker Printers" width="150" height="80" loading="lazy"></span>
                 </div>
                 <div class="client-logo" data-company-name="Cardnet">
-                    <span class="client-name"><img src="clientes/cardnet.png" alt="Logo Cardnet - Cliente Brücker Printers" width="150" height="80" loading="lazy"></span>
+                    <span class="client-name"><img src="clientes/cardnet.webp" alt="Logo Cardnet - Cliente Brücker Printers" width="150" height="80" loading="lazy"></span>
                 </div>
                 <div class="client-logo" data-company-name="CTD - Cia. de Tecnologia Digital">
-                    <span class="client-name"><img src="clientes/ctd.jpg" alt="Logo CTD Cia. de Tecnologia Digital - Cliente Brücker Printers" width="150" height="80" loading="lazy"></span>
+                    <span class="client-name"><img src="clientes/ctd.webp" alt="Logo CTD Cia. de Tecnologia Digital - Cliente Brücker Printers" width="150" height="80" loading="lazy"></span>
                 </div>
                 <div class="client-logo" data-company-name="Gráfica Pinguim">
-                    <span class="client-name"><img src="clientes/grafica-pinguin.jpg" alt="Logo Gráfica Pinguim - Cliente Brücker Printers" width="150" height="80" loading="lazy"></span>
+                    <span class="client-name"><img src="clientes/grafica-pinguin.webp" alt="Logo Gráfica Pinguim - Cliente Brücker Printers" width="150" height="80" loading="lazy"></span>
                 </div>
                 <div class="client-logo" data-company-name="Gráfica Valeform">
-                    <span class="client-name"><img src="clientes/grafica-valeform.jpg" alt="Logo Gráfica Valeform - Cliente Brücker Printers" width="150" height="80" loading="lazy"></span>
+                    <span class="client-name"><img src="clientes/grafica-valeform.webp" alt="Logo Gráfica Valeform - Cliente Brücker Printers" width="150" height="80" loading="lazy"></span>
                 </div>
                 <div class="client-logo" data-company-name="Grafimax Editora Gráfica">
-                    <span class="client-name"><img src="clientes/grafimax.jpg" alt="Logo Grafimax Editora Gráfica" width="150" height="80" loading="lazy"></span>
+                    <span class="client-name"><img src="clientes/grafimax.webp" alt="Logo Grafimax Editora Gráfica" width="150" height="80" loading="lazy"></span>
                 </div>
                 <div class="client-logo" data-company-name="Raizler Promocional">
-                    <span class="client-name"><img src="clientes/raizler.jpg" alt="Logo Raizler Promocional - Cliente Brücker Printers" width="150" height="80" loading="lazy"></span>
+                    <span class="client-name"><img src="clientes/raizler.webp" alt="Logo Raizler Promocional - Cliente Brücker Printers" width="150" height="80" loading="lazy"></span>
                 </div>
             </div>
         </div>
@@ -500,7 +554,7 @@
                             </div>
                             <div class="contact-item-text">
                                 <strong>WhatsApp</strong>
-                                <span>(51) 99737-1666</span>
+                                <a href="tel:+5551997371666" data-origem="secao_contato">(51) 99737-1666</a>
                             </div>
                         </div>
                         <div class="contact-item">
@@ -509,7 +563,9 @@
                             </div>
                             <div class="contact-item-text">
                                 <strong>E-mail</strong>
-                                <span>contato@bruckerprinters.com.br</span>
+                                <a href="mailto:contato@bruckerprinters.com.br" data-origem="secao_contato">contato@bruckerprinters.com.br</a>
+                                <!-- Fallback caso a ofuscação de e-mail do Cloudflare esteja ativa. -->
+                                <noscript><span>contato@bruckerprinters.com.br</span></noscript>
                             </div>
                         </div>
                         <div class="contact-item">
@@ -533,28 +589,48 @@
                     </div>
                 </div>
                 <div class="contact-form">
-                    <form id="contactForm">
+                    <!-- novalidate desliga as bolhas nativas do navegador para que a
+                         validação de js/script.js assuma: mensagem por campo, em
+                         português, e ligada ao input por aria-describedby. -->
+                    <form id="contactForm" novalidate>
                         <div class="form-group">
                             <label for="name">Nome Completo *</label>
-                            <input type="text" id="name" name="name" required>
+                            <input type="text" id="name" name="name" required autocomplete="name" aria-describedby="erro-name">
+                            <span class="form-erro" id="erro-name"></span>
                         </div>
                         <div class="form-group">
                             <label for="company">Empresa *</label>
-                            <input type="text" id="company" name="company" required>
+                            <input type="text" id="company" name="company" required autocomplete="organization" aria-describedby="erro-company">
+                            <span class="form-erro" id="erro-company"></span>
                         </div>
                         <div class="form-group">
                             <label for="email">E-mail Corporativo *</label>
-                            <input type="email" id="email" name="email" required>
+                            <input type="email" id="email" name="email" required autocomplete="email" aria-describedby="erro-email">
+                            <span class="form-erro" id="erro-email"></span>
                         </div>
                         <div class="form-group">
                             <label for="phone">Telefone *</label>
-                            <input type="tel" id="phone" name="phone" required>
+                            <input type="tel" id="phone" name="phone" required autocomplete="tel" inputmode="tel" aria-describedby="erro-phone">
+                            <span class="form-erro" id="erro-phone"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="modelo">Modelo de interesse</label>
+                            <select id="modelo" name="modelo">
+                                <option value="">Não sei ainda / quero uma recomendação</option>
+                                <option value="Ricoh Pro C5200">Ricoh Pro C5200</option>
+                                <option value="Ricoh Pro C5300">Ricoh Pro C5300</option>
+                                <option value="Ricoh Pro C7200">Ricoh Pro C7200</option>
+                                <option value="Ricoh Pro C9200">Ricoh Pro C9200</option>
+                                <option value="Ricoh Pro 8300">Ricoh Pro 8300 (monocromática)</option>
+                                <option value="Ricoh MP C2004">Ricoh MP C2004 (multifuncional)</option>
+                            </select>
                         </div>
                         <div class="form-group">
                             <label for="message">Mensagem</label>
                             <textarea id="message" name="message" placeholder="Conte-nos sobre suas necessidades..."></textarea>
                         </div>
                         <button type="submit" class="btn-submit">Enviar via WhatsApp</button>
+                        <p id="formStatus" class="form-status" role="status" aria-live="polite"></p>
                     </form>
                 </div>
             </div>
@@ -563,14 +639,78 @@
 
     </main>
 
+
+
+
+
+
+
+    <a href="https://wa.me/5551997371666?text=Ol%C3%A1!%20Gostaria%20de%20solicitar%20um%20or%C3%A7amento." class="whatsapp-float" target="_blank" rel="noopener noreferrer"
+       data-origem="botao_flutuante"
+       aria-label="Falar no WhatsApp com a Brücker Printers">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884a9.82 9.82 0 0 1 6.99 2.896 9.83 9.83 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.887 9.884m8.413-18.297A11.82 11.82 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.88 11.88 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.82 11.82 0 0 0-3.48-8.413Z"/>
+        </svg>
+    </a>
+
     <footer class="footer">
         <div class="footer-content">
+            <nav class="footer-mapa" aria-label="Mapa do site">
+                <div>
+                    <h3>Impressoras</h3>
+                    <ul>
+                        <li><a href="/impressoras.html">Comparar os 6 modelos</a></li>
+                        <li><a href="/impressoras/ricoh-pro-c5200.html">Ricoh Pro C5200</a></li>
+                        <li><a href="/impressoras/ricoh-pro-c5300.html">Ricoh Pro C5300</a></li>
+                        <li><a href="/impressoras/ricoh-pro-c7200.html">Ricoh Pro C7200</a></li>
+                        <li><a href="/impressoras/ricoh-pro-c9200.html">Ricoh Pro C9200</a></li>
+                        <li><a href="/impressoras/ricoh-pro-8300.html">Ricoh Pro 8300</a></li>
+                        <li><a href="/impressoras/ricoh-mp-c2004.html">Ricoh MP C2004</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>Soluções</h3>
+                    <ul>
+                        <li><a href="/locacao-de-impressoras-ricoh.html">Locação de impressoras</a></li>
+                        <li><a href="/venda-de-impressoras-ricoh.html">Venda de impressoras</a></li>
+                        <li><a href="/assistencia-tecnica-ricoh.html">Assistência técnica</a></li>
+                        <li><a href="/outsourcing-de-impressao.html">Outsourcing de impressão</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>A empresa</h3>
+                    <ul>
+                        <li><a href="/#sobre">Sobre a Brücker</a></li>
+                        <li><a href="/#vantagens">Vantagens da locação</a></li>
+                        <li><a href="/#diferenciais">Diferenciais</a></li>
+                        <li><a href="/#faq">Perguntas frequentes</a></li>
+                        <li><a href="/blog/">Blog</a></li>
+                        <li><a href="/impressoras-para-graficas-porto-alegre.html">Atendimento em Porto Alegre</a></li>
+                        <li><a href="/politica-privacidade-chamados.html">Política de Privacidade</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>Contato</h3>
+                    <address class="footer-endereco">
+                        Av. Armando Fajardo, 2903 - Sala 2<br>
+                        Igara, Canoas - RS<br>
+                        CEP 92412-550<br><br>
+                        <a href="tel:+5551997371666" data-origem="rodape">(51) 99737-1666</a><br>
+                        <a href="mailto:contato@bruckerprinters.com.br" data-origem="rodape">contato@bruckerprinters.com.br</a>
+                        <!-- Se a ofuscação de e-mail do Cloudflare estiver ativa, ela troca o
+                             mailto acima por um script que só resolve com JavaScript. Este
+                             fallback garante o endereço legível sem JS. -->
+                        <noscript><br>contato@bruckerprinters.com.br</noscript>
+                    </address>
+                </div>
+            </nav>
+
             <div class="footer-info">
                 <h3 style="margin-bottom: 1rem;">Brücker Printers</h3>
                 <p>Soluções corporativas em impressão para empresas de todos os portes.</p>
                 <p>Venda | Locação | Manutenção Especializada</p>
             </div>
-            
+
             <div class="footer-social">
                 <a href="https://www.instagram.com/bruckerprinters/" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="Instagram Brücker Printers">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -578,10 +718,10 @@
                     </svg>
                 </a>
             </div>
-            
+
             <div class="footer-links">
-                <a href="http://localhost:5173/cliente" target="_blank" rel="noopener noreferrer">Área do Cliente</a>
-                <a href="politica-privacidade-chamados.html">Política de Privacidade — Brucker Chamados</a>
+                <a href="http://localhost:5173/cliente" target="_blank" rel="noopener noreferrer" data-evento="area-cliente">Área do Cliente</a>
+                <a href="/politica-privacidade-chamados.html">Política de Privacidade — Brucker Chamados</a>
             </div>
 
             <div class="footer-bottom">
@@ -593,6 +733,8 @@
         </div>
     </footer>
 
+    <!-- analytics antes de script: registra o medidor de lead antes do handler do formulário -->
+    <script src="/js/analytics.min.js" defer></script>
     <script src="js/script.min.js" defer></script>
 </body>
 </html>
