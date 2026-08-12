@@ -250,7 +250,87 @@ Após o deploy, conferir se o `mailto:` funciona com e sem JavaScript.
 
 ---
 
+## 4.5 GitHub Pages: preview parcial, não é o site
+
+O repositório está publicado no GitHub Pages, mas em **subdiretório**:
+
+- ✅ `https://maxcanoas.github.io/brucker-printers/`
+- ❌ `https://maxcanoas.github.io/` — este é o *user site*, que viria de um
+  repositório chamado `maxcanoas.github.io`. Não existe.
+
+**O preview está parcialmente quebrado, e isso é esperado.** Todos os caminhos
+do site são absolutos (`/js/...`, `/imagens/...`, `/impressoras.html`), porque a
+produção é a HostGator, onde o site fica na raiz do domínio. Num subdiretório,
+`/js/` resolve para `maxcanoas.github.io/js/`, que não existe.
+
+O que acontece no GitHub Pages:
+
+| Recurso | Estado |
+|---|---|
+| CSS | Funciona — está embutido no HTML |
+| Conteúdo, textos, schema | Funcionam |
+| `/js/analytics.min.js` | 404 — **nenhum evento GA4 dispara ali** |
+| `/js/script.min.js` | 404 — carrossel e formulário não funcionam |
+| Imagens (`/imagens/`, `/impressoras/`) | 404 |
+| Links do menu e do rodapé | 404 |
+
+Em `bruckerprinters.com.br` tudo isso funciona, porque o site fica na raiz.
+
+**Serve para:** conferir texto, títulos, estrutura e dados estruturados.
+**Não serve para:** testar navegação, medição, formulário ou performance.
+
+Se em algum momento quiserem um preview fiel, a saída é configurar um domínio
+customizado no GitHub Pages (arquivo `CNAME`), que passa a servir na raiz — sem
+precisar mexer em nenhum caminho.
+
+---
+
 ## 5. Depois de publicar
+
+### 5.0 O deploy é manual, por FTP ou cPanel
+
+Enviar ao GitHub **não publica nada** em `bruckerprinters.com.br`. O site roda
+na HostGator e o deploy é feito por FTP ou pelo gerenciador de arquivos do
+cPanel.
+
+O que precisa subir para a raiz do site (`public_html` ou equivalente):
+
+```
+404.html                                    (novo)
+.htaccess                                   (era vazio — ver item 1.1)
+index.html                                  (alterado)
+impressoras.html                            (alterado)
+politica-privacidade-chamados.html          (alterado)
+robots.txt                                  (alterado)
+sitemap.xml                                 (alterado)
+assistencia-tecnica-ricoh.html              (novo)
+impressoras-para-graficas-porto-alegre.html (novo)
+locacao-de-impressoras-ricoh.html           (novo)
+outsourcing-de-impressao.html               (novo)
+venda-de-impressoras-ricoh.html             (novo)
+blog/                                       (pasta nova, 4 arquivos)
+impressoras/*.html                          (6 arquivos novos, junto dos .webp)
+css/interna.css e css/interna.min.css       (novos)
+js/analytics.js, analytics.min.js,
+   gtag-init.js, gtag-init.min.js           (novos)
+js/script.js e script.min.js                (alterados)
+clientes/*.webp                             (7 novos)
+imagens/logo-brucker.webp                   (novo)
+imagens/og-*.png                            (7 novos)
+```
+
+Cuidados:
+
+- **O `.htaccess` costuma ficar oculto** em clientes de FTP. Ative a exibição de
+  arquivos ocultos, senão ele não sobe — e sem ele não há HTTPS forçado,
+  redirects, gzip nem página 404.
+- **Não é preciso subir `scripts/`.** São ferramentas de geração, não fazem
+  parte do site. O `robots.txt` já bloqueia essa pasta por precaução, caso vá
+  junto.
+- Os arquivos antigos que continuam no servidor (`css/style-impressora.min.css`,
+  imagens não referenciadas) não atrapalham; ver itens 4.2 e 4.3.
+
+
 
 ### 5.1 Medir de novo em produção
 
@@ -310,5 +390,7 @@ não existia antes.
 | 4.2 | CSS órfão | Baixa |
 | 4.3 | Imagens não referenciadas | Baixa |
 | 4.4 | Ofuscação de e-mail | Baixa |
+| 4.5 | GitHub Pages é preview parcial, não o site | Informativo |
+| 5.0 | **Subir os arquivos por FTP/cPanel** | **Alta** |
 | 5.1 | Medir em produção | Após deploy |
 | 5.2 | Acompanhar indexação | Contínuo |
