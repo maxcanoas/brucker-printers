@@ -200,6 +200,11 @@ ARQUIVOS.forEach(function (alvo) {
         html = html.replace('</head>', function () { return blocos + '\n</head>'; });
     }
 
+    // Os três arquivos manuais ficam na raiz, então não levam prefixo — mas
+    // ainda assim precisam passar por aplicarBase, para converter os caminhos
+    // absolutos que o template produz.
+    html = T.aplicarBase(html, '');
+
     // A comparação normaliza o fim de linha.
     //
     // O repositório está com core.autocrlf=true: o git grava LF e devolve

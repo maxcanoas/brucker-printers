@@ -563,7 +563,8 @@ ${T.montarScripts()}
 // ===================================
 
 PAGINAS.forEach(function (pagina) {
-    const html = montarPagina(pagina);
+    // Todas ficam na raiz do site: sem prefixo.
+    const html = T.aplicarBase(montarPagina(pagina), '');
     fs.writeFileSync(path.join(RAIZ, pagina.slug + '.html'), html, 'utf8');
 
     const texto = html

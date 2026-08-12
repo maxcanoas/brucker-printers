@@ -250,38 +250,32 @@ Após o deploy, conferir se o `mailto:` funciona com e sem JavaScript.
 
 ---
 
-## 4.5 GitHub Pages: preview parcial, não é o site
+## 4.5 GitHub Pages: preview funcional
 
-O repositório está publicado no GitHub Pages, mas em **subdiretório**:
+O repositório está publicado no GitHub Pages em **subdiretório**:
 
 - ✅ `https://maxcanoas.github.io/brucker-printers/`
-- ❌ `https://maxcanoas.github.io/` — este é o *user site*, que viria de um
-  repositório chamado `maxcanoas.github.io`. Não existe.
+- ❌ `https://maxcanoas.github.io/` — este seria o *user site*, que viria de um
+  repositório chamado `maxcanoas.github.io`. Não existe, por isso dá 404.
 
-**O preview está parcialmente quebrado, e isso é esperado.** Todos os caminhos
-do site são absolutos (`/js/...`, `/imagens/...`, `/impressoras.html`), porque a
-produção é a HostGator, onde o site fica na raiz do domínio. Num subdiretório,
-`/js/` resolve para `maxcanoas.github.io/js/`, que não existe.
+O site funciona por inteiro nos dois endereços: todos os caminhos internos são
+**relativos**, e não absolutos. Um `href="/css/style.css"` só funcionaria com o
+site na raiz do domínio; em subpasta ele aponta para fora do projeto.
 
-O que acontece no GitHub Pages:
+`scripts/verificar-seo.js` recusa qualquer caminho absoluto em `href` ou `src`,
+então a regressão é detectada antes de publicar.
 
-| Recurso | Estado |
-|---|---|
-| CSS | Funciona — está embutido no HTML |
-| Conteúdo, textos, schema | Funcionam |
-| `/js/analytics.min.js` | 404 — **nenhum evento GA4 dispara ali** |
-| `/js/script.min.js` | 404 — carrossel e formulário não funcionam |
-| Imagens (`/imagens/`, `/impressoras/`) | 404 |
-| Links do menu e do rodapé | 404 |
+**O que continua absoluto, de propósito:** `canonical`, `og:url` e as URLs
+dentro do JSON-LD, todas apontando para `bruckerprinters.com.br`. É o que diz
+aos buscadores qual é o endereço oficial e impede que o preview do GitHub Pages
+seja indexado como conteúdo duplicado.
 
-Em `bruckerprinters.com.br` tudo isso funciona, porque o site fica na raiz.
+### O que o preview não reproduz
 
-**Serve para:** conferir texto, títulos, estrutura e dados estruturados.
-**Não serve para:** testar navegação, medição, formulário ou performance.
+O GitHub Pages não lê `.htaccess`. Lá não valem: HTTPS forçado, os redirects
+301, o gzip nem a página 404 personalizada (o GitHub tem a própria).
 
-Se em algum momento quiserem um preview fiel, a saída é configurar um domínio
-customizado no GitHub Pages (arquivo `CNAME`), que passa a servir na raiz — sem
-precisar mexer em nenhum caminho.
+Para testar essas regras, só em produção — ver item 1.1.
 
 ---
 

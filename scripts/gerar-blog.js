@@ -574,13 +574,14 @@ function contarPalavras(html) {
         .filter(Boolean).length;
 }
 
+// Tudo em /blog/: um nível abaixo da raiz.
 ARTIGOS.forEach(function (artigo) {
-    const html = montarArtigo(artigo);
+    const html = T.aplicarBase(montarArtigo(artigo), '../');
     fs.writeFileSync(path.join(DESTINO, artigo.slug + '.html'), html, 'utf8');
     console.log('  gerado    blog/' + artigo.slug + '.html  (' + contarPalavras(html) + ' palavras, ' + artigo.secoes.length + ' seções)');
 });
 
-const indice = montarIndice();
+const indice = T.aplicarBase(montarIndice(), '../');
 fs.writeFileSync(path.join(DESTINO, 'index.html'), indice, 'utf8');
 console.log('  gerado    blog/index.html  (índice com ' + ARTIGOS.length + ' artigos)');
 

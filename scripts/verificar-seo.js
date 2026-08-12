@@ -276,6 +276,26 @@ paginas.forEach(function (p) {
     }
 });
 
+// --- Caminhos internos precisam ser relativos ---
+//
+// Um href ou src começando com "/" só funciona quando o site está na raiz do
+// domínio. Em subpasta — GitHub Pages sob /brucker-printers/, ou qualquer
+// ambiente de teste — ele aponta para fora do projeto e devolve 404. Foi o que
+// derrubou CSS, JS, imagens e o menu inteiro no preview.
+//
+// Isto NÃO vale para canonical, og:url e as URLs do JSON-LD: aquelas são
+// absolutas com o domínio de propósito, e é o que declara o endereço oficial
+// da página e impede que o preview seja indexado como conteúdo duplicado.
+
+paginas.forEach(function (p) {
+    const semComentarios = p.html.replace(/<!--[\s\S]*?-->/g, '');
+    const absolutos = semComentarios.match(/(?:href|src)="\/(?!\/)[^"]*"/g) || [];
+
+    absolutos.forEach(function (achado) {
+        erros.push(p.url + ' — caminho absoluto quebra em subpasta: ' + achado);
+    });
+});
+
 // --- Tags estruturais desbalanceadas ---
 //
 // Um <noscript> aberto e não fechado faz o navegador tratar todo o resto da

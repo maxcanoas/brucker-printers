@@ -69,6 +69,40 @@ function escapar(texto) {
         .replace(/"/g, '&quot;');
 }
 
+// ===================================
+// CAMINHOS RELATIVOS À RAIZ DO SITE
+// ===================================
+// Os geradores escrevem os caminhos como se o site estivesse na raiz do
+// domínio ("/css/...", "/impressoras.html"). Esta função converte tudo para
+// relativo antes de gravar o arquivo.
+//
+// Por que não deixar absoluto: em bruckerprinters.com.br o site fica na raiz e
+// caminho absoluto funciona, mas no GitHub Pages ele é servido sob
+// /brucker-printers/ — ali "/css/style.css" aponta para fora do projeto e dá
+// 404. Com caminho relativo, o mesmo arquivo funciona nos dois lugares, e
+// também em qualquer subpasta de teste.
+//
+// O que NÃO é convertido: canonical, og:url e as URLs dentro do JSON-LD.
+// Essas continuam absolutas com o domínio de produção, de propósito — é o que
+// diz aos buscadores qual é o endereço oficial da página e impede que o
+// preview do GitHub Pages seja indexado como conteúdo duplicado.
+//
+// base é o prefixo até a raiz: "" para páginas na raiz, "../" para as que
+// ficam em /impressoras/ ou /blog/.
+function aplicarBase(html, base) {
+    const prefixo = base || '';
+
+    return html
+        // "/" e "/#ancora" precisam apontar para o arquivo, não para o
+        // diretório: com base "../", href="/" viraria "../", que sobe um
+        // nível em vez de abrir a home.
+        .replace(/(href)="\/"/g, '$1="' + prefixo + 'index.html"')
+        .replace(/(href)="\/#/g, '$1="' + prefixo + 'index.html#')
+        // Demais caminhos internos. O (?![/#]) evita mexer em "//" (protocolo
+        // relativo) e nos casos já tratados acima.
+        .replace(/(href|src)="\/(?![/#])/g, '$1="' + prefixo);
+}
+
 function linkWhatsApp(mensagem) {
     return 'https://wa.me/' + WHATSAPP + '?text=' + encodeURIComponent(mensagem);
 }
@@ -589,6 +623,7 @@ function schemaFaq(perguntas) {
 }
 
 module.exports = {
+    aplicarBase: aplicarBase,
     lerAsset: lerAsset,
     montarCss: montarCss,
     ID_ORGANIZACAO: ID_ORGANIZACAO,

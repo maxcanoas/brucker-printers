@@ -780,7 +780,8 @@ modelos.forEach(function (modelo) {
     }
 
     const arquivo = path.join(DESTINO, conteudo.slug + '.html');
-    fs.writeFileSync(arquivo, montarPagina(modelo, conteudo), 'utf8');
+    // Páginas em /impressoras/: um nível abaixo da raiz.
+    fs.writeFileSync(arquivo, T.aplicarBase(montarPagina(modelo, conteudo), '../'), 'utf8');
 
     const palavras = montarPagina(modelo, conteudo).replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length;
     console.log('  gerado    impressoras/' + conteudo.slug + '.html  (' + palavras + ' palavras, ' +
@@ -789,7 +790,8 @@ modelos.forEach(function (modelo) {
 });
 
 // O hub reaproveita a URL antiga e passa a apontar para as páginas acima.
-fs.writeFileSync(path.join(RAIZ, 'impressoras.html'), montarHub(), 'utf8');
+// Fica na raiz, então não leva prefixo.
+fs.writeFileSync(path.join(RAIZ, 'impressoras.html'), T.aplicarBase(montarHub(), ''), 'utf8');
 console.log('  gerado    impressoras.html  (hub comparativo dos ' + modelos.length + ' modelos)');
 
 console.log('\n' + gerados + ' página(s) de modelo + hub gerados.');
