@@ -287,7 +287,27 @@ Enviar ao GitHub **não publica nada** em `bruckerprinters.com.br`. O site roda
 na HostGator e o deploy é feito por FTP ou pelo gerenciador de arquivos do
 cPanel.
 
-O que precisa subir para a raiz do site (`public_html` ou equivalente):
+Para montar o pacote com o que precisa subir:
+
+```bash
+node scripts/preparar-deploy.js "C:\caminho\para\a\pasta"
+```
+
+O script varre as páginas e copia só o que elas referenciam — 53 arquivos,
+2,3 MB. Ficam de fora `scripts/`, os `.css` e `.js` não minificados e a
+documentação. Não há pasta `css/` no pacote: as folhas estão embutidas no HTML.
+
+Ordem sugerida:
+
+1. **Backup** — no cPanel, selecionar o conteúdo de `public_html` e Compactar.
+   Três arquivos serão sobrescritos e não há como desfazer.
+2. **Enviar** os arquivos preservando as subpastas. Compactar em `.zip` e usar
+   "Extrair" no cPanel é mais rápido que 53 uploads.
+3. **Conferir o `.htaccess`** (Configurações → Mostrar arquivos ocultos).
+4. **Purgar o cache do Cloudflare** — ver 5.0.1, é obrigatório.
+5. **Testar** as URLs do item 1.1.
+
+Conteúdo do pacote:
 
 ```
 404.html                                    (novo)
@@ -325,6 +345,32 @@ Cuidados:
   imagens não referenciadas) não atrapalham; ver itens 4.2 e 4.3.
 
 
+
+### 5.0.1 Purgar o cache do Cloudflare depois de subir
+
+**Obrigatório, não opcional.** O Cloudflare está como proxy do domínio, não
+apenas como DNS, e guarda os arquivos estáticos na borda:
+
+```
+/css/style.min.css             CF-Cache-Status: HIT   max-age=14400
+/js/script.min.js              CF-Cache-Status: HIT   max-age=14400
+/imagens/logoTransparente.png  CF-Cache-Status: HIT   max-age=14400
+```
+
+`js/script.min.js` já existe hoje com esse mesmo nome e vai ser substituído por
+uma versão diferente. Sem purgar, o Cloudflare continua entregando a antiga por
+até quatro horas — e o site fica com **HTML novo e JavaScript velho**.
+
+O efeito é traiçoeiro porque não parece defeito: a página abre normalmente, mas
+o formulário volta a usar `alert()` e **deixa de disparar o `generate_lead`**. A
+medição de conversão, que é o motivo deste trabalho, ficaria quebrada sem exibir
+nenhum erro.
+
+No painel do Cloudflare: **Caching → Configuration → Purge Everything**, logo
+após enviar os arquivos.
+
+O HTML em si responde `CF-Cache-Status: DYNAMIC`, ou seja, não fica em cache de
+borda — o problema é restrito aos assets.
 
 ### 5.1 Medir de novo em produção
 
@@ -386,5 +432,6 @@ não existia antes.
 | 4.4 | Ofuscação de e-mail | Baixa |
 | 4.5 | GitHub Pages é preview parcial, não o site | Informativo |
 | 5.0 | **Subir os arquivos por FTP/cPanel** | **Alta** |
+| 5.0.1 | **Purgar o cache do Cloudflare** | **Alta** |
 | 5.1 | Medir em produção | Após deploy |
 | 5.2 | Acompanhar indexação | Contínuo |
