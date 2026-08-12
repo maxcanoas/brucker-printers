@@ -220,7 +220,13 @@ ALVOS.forEach(function (relativo) {
 
     const atual = fs.existsSync(caminhoDestino) ? fs.readFileSync(caminhoDestino, 'utf8') : null;
 
-    if (atual === minificado) {
+    // Normaliza o fim de linha na comparação: com core.autocrlf=true o git
+    // devolve CRLF no checkout e os scripts escrevem LF. Sem isso, todo
+    // arquivo recém-baixado pareceria desatualizado.
+    const iguais = atual !== null &&
+        atual.replace(/\r\n/g, '\n') === minificado.replace(/\r\n/g, '\n');
+
+    if (iguais) {
         console.log('  ok        ' + destinoRelativo);
         return;
     }

@@ -151,7 +151,12 @@ const destino = path.join(RAIZ, 'sitemap.xml');
 const atual = fs.existsSync(destino) ? fs.readFileSync(destino, 'utf8') : null;
 
 if (process.argv.includes('--verificar')) {
-    if (atual === xml) {
+    // Fim de linha normalizado: o git devolve CRLF no checkout (autocrlf) e
+    // este script escreve LF.
+    const iguais = atual !== null &&
+        atual.replace(/\r\n/g, '\n') === xml.replace(/\r\n/g, '\n');
+
+    if (iguais) {
         console.log('sitemap.xml em dia (' + entradas.length + ' URLs).');
     } else {
         console.error('sitemap.xml desatualizado. Rode: node scripts/gerar-sitemap.js');

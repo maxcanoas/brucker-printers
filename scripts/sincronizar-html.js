@@ -25,6 +25,11 @@ const T = require('./template');
 
 const RAIZ = path.resolve(__dirname, '..');
 
+// Compara conteúdo ignorando a convenção de fim de linha (CR LF x LF).
+function mesmoConteudo(a, b) {
+    return String(a).replace(/\r\n/g, '\n') === String(b).replace(/\r\n/g, '\n');
+}
+
 // Delimitam o bloco de CSS embutido nos arquivos escritos à mão.
 const MARCADOR_CSS_INICIO = '<!-- BP:CSS -->';
 const MARCADOR_CSS_FIM = '<!-- /BP:CSS -->';
@@ -195,7 +200,13 @@ ARQUIVOS.forEach(function (alvo) {
         html = html.replace('</head>', function () { return blocos + '\n</head>'; });
     }
 
-    if (html === original) {
+    // A comparação normaliza o fim de linha.
+    //
+    // O repositório está com core.autocrlf=true: o git grava LF e devolve
+    // CRLF no checkout. Os scripts escrevem LF. Comparando byte a byte, todo
+    // arquivo recém-baixado apareceria como "fora de sincronia" mesmo sem
+    // nenhuma diferença de conteúdo — e o --verificar nunca ficaria limpo.
+    if (mesmoConteudo(html, original)) {
         console.log('  ok        ' + alvo.nome);
         return;
     }
