@@ -57,6 +57,28 @@ Medido em servidor local. Em produção entram o TTFB da HostGator e o CDN do
 Cloudflare — repetir a medição no PageSpeed Insights após o deploy (ver
 `SEO-PENDENCIAS.md`).
 
+### Sobre a variação entre execuções
+
+A pontuação de Performance oscila bastante entre rodadas — foram observados
+valores de 70 a 100 na **mesma versão do código**, com LCP entre 1,6 s e 4,7 s.
+
+A causa é o `gtag.js`: 166 KB baixados de `googletagmanager.com` a cada
+medição, o maior recurso da página e o único que vem de fora. A latência dele
+varia, e como ele executa JavaScript, domina o tempo de renderização.
+
+Bloqueando esse domínio para isolar o código do site, o resultado fica estável:
+
+| | Performance | LCP |
+|---|---:|---:|
+| Sem o gtag externo (mediana de 3) | **99** | **1,69 s** |
+
+Isso foi verificado trocando só o CSS entre execuções: com e sem as alterações
+visuais, os números foram os mesmos. A variável é a rede, não o código.
+
+Consequência prática: **uma única execução do Lighthouse não diz nada sobre
+este site.** Ao medir, rode três vezes e use a mediana — e desconfie tanto de um
+100 isolado quanto de um 70 isolado.
+
 ---
 
 ## Bloco 1 — Medição
@@ -239,6 +261,41 @@ marcada que não esteja visível.
 - **Select "Modelo de interesse"** alimentando `modelo_interesse`.
 - **Prova social** — apenas um `<!-- TODO -->`. Depoimento inventado é fraude;
   o texto precisa vir do cliente, com autorização de uso.
+
+---
+
+## Aparência das seções de card da home
+
+A pedido do cliente, Soluções, Vantagens e Diferenciais foram redesenhadas.
+
+O que motivou: os Diferenciais tinham uma barra laranja na lateral esquerda de
+cada card, apontada como "cara de página feita por IA". A barra vinha do
+`css/style.css` original, de antes deste trabalho — mas a observação procede, e
+o que produz esse efeito não é a cor isolada: é a combinação de card
+arredondado, sombra suave, barra de destaque colorida e ícone dentro de um
+círculo com gradiente. É o preset que praticamente todo gerador de página
+entrega.
+
+Foram apresentadas três direções renderizadas — lista editorial numerada, ficha
+técnica em duas colunas e cards sóbrios. O cliente escolheu **cards sóbrios**, e
+pediu para aplicar nas três seções, não só nos Diferenciais.
+
+O que mudou: saíram sombra, raio de borda, barra colorida e o fundo em gradiente
+dos ícones. Entraram divisória de 1px, ícone monocromático e alinhamento à
+esquerda, com o peso na tipografia.
+
+Dois detalhes de implementação:
+
+- **As bordas se sobrepõem** (`margin: -1px 0 0 -1px`) em vez de usar `gap`
+  sobre um fundo cinza. A segunda técnica é mais curta, mas pinta de cinza as
+  células vazias da última linha — e com cinco ou seis cards em grade sempre
+  sobra célula.
+- **O número de colunas segue a contagem de itens**: Soluções tem 4 (4 colunas),
+  Vantagens tem 6 (3+3) e Diferenciais tem 5 (3+2, melhor que 4+1). Abaixo de
+  1100px o `auto-fit` assume.
+
+Tudo em `css/interna.css`, sobrescrevendo. `css/style.css` continua intocado, e
+remover esse bloco devolve o visual anterior.
 
 ---
 

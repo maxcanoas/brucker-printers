@@ -48,6 +48,147 @@
 }
 
 /* ===================================
+   SEÇÕES DE CARDS DA HOME — VERSÃO SÓBRIA
+   ===================================
+   Reescreve a aparência de Soluções, Vantagens e Diferenciais sem tocar em
+   css/style.css nem no HTML: só sobrescreve as regras. Para voltar ao visual
+   anterior, basta remover este bloco.
+
+   O que saiu, e por quê: a combinação de card arredondado, sombra suave,
+   barra colorida na lateral e ícone dentro de um círculo com gradiente é o
+   preset que praticamente todo gerador de página produz — e é isso, mais que
+   qualquer cor isolada, que dá a um site o ar de template automático.
+
+   No lugar: divisória de 1px, sem sombra, sem raio, ícone monocromático e o
+   peso todo na tipografia.
+
+   As bordas se sobrepõem em vez de existir espaçamento entre os cards. Fazer
+   a divisória com gap sobre um fundo cinza seria mais curto, mas deixaria as
+   células vazias da última linha pintadas de cinza — e são cinco cards em
+   grade de duas ou três colunas, então sempre sobra célula. */
+
+.solutions-grid,
+.advantages-grid,
+.differentials-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+    gap: 0;
+    margin-top: var(--spacing-2xl, 4rem);
+}
+
+.solution-card,
+.advantage-item,
+.differential-card {
+    background: var(--white);
+    border: 1px solid var(--gray-300);
+    /* Puxa cada card 1px para cima e para a esquerda: as bordas vizinhas se
+       sobrepõem e viram uma linha só, sem dupla espessura no meio da grade. */
+    margin: -1px 0 0 -1px;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 2rem 1.75rem;
+    text-align: left;
+    transition: background var(--transition-fast, 0.2s ease);
+}
+
+.solution-card:hover,
+.advantage-item:hover,
+.differential-card:hover {
+    background: var(--gray-100);
+    border-color: var(--gray-300);
+    box-shadow: none;
+    transform: none;
+}
+
+/* Ícones: sem fundo, sem gradiente, sem círculo. Cinza para não competir
+   com o título, que é o que a pessoa lê primeiro. */
+.solution-icon,
+.advantage-icon {
+    width: auto;
+    height: auto;
+    background: none;
+    border-radius: 0;
+    margin: 0 0 1rem;
+    justify-content: flex-start;
+    color: var(--gray-500);
+}
+
+.solution-icon svg,
+.advantage-icon svg {
+    width: 26px;
+    height: 26px;
+}
+
+/* Nos Diferenciais o ícone está dentro do <h3>, no HTML. Em vez de mexer na
+   marcação, display:block o coloca acima do título. O stroke definido como
+   atributo no SVG é de apresentação, então o CSS prevalece. */
+.differential-card h3 svg {
+    display: block;
+    width: 26px;
+    height: 26px;
+    margin-bottom: 0.9rem;
+    stroke: var(--gray-500);
+}
+
+.solution-card h3,
+.advantage-item h3,
+.advantage-item h4,
+.differential-card h3 {
+    font-size: 1.15rem;
+    font-weight: var(--font-weight-semibold, 600);
+    line-height: 1.4;
+    color: var(--gray-900);
+    text-align: left;
+    margin-bottom: 0.6rem;
+    display: block;
+}
+
+.solution-card p,
+.advantage-item p,
+.differential-card p {
+    color: var(--gray-700);
+    font-size: 0.96rem;
+    line-height: 1.7;
+    margin-bottom: 0.9rem;
+}
+
+.solution-card ul {
+    margin-bottom: 0;
+}
+
+.solution-card li {
+    font-size: 0.93rem;
+    padding: 0.2rem 0 0.2rem 1.2rem;
+}
+
+/* O marcador continua laranja: aqui ele é um detalhe de lista, não um bloco
+   de cor competindo com o texto. */
+.solution-card li::before {
+    content: '—';
+    color: var(--gray-500);
+    font-weight: var(--font-weight-normal, 400);
+}
+
+/* Número de colunas escolhido pela quantidade de itens de cada seção, para
+   não sobrar card solitário na última linha em tela larga:
+   Soluções tem 4 (4 colunas), Vantagens tem 6 (3+3) e Diferenciais tem 5
+   (3+2, melhor que 4+1). Abaixo desta largura o auto-fit assume. */
+@media (min-width: 1100px) {
+    .advantages-grid,
+    .differentials-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .solution-card,
+    .advantage-item,
+    .differential-card {
+        padding: 1.75rem 1.5rem;
+    }
+}
+
+/* ===================================
    CONTRASTE DO SUBTÍTULO DE SEÇÃO
    ===================================
    O laranja da marca (#FF8C42) sobre branco dá contraste de 2,31:1, e sobre
