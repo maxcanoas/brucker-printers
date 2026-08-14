@@ -53,6 +53,47 @@
         return elemento.getAttribute('data-origem') || ORIGEM_PADRAO;
     }
 
+    // Parâmetros comuns a todo evento de contato.
+    //
+    // origem diz de qual bloco da página o clique partiu (hero, rodapé, botão
+    // flutuante); pagina e titulo_pagina dizem de onde. Saber que o WhatsApp
+    // do rodapé converte mais que o do hero é o que permite decidir onde
+    // investir — e isso não se responde só com a contagem total de cliques.
+    //
+    // O GA4 já grava page_location e page_title por conta própria, mas só como
+    // dimensões da sessão. Repetidos aqui, viram dimensões do evento e podem
+    // ser cruzados com origem no mesmo relatório.
+    function parametrosDe(elemento) {
+        return {
+            origem: origemDe(elemento),
+            pagina: paginaAtual,
+            titulo_pagina: document.title
+        };
+    }
+
+    // Reconhece as quatro formas de link do WhatsApp. wa.me é a que o site
+    // usa hoje, mas as outras aparecem em texto colado de fora e nos links
+    // que o próprio aplicativo gera.
+    function ehWhatsApp(destino) {
+        return destino.indexOf('https://wa.me') === 0 ||
+            destino.indexOf('https://api.whatsapp.com') === 0 ||
+            destino.indexOf('https://web.whatsapp.com') === 0 ||
+            destino.indexOf('whatsapp://') === 0;
+    }
+
+    // A Área do Cliente é reconhecida pelo atributo de medição e também pelo
+    // endereço do sistema de chamados.
+    //
+    // São dois caminhos porque a URL do botão diverge entre o repositório e o
+    // que está publicado: aqui ela aponta para o ambiente local, por decisão
+    // registrada em SEO-PENDENCIAS.md, enquanto em produção aponta para o
+    // sistema. Reconhecer as duas formas faz o evento funcionar nos dois casos,
+    // sem depender de qual URL esteja no ar.
+    function ehAreaDoCliente(link, destino) {
+        return link.getAttribute('data-evento') === 'area-cliente' ||
+            destino.indexOf('chamado.bruckerprinters.com.br') !== -1;
+    }
+
     // ===================================
     // CLIQUES EM CTA (DELEGAÇÃO ÚNICA)
     // ===================================
@@ -63,17 +104,19 @@
         const link = evento.target.closest('a[href]');
         if (!link) return;
 
-        // .href é a forma absoluta e normalizada do atributo.
+        // .href é a forma absoluta e normalizada do atributo. Também é o que
+        // enxerga o endereço já decodificado quando a ofuscação de e-mail do
+        // Cloudflare reescreve o mailto: — o atributo cru, nesse caso, ainda
+        // traz /cdn-cgi/l/email-protection.
         const destino = link.href || '';
-        const origem = origemDe(link);
 
-        if (link.getAttribute('data-evento') === 'area-cliente') {
-            enviarEvento('acesso_area_cliente', {});
+        if (ehAreaDoCliente(link, destino)) {
+            enviarEvento('acesso_area_cliente', parametrosDe(link));
             return;
         }
 
-        if (destino.indexOf('https://wa.me') === 0 || destino.indexOf('https://api.whatsapp.com') === 0) {
-            const parametros = { origem: origem };
+        if (ehWhatsApp(destino)) {
+            const parametros = parametrosDe(link);
             const modelo = link.getAttribute('data-modelo');
             if (modelo) parametros.modelo = modelo;
             enviarEvento('contato_whatsapp', parametros);
@@ -81,12 +124,12 @@
         }
 
         if (destino.indexOf('tel:') === 0) {
-            enviarEvento('contato_telefone', { origem: origem });
+            enviarEvento('contato_telefone', parametrosDe(link));
             return;
         }
 
         if (destino.indexOf('mailto:') === 0) {
-            enviarEvento('contato_email', { origem: origem });
+            enviarEvento('contato_email', parametrosDe(link));
         }
     });
 
@@ -231,7 +274,15 @@
     window.BP_ANALYTICS = {
         enviarEvento: enviarEvento,
         enviarLead: function (parametros, aoConcluir) {
-            enviarEventoEntao('generate_lead', parametros, aoConcluir);
+            // pagina e titulo_pagina entram aqui, e não em script.js, para que
+            // o formulário seja descrito pelos mesmos parâmetros dos demais
+            // eventos de contato. Quem chama informa só o que é próprio do
+            // lead: a origem e o modelo de interesse.
+            const carga = Object.assign(
+                { pagina: paginaAtual, titulo_pagina: document.title },
+                parametros
+            );
+            enviarEventoEntao('generate_lead', carga, aoConcluir);
         }
     };
 })();
