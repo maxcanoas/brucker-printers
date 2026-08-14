@@ -34,6 +34,23 @@ function mesmoConteudo(a, b) {
 const MARCADOR_CSS_INICIO = '<!-- BP:CSS -->';
 const MARCADOR_CSS_FIM = '<!-- /BP:CSS -->';
 
+// O mesmo para o snippet do GA4, e pela mesma razão.
+const MARCADOR_GTAG_INICIO = '<!-- BP:GTAG -->';
+const MARCADOR_GTAG_FIM = '<!-- /BP:GTAG -->';
+
+// Troca o conteúdo entre dois marcadores de comentário, preservando-os.
+// Devolve null quando algum dos dois falta, para o chamador acusar o erro em
+// vez de gravar um arquivo pela metade.
+function substituirEntreMarcadores(html, inicioMarcador, fimMarcador, novo) {
+    const inicio = html.indexOf(inicioMarcador);
+    const fim = html.indexOf(fimMarcador);
+    if (inicio === -1 || fim === -1) return null;
+
+    return html.slice(0, inicio + inicioMarcador.length) +
+        novo +
+        html.slice(fim);
+}
+
 const ARQUIVOS = [
     { nome: 'index.html', ativo: null, schema: 'home' },
     { nome: 'politica-privacidade-chamados.html', ativo: null, schema: 'interna' },
@@ -154,10 +171,29 @@ ARQUIVOS.forEach(function (alvo) {
     // --- gtag embutido ---
     // Trocar <script src> por inline elimina 865 ms de bloqueio da primeira
     // pintura, causados por uma requisição de 1,4 KB.
-    html = html.replace(
-        /<script src="\/js\/gtag-init(\.min)?\.js"><\/script>/,
-        function () { return '<script>' + T.lerAsset('js/gtag-init.min.js') + '</script>'; }
+    //
+    // O bloco fica entre marcadores explícitos, e não por reconhecimento da
+    // tag. A versão anterior procurava <script src="/js/gtag-init.min.js">
+    // para trocá-la pelo inline — o que funciona uma única vez: a partir da
+    // segunda execução o atributo src já não existe, o padrão deixa de casar
+    // e o snippet destes três arquivos congela. Pior, o --verificar passava a
+    // dizer "em dia", porque o conteúdo de fato não mudava mais. Editar
+    // js/gtag-init.js e não ver o efeito na home é o tipo de falha que só
+    // aparece semanas depois, quando alguém confere a medição.
+    const comGtag = substituirEntreMarcadores(
+        html,
+        MARCADOR_GTAG_INICIO,
+        MARCADOR_GTAG_FIM,
+        '\n    <script>' + T.lerAsset('js/gtag-init.min.js') + '</script>\n    '
     );
+
+    if (comGtag === null) {
+        console.error('  ERRO      ' + alvo.nome + ' — marcadores ' + MARCADOR_GTAG_INICIO +
+            ' / ' + MARCADOR_GTAG_FIM + ' não encontrados no <head>');
+        falhas += 1;
+        return;
+    }
+    html = comGtag;
 
     // --- CSS crítico embutido ---
     // Substitui os <link rel="stylesheet"> bloqueantes pelo crítico inline
