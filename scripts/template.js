@@ -92,12 +92,23 @@ function escapar(texto) {
 function aplicarBase(html, base) {
     const prefixo = base || '';
 
+    // "/" e "/#ancora" apontam para o diretório, não para index.html.
+    //
+    // O .htaccess redireciona /index.html para / com 301, para que a home
+    // tenha um endereço só — é o mesmo endereço que o canonical declara.
+    // Escrever href="index.html" faria cada clique de menu passar por esse
+    // redirecionamento: uma viagem a mais de ida e volta ao servidor por
+    // clique, e crawl budget gasto à toa em 186 links internos.
+    //
+    // "./" na raiz e "../" em subpasta resolvem para o mesmo diretório nos
+    // dois ambientes — o site na raiz do domínio em produção e sob
+    // /brucker-printers/ no preview. Os validadores já tratam caminho
+    // terminado em "/" como o index daquele diretório.
+    const raizRelativa = prefixo || './';
+
     return html
-        // "/" e "/#ancora" precisam apontar para o arquivo, não para o
-        // diretório: com base "../", href="/" viraria "../", que sobe um
-        // nível em vez de abrir a home.
-        .replace(/(href)="\/"/g, '$1="' + prefixo + 'index.html"')
-        .replace(/(href)="\/#/g, '$1="' + prefixo + 'index.html#')
+        .replace(/(href)="\/"/g, '$1="' + raizRelativa + '"')
+        .replace(/(href)="\/#/g, '$1="' + raizRelativa + '#')
         // Demais caminhos internos. O (?![/#]) evita mexer em "//" (protocolo
         // relativo) e nos casos já tratados acima.
         .replace(/(href|src)="\/(?![/#])/g, '$1="' + prefixo);
@@ -287,7 +298,7 @@ function montarHeader(opcoes) {
             </a>
             <nav class="nav" id="nav" aria-label="Navegação Principal">
 ${montarNavegacao(opcoes.ativo)}
-                <a href="${URL_AREA_CLIENTE}" class="nav-link nav-link--subtle" target="_blank" rel="noopener noreferrer" data-evento="area-cliente">Área do Cliente</a>
+                <a href="${URL_AREA_CLIENTE}" class="nav-link nav-link--subtle" target="_blank" rel="noopener noreferrer" data-evento="area-cliente" data-origem="header">Área do Cliente</a>
                 <a href="${zap}" class="btn-header" target="_blank" rel="noopener noreferrer" data-origem="header"${dataModelo}>Falar no WhatsApp</a>
             </nav>
             <button class="menu-toggle" id="menuToggle" aria-label="Menu de Navegação">
@@ -402,7 +413,7 @@ ${montarMapaDoSite()}
             </div>
 
             <div class="footer-links">
-                <a href="${URL_AREA_CLIENTE}" target="_blank" rel="noopener noreferrer" data-evento="area-cliente">Área do Cliente</a>
+                <a href="${URL_AREA_CLIENTE}" target="_blank" rel="noopener noreferrer" data-evento="area-cliente" data-origem="rodape">Área do Cliente</a>
                 <a href="/politica-privacidade-chamados.html">Política de Privacidade — Brucker Chamados</a>
             </div>
 
