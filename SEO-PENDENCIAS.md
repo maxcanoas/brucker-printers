@@ -72,10 +72,10 @@ Qualquer outra coisa é regressão.
 
 ### 2.1 Registrar as dimensões personalizadas no GA4
 
-Os sete eventos já disparam, mas os parâmetros `origem`, `modelo`, `pagina` e
-`modelo_interesse` **não aparecem em nenhum relatório** enquanto não forem
-registrados. Ficam gravados no evento, e não retroagem: só valem a partir do
-registro.
+Os sete eventos já disparam, mas os parâmetros `origem`, `modelo`, `pagina`,
+`titulo_pagina` e `modelo_interesse` **não aparecem em nenhum relatório**
+enquanto não forem registrados. Ficam gravados no evento, e não retroagem: só
+valem a partir do registro.
 
 Admin → Definições personalizadas → Criar dimensão personalizada, escopo Evento:
 
@@ -84,6 +84,7 @@ Admin → Definições personalizadas → Criar dimensão personalizada, escopo 
 | Origem do contato | `origem` |
 | Modelo | `modelo` |
 | Página | `pagina` |
+| Título da página | `titulo_pagina` |
 | Modelo de interesse | `modelo_interesse` |
 
 Sem isso é possível ver *quantos* cliques houve, mas não *de onde* vieram — e
@@ -111,6 +112,15 @@ interno e cadastrar o IP do escritório em Definições de tráfego interno.
 
 Sem isso, as próprias visitas de vocês contaminam a medição — e num site com
 28 usuários por mês, isso distorce tudo.
+
+**O preview já não contamina mais.** `js/gtag-init.js` só mede em
+`bruckerprinters.com.br` e `www.bruckerprinters.com.br`; em qualquer outro
+host — GitHub Pages, `localhost`, `file://` — liga a flag `ga-disable` e nem
+chega a baixar o `gtag.js`. Era a origem das páginas `/brucker-printers/...`
+que apareciam no relatório.
+
+Se algum dia o site mudar de domínio, é essa lista que precisa ser atualizada,
+senão a medição para sem avisar.
 
 ---
 
@@ -200,17 +210,22 @@ política existente.
 
 ### 4.1 Link da Área do Cliente
 
-Aponta para **`http://localhost:5173/cliente`** em seis lugares (menu e rodapé
-das páginas). Foi mantido a seu pedido.
+No repositório aponta para **`http://localhost:5173/cliente`** em 38 lugares
+(menu e rodapé das 19 páginas). Foi mantido a seu pedido.
 
-Enquanto estiver assim, **o botão está quebrado para todo visitante** — leva a
-um endereço que só existe na máquina de quem desenvolve. É também a única
-exceção ao critério de aceite "nenhum link `http://` interno", e o
-`verificar-seo.js` tem esse endereço numa lista de exceções para não acusar
+**Em produção não é mais assim.** O endereço publicado hoje é
+`http://chamado.bruckerprinters.com.br`, trocado direto no servidor, sem
+commit. Enquanto o repositório não acompanhar, **todo deploy desfaz a
+correção** — daí o passo obrigatório do item 5.0.2.
+
+É também a única exceção ao critério de aceite "nenhum link `http://` interno",
+e o `verificar-seo.js` tem esse endereço numa lista de exceções para não acusar
 erro a cada execução.
 
-Quando decidir o endereço definitivo: `scripts/template.js`, constante
-`URL_AREA_CLIENTE`, e rodar os geradores e o `sincronizar-html.js`.
+O endereço definitivo já se conhece: `https://chamado.bruckerprinters.com.br`,
+que responde em HTTPS. Para adotá-lo e dispensar o passo manual de deploy:
+`scripts/template.js`, constante `URL_AREA_CLIENTE`; apagar `EXCECOES_HTTP` de
+`scripts/verificar-seo.js`; rodar os geradores e o `sincronizar-html.js`.
 
 ### 4.2 `css/style-impressora.min.css` sem uso
 
@@ -247,6 +262,35 @@ contato. Vale notar que o e-mail já aparece em texto plano no JSON-LD, que o
 Cloudflare não ofusca — a proteção contra coleta automatizada já era parcial.
 
 Após o deploy, conferir se o `mailto:` funciona com e sem JavaScript.
+
+Verificado em produção: o Cloudflare **está** ofuscando. No HTML servido o
+`mailto:` some e vira `/cdn-cgi/l/email-protection#<hex>`, decodificado no
+cliente por `email-decode.min.js`. O `contato_email` continua funcionando —
+`analytics.js` lê `link.href`, que já vem decodificado —, mas quem estiver sem
+JavaScript vê o link quebrado e depende do `<noscript>`.
+
+Para desligar: Cloudflare → Scrape Shield → **Email Address Obfuscation**.
+
+### 4.6 Caminhos relativos na página 404
+
+`404.html` traz um aviso explícito na linha 74: *"todos os caminhos desta
+página precisam ser absolutos"*. Hoje **todos são relativos** — passaram a ser
+no commit `ec9cef3`, que tornou o site compatível com subpasta.
+
+O Apache serve esse arquivo para **qualquer** URL inexistente. Em
+`bruckerprinters.com.br/pagina-errada` funciona, porque a página está na raiz.
+Em `bruckerprinters.com.br/blog/pagina-errada`, os caminhos resolvem a partir
+de `/blog/`: o logo, os links do menu e os do rodapé apontam todos para o lugar
+errado. O CSS está embutido, então a página não fica sem estilo — o defeito é
+silencioso, e é exatamente por isso que passou.
+
+Corrigir exige escolher entre os dois destinos: absoluto (`/imagens/...`) só
+funciona com o site na raiz do domínio, e o `verificar-seo.js` recusa caminho
+absoluto justamente para o preview em subpasta continuar funcionando. Uma saída
+é `<base href="https://bruckerprinters.com.br/">` apenas nesta página.
+
+Não foi alterado: está fora do escopo do trabalho de medição e a decisão de
+qual ambiente priorizar no 404 é sua.
 
 ---
 
@@ -301,11 +345,12 @@ Ordem sugerida:
 
 1. **Backup** — no cPanel, selecionar o conteúdo de `public_html` e Compactar.
    Três arquivos serão sobrescritos e não há como desfazer.
-2. **Enviar** os arquivos preservando as subpastas. Compactar em `.zip` e usar
+2. **Trocar o link da Área do Cliente no pacote** — ver 5.0.2, é obrigatório.
+3. **Enviar** os arquivos preservando as subpastas. Compactar em `.zip` e usar
    "Extrair" no cPanel é mais rápido que 53 uploads.
-3. **Conferir o `.htaccess`** (Configurações → Mostrar arquivos ocultos).
-4. **Purgar o cache do Cloudflare** — ver 5.0.1, é obrigatório.
-5. **Testar** as URLs do item 1.1.
+4. **Conferir o `.htaccess`** (Configurações → Mostrar arquivos ocultos).
+5. **Purgar o cache do Cloudflare** — ver 5.0.1, é obrigatório.
+6. **Testar** as URLs do item 1.1.
 
 Conteúdo do pacote:
 
@@ -372,6 +417,41 @@ após enviar os arquivos.
 O HTML em si responde `CF-Cache-Status: DYNAMIC`, ou seja, não fica em cache de
 borda — o problema é restrito aos assets.
 
+### 5.0.2 Trocar o link da Área do Cliente antes de subir
+
+**Obrigatório, não opcional.** Hoje o repositório e o servidor divergem:
+
+| | Área do Cliente aponta para |
+|---|---|
+| Repositório | `http://localhost:5173/cliente` |
+| **Produção, agora** | `http://chamado.bruckerprinters.com.br` |
+
+A troca foi feita direto no servidor e **nunca voltou para o repositório** — não
+há commit dela. Isso significa que **todo deploy desfaz a correção**: o pacote
+carrega o endereço local, e o botão volta a apontar para uma máquina que só
+existe para quem desenvolve. Quebrado para todo visitante, e sem nada para o
+`acesso_area_cliente` medir — justamente o evento que foi marcado como conversão.
+
+Depois de rodar o `preparar-deploy.js` e **antes** de enviar, buscar e
+substituir em todos os `.html` do pacote:
+
+```
+buscar:      http://localhost:5173/cliente
+substituir:  https://chamado.bruckerprinters.com.br
+```
+
+São 38 ocorrências, duas por página (menu e rodapé). Qualquer editor com
+"substituir em arquivos" resolve; no Windows, o Notepad++ faz em pasta inteira.
+
+Note o **https**: o endereço responde em HTTPS (verificado), e o `http://`
+publicado hoje faz o navegador marcar como "não seguro" no momento exato em que
+o cliente vai entrar na área dele.
+
+> **Como eliminar este passo de vez:** trocar `URL_AREA_CLIENTE` em
+> `scripts/template.js` pela URL de produção e apagar a exceção
+> `EXCECOES_HTTP` de `scripts/verificar-seo.js`. Foi mantido como está a seu
+> pedido — ver item 4.1.
+
 ### 5.1 Medir de novo em produção
 
 Os números do changelog são de servidor local. Em produção entram o TTFB da
@@ -431,7 +511,9 @@ não existia antes.
 | 4.3 | Imagens não referenciadas | Baixa |
 | 4.4 | Ofuscação de e-mail | Baixa |
 | 4.5 | GitHub Pages é preview parcial, não o site | Informativo |
+| 4.6 | Caminhos relativos na página 404 | Média |
 | 5.0 | **Subir os arquivos por FTP/cPanel** | **Alta** |
 | 5.0.1 | **Purgar o cache do Cloudflare** | **Alta** |
+| 5.0.2 | **Trocar o link da Área do Cliente no pacote** | **Alta** |
 | 5.1 | Medir em produção | Após deploy |
 | 5.2 | Acompanhar indexação | Contínuo |
