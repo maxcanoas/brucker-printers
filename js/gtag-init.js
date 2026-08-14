@@ -15,9 +15,23 @@
     const ID_MEDICAO = 'G-ZBKE5NWBW8';
     const CHAVE_CONSENTIMENTO = 'bp_consent';
 
+    // Só o site oficial mede. O mesmo HTML é servido em três lugares — o
+    // domínio de produção, o preview do GitHub Pages e a máquina de quem
+    // desenvolve — e todos carregam esta mesma tag.
+    //
+    // Sem esta guarda, metade das páginas do relatório do GA4 vinha de fora
+    // do site: o preview registrava visitas como se fossem de clientes, e
+    // qualquer decisão tomada sobre esses números estaria errada.
+    const HOSTS_DE_PRODUCAO = ['bruckerprinters.com.br', 'www.bruckerprinters.com.br'];
+    const emProducao = HOSTS_DE_PRODUCAO.indexOf(location.hostname) !== -1;
+
     window.dataLayer = window.dataLayer || [];
     function gtag() { dataLayer.push(arguments); }
     window.gtag = gtag;
+
+    // A flag oficial do GA4 para desligar a medição. Precisa existir antes do
+    // gtag('config'): depois dele o pageview já foi enviado.
+    if (!emProducao) window['ga-disable-' + ID_MEDICAO] = true;
 
     // localStorage lança exceção em navegação restrita/iframe bloqueado.
     // Na dúvida, negamos o consentimento.
@@ -46,13 +60,42 @@
 
     // Loader oficial do GA4. Injetado por JS para que o snippet inteiro
     // fique num arquivo só e não possa divergir entre páginas.
-    const loader = document.createElement('script');
-    loader.async = true;
-    loader.src = 'https://www.googletagmanager.com/gtag/js?id=' + ID_MEDICAO;
-    document.head.appendChild(loader);
+    //
+    // Fora de produção nem chega a ser baixado: são 166 KB, o maior recurso
+    // da página, que o preview não tem por que carregar. A flag ga-disable
+    // acima já bastaria para não enviar nada, mas não impediria o download.
+    if (emProducao) {
+        const loader = document.createElement('script');
+        loader.async = true;
+        loader.src = 'https://www.googletagmanager.com/gtag/js?id=' + ID_MEDICAO;
+        document.head.appendChild(loader);
+    }
 
+    // window.gtag continua definido nos dois casos: é a função que empilha no
+    // dataLayer, e analytics.js depende dela. Sem o loader, as chamadas se
+    // acumulam ali e ninguém as consome — que é exatamente o efeito desejado.
     gtag('js', new Date());
     gtag('config', ID_MEDICAO);
+
+    // Fora de produção, a página também não pode disputar posição na busca
+    // com o site oficial.
+    //
+    // Isto não podia ser resolvido por robots.txt: o preview é servido em
+    // maxcanoas.github.io/brucker-printers/, e arquivo em subpasta é ignorado
+    // pelo rastreador — só vale na raiz do host. E o robots.txt do repositório
+    // vai junto no pacote de deploy, então um "Disallow: /" ali bloquearia o
+    // site real.
+    //
+    // Havendo duas diretivas robots na página, o Google aplica a mais
+    // restritiva. O canonical absoluto, presente em todas as páginas e
+    // apontando para o domínio de produção, segue como defesa principal —
+    // esta é a segunda camada, para quando o rastreador renderiza o JS.
+    if (!emProducao) {
+        const semIndexacao = document.createElement('meta');
+        semIndexacao.name = 'robots';
+        semIndexacao.content = 'noindex, nofollow';
+        document.head.appendChild(semIndexacao);
+    }
 
     // Consumido por analytics.js (banner de consentimento e eventos).
     window.BP_MEDICAO = {
