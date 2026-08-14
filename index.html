@@ -5,13 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- Google Analytics (GA4) + Consent Mode v2 — snippet único em js/gtag-init.js -->
+    <!-- BP:GTAG -->
     <script>(function () {
 'use strict';
 const ID_MEDICAO = 'G-ZBKE5NWBW8';
 const CHAVE_CONSENTIMENTO = 'bp_consent';
+const HOSTS_DE_PRODUCAO = ['bruckerprinters.com.br', 'www.bruckerprinters.com.br'];
+const emProducao = HOSTS_DE_PRODUCAO.indexOf(location.hostname) !== -1;
 window.dataLayer = window.dataLayer || [];
 function gtag() { dataLayer.push(arguments); }
 window.gtag = gtag;
+if (!emProducao) window['ga-disable-' + ID_MEDICAO] = true;
 function lerConsentimento() {
 try {
 return localStorage.getItem(CHAVE_CONSENTIMENTO);
@@ -29,18 +33,27 @@ analytics_storage: analiseAutorizada ? 'granted' : 'denied',
 functionality_storage: 'granted',
 security_storage: 'granted'
 });
+if (emProducao) {
 const loader = document.createElement('script');
 loader.async = true;
 loader.src = 'https://www.googletagmanager.com/gtag/js?id=' + ID_MEDICAO;
 document.head.appendChild(loader);
+}
 gtag('js', new Date());
 gtag('config', ID_MEDICAO);
+if (!emProducao) {
+const semIndexacao = document.createElement('meta');
+semIndexacao.name = 'robots';
+semIndexacao.content = 'noindex, nofollow';
+document.head.appendChild(semIndexacao);
+}
 window.BP_MEDICAO = {
 idMedicao: ID_MEDICAO,
 chaveConsentimento: CHAVE_CONSENTIMENTO,
 escolhaRegistrada: escolhaRegistrada
 };
 })();</script>
+    <!-- /BP:GTAG -->
 
     <!-- SEO Meta Tags -->
     <title>Brücker Printers | Venda e Locação de Impressoras Ricoh</title>
@@ -237,7 +250,7 @@ escolhaRegistrada: escolhaRegistrada
                     </ul>
                 </div>
                 <div class="nav-item">
-                    <a href="index.html#solucoes" class="nav-link">Soluções</a>
+                    <a href="./#solucoes" class="nav-link">Soluções</a>
                     <ul class="nav-submenu" aria-label="Soluções">
                         <li><a href="locacao-de-impressoras-ricoh.html">Locação de impressoras</a></li>
                         <li><a href="venda-de-impressoras-ricoh.html">Venda de impressoras</a></li>
@@ -247,11 +260,11 @@ escolhaRegistrada: escolhaRegistrada
                         <li><a href="impressoras-para-graficas-porto-alegre.html">Atendimento em Porto Alegre</a></li>
                     </ul>
                 </div>
-                <a href="index.html#vantagens" class="nav-link">Vantagens</a>
-                <a href="index.html#diferenciais" class="nav-link">Diferenciais</a>
+                <a href="./#vantagens" class="nav-link">Vantagens</a>
+                <a href="./#diferenciais" class="nav-link">Diferenciais</a>
                 <a href="blog/" class="nav-link">Blog</a>
-                <a href="index.html#contato" class="nav-link">Contato</a>
-                <a href="http://localhost:5173/cliente" class="nav-link nav-link--subtle" target="_blank" rel="noopener noreferrer" data-evento="area-cliente">Área do Cliente</a>
+                <a href="./#contato" class="nav-link">Contato</a>
+                <a href="http://localhost:5173/cliente" class="nav-link nav-link--subtle" target="_blank" rel="noopener noreferrer" data-evento="area-cliente" data-origem="header">Área do Cliente</a>
                 <a href="https://wa.me/5551997371666?text=Ol%C3%A1!%20Gostaria%20de%20solicitar%20um%20or%C3%A7amento." class="btn-header" target="_blank" rel="noopener noreferrer" data-origem="header">Falar no WhatsApp</a>
             </nav>
             <button class="menu-toggle" id="menuToggle" aria-label="Menu de Navegação">
@@ -553,7 +566,7 @@ escolhaRegistrada: escolhaRegistrada
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92Z"/></svg>
                             </div>
                             <div class="contact-item-text">
-                                <strong>WhatsApp</strong>
+                                <strong>Telefone</strong>
                                 <a href="tel:+5551997371666" data-origem="secao_contato">(51) 99737-1666</a>
                             </div>
                         </div>
@@ -680,10 +693,10 @@ escolhaRegistrada: escolhaRegistrada
                 <div>
                     <h3>A empresa</h3>
                     <ul>
-                        <li><a href="index.html#sobre">Sobre a Brücker</a></li>
-                        <li><a href="index.html#vantagens">Vantagens da locação</a></li>
-                        <li><a href="index.html#diferenciais">Diferenciais</a></li>
-                        <li><a href="index.html#faq">Perguntas frequentes</a></li>
+                        <li><a href="./#sobre">Sobre a Brücker</a></li>
+                        <li><a href="./#vantagens">Vantagens da locação</a></li>
+                        <li><a href="./#diferenciais">Diferenciais</a></li>
+                        <li><a href="./#faq">Perguntas frequentes</a></li>
                         <li><a href="blog/">Blog</a></li>
                         <li><a href="impressoras-para-graficas-porto-alegre.html">Atendimento em Porto Alegre</a></li>
                         <li><a href="politica-privacidade-chamados.html">Política de Privacidade</a></li>
@@ -720,7 +733,7 @@ escolhaRegistrada: escolhaRegistrada
             </div>
 
             <div class="footer-links">
-                <a href="http://localhost:5173/cliente" target="_blank" rel="noopener noreferrer" data-evento="area-cliente">Área do Cliente</a>
+                <a href="http://localhost:5173/cliente" target="_blank" rel="noopener noreferrer" data-evento="area-cliente" data-origem="rodape">Área do Cliente</a>
                 <a href="politica-privacidade-chamados.html">Política de Privacidade — Brucker Chamados</a>
             </div>
 
