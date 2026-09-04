@@ -319,29 +319,20 @@ if (contactForm) {
 }
 
 // ===================================
-// ANIMAÇÃO DE SCROLL (INTERSECTION OBSERVER)
+// REVELAÇÃO AO ROLAR — AGORA É CSS
 // ===================================
-const observerOptions = {
-    threshold: 0.1,
-    rootMargin: '0px 0px -50px 0px'
-};
-
-const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            entry.target.style.opacity = '1';
-            entry.target.style.transform = 'translateY(0)';
-        }
-    });
-}, observerOptions);
-
-// Aplica animação aos elementos
-document.querySelectorAll('.solution-card, .advantage-item, .differential-card, .client-logo').forEach(el => {
-    el.style.opacity = '0';
-    el.style.transform = 'translateY(30px)';
-    el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-    observer.observe(el);
-});
+// Aqui existia um IntersectionObserver que escrevia opacity, transform e
+// transition como estilo *inline* nos cards. Dois problemas com isso:
+//
+// 1. Estilo inline vence qualquer folha, inclusive o bloco
+//    @media (prefers-reduced-motion: reduce). Quem pedia menos movimento
+//    recebia a animação assim mesmo.
+// 2. Se o JS falhasse depois de esconder os elementos, eles ficariam
+//    invisíveis para sempre.
+//
+// A revelação passou para css/site.css com animation-timeline: view(), dentro
+// de um @supports. Onde o recurso não existe, o bloco inteiro é ignorado e o
+// conteúdo aparece normalmente — nada depende de JS para ser visto.
 
 const currentYearEl = document.getElementById('currentYear');
 if (currentYearEl) currentYearEl.textContent = new Date().getFullYear();
