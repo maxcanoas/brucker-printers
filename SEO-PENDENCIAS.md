@@ -227,12 +227,18 @@ que responde em HTTPS. Para adotá-lo e dispensar o passo manual de deploy:
 `scripts/template.js`, constante `URL_AREA_CLIENTE`; apagar `EXCECOES_HTTP` de
 `scripts/verificar-seo.js`; rodar os geradores e o `sincronizar-html.js`.
 
-### 4.2 `css/style-impressora.min.css` sem uso
+### 4.2 `css/style-impressora.min.css` sem uso — RESOLVIDO
 
-Ficou órfão quando o hub migrou para `style.min.css` + `interna.min.css`. Não
-foi apagado — remover não traz ganho, já que não é mais servido a ninguém.
+Ficou órfão quando o hub migrou para `style.min.css` + `interna.min.css`.
 
-Só faz sentido excluir numa limpeza de repositório.
+**Resolvido em setembro de 2026**, no redesign do frontend: as três folhas
+antigas (`style`, `interna` e `style-impressora`) foram consolidadas em
+`css/site.css` e removidas do repositório. Ver `REDESIGN-FRONTEND.md`.
+
+**Atenção no próximo deploy:** os `.css` antigos continuam no servidor e agora
+não são servidos por página nenhuma — apagá-los é opcional. O que **não** é
+opcional é subir a pasta `fontes/`: sem ela a tipografia cai no fallback do
+sistema, e não há erro visível em lugar nenhum.
 
 ### 4.3 Imagens não referenciadas (~3,2 MB)
 

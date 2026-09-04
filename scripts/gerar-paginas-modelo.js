@@ -553,7 +553,7 @@ ${blocoFaq(conteudo)}
             <div class="container">
                 <h2>Modelos relacionados</h2>
 ${blocoRelacionados(conteudo)}
-                <p style="margin-top: 1.5rem;"><a href="/impressoras.html">Ver a comparação completa dos seis modelos</a></p>
+                <p><a href="/impressoras.html">Ver a comparação completa dos seis modelos</a></p>
             </div>
         </section>
 
@@ -729,7 +729,9 @@ ${avisoSemDado}
             <div class="container">
                 <h2>Ficha técnica de cada modelo</h2>
                 <p>Cada página traz as especificações completas, para qual operação o equipamento é indicado e o que está incluso no contrato de locação.</p>
+                <div class="relacionados-grid">
 ${cartoes}
+                </div>
             </div>
         </section>
 

@@ -256,6 +256,7 @@ p {
    menor elemento possível e no lugar em que ele significa alguma coisa. */
 @media (min-width: 900px) {
     .section::before,
+    .policy-wrapper::before,
     .pagina-topo::before {
         content: '';
         position: absolute;
@@ -268,6 +269,7 @@ p {
     }
 
     .section::after,
+    .policy-wrapper::after,
     .pagina-topo::after {
         content: '';
         position: absolute;
@@ -1564,7 +1566,8 @@ p {
     color: var(--white);
 }
 
-.pagina-topo::after {
+.pagina-topo::after,
+.policy-wrapper::after {
     top: calc(var(--altura-header) + clamp(2.5rem, 1rem + 4vw, 5rem));
 }
 
@@ -1718,7 +1721,7 @@ p {
 }
 
 .conteudo-texto > h2 {
-    font-size: var(--t-h2);
+    font-size: clamp(1.6rem, 1.25rem + 1.5vw, 2.25rem);
     color: var(--gray-900);
     margin-bottom: var(--spacing-md);
     max-width: 22ch;
@@ -1857,6 +1860,15 @@ p {
     border-top: 1px solid var(--hairline);
 }
 
+/* O hub lista os seis modelos e o auto-fit os quebrava em 5 + 1, deixando um
+   card sozinho na última linha. Com seis ou mais itens, três colunas dão 3 + 3.
+   Onde :has() não existir, o auto-fit continua valendo. */
+@media (min-width: 1100px) {
+    .relacionados-grid:has(> :nth-child(6)) {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
 .relacionado-card {
     display: block;
     padding: var(--spacing-md);
@@ -1962,16 +1974,11 @@ p {
     margin-top: auto;
 }
 
-.blog-link::after {
-    content: '';
-    width: 18px;
-    height: 1px;
-    background: currentColor;
-    transition: width .2s;
-}
-
-.blog-link:hover::after {
-    width: 26px;
+/* Sem o traço do .solution-link aqui: o texto deste link já traz uma seta,
+   escrita no gerador, e somar os dois daria "Ler o artigo → —". O conteúdo
+   não se mexe, então quem cede é o CSS. */
+.blog-link:hover {
+    color: var(--tinta);
 }
 
 /* Corpo do artigo. A medida limitada é o que torna 1.000+ palavras legíveis;
@@ -1980,8 +1987,10 @@ p {
     max-width: 68ch;
 }
 
+/* Menor que o h2 de seção: dentro de uma coluna de 68ch, o tamanho cheio
+   quebrava em duas linhas e engolia o texto que vem depois. */
 .artigo-corpo h2 {
-    font-size: var(--t-h2);
+    font-size: clamp(1.45rem, 1.2rem + 1vw, 1.95rem);
     color: var(--gray-900);
     margin-top: var(--spacing-xl);
     margin-bottom: var(--spacing-sm);
@@ -2202,14 +2211,88 @@ p {
    POLÍTICA DE PRIVACIDADE
    =================================== */
 
+/* Documento jurídico: coluna de leitura estreita, alinhada à esquerda como o
+   resto do site. Estas regras viviam num <style> próprio dentro da página, a
+   única exceção do site inteiro — agora seguem o mesmo sistema. */
 .policy-wrapper {
-    max-width: 68ch;
+    position: relative;
+    /* O box-sizing é border-box, então o padding entra na conta do max-width:
+       sem somar a margem aqui, a coluna de leitura encolheria justamente na
+       largura da margem de registro. */
+    max-width: calc(72ch + var(--margem) + var(--esp-lado));
+    padding: calc(var(--altura-header) + clamp(2.5rem, 1rem + 4vw, 5rem)) var(--esp-lado) var(--esp-secao) calc(var(--margem) + var(--esp-lado));
+    color: var(--gray-900);
+    line-height: 1.75;
+}
+
+.policy-wrapper h1 {
+    font-size: var(--t-h1);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-bottom: var(--spacing-xs);
+    color: var(--gray-900);
 }
 
 .policy-meta {
     font-size: var(--t-rotulo);
     text-transform: uppercase;
     color: var(--gray-500);
+    margin-bottom: 2.5rem;
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--hairline);
+}
+
+.policy-wrapper h2 {
+    font-size: var(--t-h3);
+    margin: 2.5rem 0 0.8rem;
+    color: var(--registro);
+}
+
+.policy-wrapper h3 {
+    font-size: 1.05rem;
+    margin: 1.5rem 0 0.6rem;
+    color: var(--gray-900);
+}
+
+.policy-wrapper p,
+.policy-wrapper li {
+    font-size: var(--t-base);
+    color: var(--gray-700);
+}
+
+.policy-wrapper ul {
+    padding-left: 1.4rem;
+    margin: 0.5rem 0 1rem;
+}
+
+.policy-wrapper li {
+    margin-bottom: 0.4rem;
+}
+
+.policy-wrapper a {
+    color: var(--registro);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+}
+
+.policy-wrapper table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0 1.5rem;
+    font-size: 0.925rem;
+}
+
+.policy-wrapper th,
+.policy-wrapper td {
+    border: 1px solid var(--hairline);
+    padding: 0.65rem 0.8rem;
+    text-align: left;
+    vertical-align: top;
+}
+
+.policy-wrapper th {
+    background: var(--gray-100);
+    font-weight: var(--font-weight-semibold);
 }
 
 /* ===================================
@@ -2327,6 +2410,18 @@ body.tem-cookie-banner .whatsapp-float {
 
 .footer-info {
     margin-bottom: var(--spacing-sm);
+}
+
+/* Estas duas regras existem para tirar do markup um style= inline que estava
+   repetido em 19 páginas (o h3) e em 6 (o link de comparação). Espaçamento é
+   trabalho da folha de estilo, não de atributo. */
+.footer-info h3 {
+    font-size: 1.1rem;
+    margin-bottom: var(--spacing-sm);
+}
+
+.relacionados-grid + p {
+    margin-top: var(--spacing-md);
 }
 
 .footer-info p {

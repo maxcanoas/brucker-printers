@@ -391,6 +391,11 @@ validar-schema                62 blocos, 0 erros
   Tudo que é novo está em `css/interna.css`.
 - **`css/style-impressora.min.css`** ficou **sem uso** quando o hub migrou para
   `style.min.css` + `interna.min.css`. Não foi apagado; ver pendências.
+
+  > **Superado em setembro de 2026.** O redesign do frontend consolidou
+  > `style.css` e `interna.css` num `css/site.css` único e apagou o
+  > `style-impressora`. O relato acima vale como registro do que era verdade na
+  > época; o estado atual está em `REDESIGN-FRONTEND.md`.
 - **Link da Área do Cliente** — aponta para `http://localhost:5173/cliente` em
   seis lugares. Mantido a seu pedido; ver pendências.
 - **Imagens órfãs** (~3,2 MB, incluindo um PNG de 1,86 MB não referenciado) —

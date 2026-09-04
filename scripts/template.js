@@ -406,7 +406,7 @@ function montarFooter(opcoes) {
         <div class="footer-content">
 ${montarMapaDoSite()}
             <div class="footer-info">
-                <h3 style="margin-bottom: 1rem;">Brücker Printers</h3>
+                <h3>Brücker Printers</h3>
                 <p>Soluções corporativas em impressão para empresas de todos os portes.</p>
                 <p>Venda | Locação | Manutenção Especializada</p>
             </div>
