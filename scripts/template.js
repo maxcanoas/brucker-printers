@@ -111,7 +111,13 @@ function aplicarBase(html, base) {
         .replace(/(href)="\/#/g, '$1="' + raizRelativa + '#')
         // Demais caminhos internos. O (?![/#]) evita mexer em "//" (protocolo
         // relativo) e nos casos já tratados acima.
-        .replace(/(href|src)="\/(?![/#])/g, '$1="' + prefixo);
+        .replace(/(href|src)="\/(?![/#])/g, '$1="' + prefixo)
+        // O CSS vai inline, então o url() das fontes é resolvido em relação ao
+        // HTML — e as páginas vivem em três profundidades. aplicarBase já sabe
+        // qual é o prefixo de cada uma; só faltava isso valer para url() também.
+        // Idempotente: a saída não tem barra inicial, então rodar de novo não
+        // muda nada. Exige aspas duplas no url(), que é como o site.css escreve.
+        .replace(/url\("\/(?![\/#])/g, 'url("' + prefixo);
 }
 
 function linkWhatsApp(mensagem) {
@@ -215,31 +221,30 @@ function montarHead(opcoes) {
 ${montarCss()}
 ${blocosJsonLd}`;
 }
-
-// CSS crítico embutido + folhas completas carregadas fora do caminho de
-// renderização.
+// O CSS inteiro vai embutido no bloco de estilo de cada página, sem <link>.
 //
-// O truque do rel="preload" com onload é o padrão para isso: o navegador
-// baixa o arquivo sem bloquear a pintura e só o aplica quando chega. O
-// <noscript> cobre quem está sem JavaScript, para quem o onload nunca
-// dispararia e a página ficaria só com o CSS crítico.
+// Por que embutir tudo, e não só o crítico: a versão com crítico inline mais
+// folhas assíncronas baixou o LCP de 4,3 s para 3,3 s, mas levou o CLS de 0
+// para 0,152 — acima do limite de 0,1. Quando o CSS completo chega depois da
+// primeira pintura, todo elemento que ele estiliza se reposiciona. Cobrir isso
+// exigiria um "crítico" do tamanho do arquivo inteiro. Embutido não há segunda
+// pintura: some o bloqueio de rede e some o deslocamento.
+//
+// O custo é não ter cache entre páginas. Para tráfego de busca, que chega
+// direto na página de destino e costuma ver uma só, a troca compensa.
+//
+// As fontes são a exceção e ficam em arquivo separado de propósito: são o único
+// asset que vale a pena cachear entre navegações. O preload precisa de
+// crossorigin mesmo sendo same-origin — sem ele o navegador usa um modo de CORS
+// diferente do fetch do @font-face e baixa a fonte duas vezes. Ele também é o
+// que faz preparar-deploy.js enxergar o .woff2: aquele script só segue href e
+// src, então fonte citada apenas em url() dentro do CSS não iria para o pacote.
+//
+// Só a Archivo é pré-carregada: é ela que pinta o H1, e somar uma segunda fonte
+// de alta prioridade competiria com o elemento de LCP. A mono entra com swap.
 function montarCss() {
-    return `    <!-- CSS completo embutido, gerado a partir de css/style.min.css e
-         css/interna.min.css. Não edite aqui — edite os .css e rode:
-         node scripts/build-assets.js && os geradores.
-
-         Por que embutir tudo, e não só o crítico: a versão com crítico inline
-         + folhas assíncronas baixou o LCP de 4,3 s para 3,3 s, mas levou o CLS
-         de 0 para 0,152 — acima do limite de 0,1. Quando o CSS completo chega
-         depois da primeira pintura, todo elemento que ele estiliza se
-         reposiciona. Cobrir isso exigiria um "crítico" do tamanho do arquivo
-         inteiro. Embutido, não há segunda pintura: some o bloqueio de rede e
-         some o deslocamento.
-
-         O custo é não ter cache entre páginas. Para tráfego de busca, que
-         chega direto na página de destino e costuma ver uma só, a troca
-         compensa. -->
-    <style>${lerAsset('css/style.min.css')}${lerAsset('css/interna.min.css')}</style>`;
+    return `    <link rel="preload" as="font" type="font/woff2" href="/fontes/archivo-var-latin.woff2" crossorigin>
+    <style>${lerAsset('css/site.min.css')}</style>`;
 }
 
 // ===================================

@@ -110,6 +110,11 @@ Options -Indexes
     ExpiresByType image/svg+xml "access plus 1 year"
     ExpiresByType image/x-icon "access plus 1 year"
 
+    # Fontes têm nome estável e conteúdo imutável: um ano é seguro. Sem esta
+    # regra elas não recebiam cabeçalho de expiração nenhum e eram revalidadas
+    # a cada navegação — o que anularia a razão de servi-las do próprio site.
+    ExpiresByType font/woff2 "access plus 1 year"
+
     ExpiresByType application/xml "access plus 1 day"
     ExpiresByType text/plain "access plus 1 day"
 </IfModule>
@@ -119,6 +124,7 @@ Options -Indexes
 # ===================================
 <IfModule mod_mime.c>
     AddType image/webp .webp
+    AddType font/woff2 .woff2
     AddType application/manifest+json .webmanifest
     AddCharset UTF-8 .html .css .js .xml .txt
 </IfModule>

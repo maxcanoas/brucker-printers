@@ -24,11 +24,17 @@ const vm = require('vm');
 
 const RAIZ = path.resolve(__dirname, '..');
 
-// Fontes gerenciadas por este script. style.css e style-impressora.css ficam
-// de fora: seus .min foram minificados à mão de forma mais agressiva e estão
-// em produção há meses — regerá-los aumentaria o arquivo sem ganho algum.
+// Fontes gerenciadas por este script.
+//
+// Antes, style.css ficava de fora daqui e seu .min era minificado à mão. Ou
+// seja: editar css/style.css não tinha efeito nenhum no site. Era uma
+// armadilha silenciosa — o arquivo parecia a fonte da verdade e não era.
+// Medido: deixar o minificador cuidar dele custava 82 bytes (0,4%), cerca de
+// 20 depois do gzip. O preço de uma fonte de CSS que mente é bem maior.
+//
+// Hoje existe um arquivo só, css/site.css, gerado como todos os outros.
 const ALVOS = [
-    'css/interna.css',
+    'css/site.css',
     'js/gtag-init.js',
     'js/analytics.js',
     'js/script.js'

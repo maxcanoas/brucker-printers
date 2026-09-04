@@ -86,6 +86,19 @@ paginas.forEach(function (arquivo) {
         registrar(alvo);
     }
 
+    // url() dentro do CSS embutido — hoje só as fontes.
+    //
+    // Sem isto, um .woff2 citado apenas no @font-face não vai para o pacote: o
+    // site sobe, o navegador não acha a fonte e cai no fallback, sem erro
+    // visível em lugar nenhum. Foi o que aconteceu com a mono, que não tem
+    // preload porque pré-carregar duas faces competiria com o elemento de LCP.
+    const rxUrlCss = /url\("([^"]+)"\)/g;
+    while ((m = rxUrlCss.exec(html)) !== null) {
+        const valor = m[1];
+        if (/^(https?:|data:|\/\/)/i.test(valor)) continue;
+        registrar(path.resolve(pasta, valor.split('?')[0]));
+    }
+
     // og:image, twitter:image e demais metas que apontam para arquivo do site.
     const rxMeta = /content="(https:\/\/bruckerprinters\.com\.br\/[^"]+)"/g;
     while ((m = rxMeta.exec(html)) !== null) {
