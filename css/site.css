@@ -661,7 +661,9 @@ p {
     margin-bottom: var(--spacing-md);
     color: rgba(255, 255, 255, 0.82);
     line-height: 1.7;
-    max-width: 46ch;
+    /* 40ch, e não 46: a diagonal desce da direita para a esquerda, então é a
+       última linha do parágrafo que chega mais perto do corte. */
+    max-width: 40ch;
 }
 
 .hero-content p:last-of-type {
@@ -2653,6 +2655,97 @@ body.tem-cookie-banner .whatsapp-float {
     }
 }
 
+/* A composição em diagonal precisa de largura para existir.
+
+   A diagonal converge para a esquerda conforme desce, então em tela estreita
+   ela avança sobre a base do bloco de texto — e o texto do hero é branco,
+   enquanto o papel do outro lado é claro: as últimas linhas simplesmente
+   somem. Tentar calibrar o ângulo por breakpoint só empurra o problema de uma
+   faixa de largura para outra; medido linha a linha com Range.getClientRects(),
+   sempre sobrava alguma largura em que vazava.
+
+   Abaixo de 1250px o hero então vira o que já era no celular: um bloco de
+   tinta inteiro, texto em cima, máquina embaixo, e a barra de controle
+   fechando na horizontal. A assinatura fica onde ela funciona. */
+@media (max-width: 1250px) {
+    .hero {
+        padding-bottom: 0;
+    }
+
+    .hero::before {
+        clip-path: none;
+        inset: -1px;
+        width: auto;
+    }
+
+    .hero::after {
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: auto;
+        height: 8px;
+        clip-path: none;
+        transform: none;
+        background: var(--strip-inv);
+    }
+
+    .hero-container {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-xl);
+    }
+
+    .hero-content h1,
+    .hero-content p {
+        max-width: 22ch;
+    }
+
+    .hero-content p {
+        max-width: 52ch;
+    }
+
+    .hero-image {
+        margin-bottom: 2.5rem;
+        justify-content: flex-start;
+    }
+
+    /* Sobre tinta as fotos não podem usar multiply: o fundo branco viraria
+       preto e a máquina sumiria. */
+    .carousel-slide img {
+        mix-blend-mode: normal;
+    }
+
+    .carousel-slide {
+        background: var(--white);
+    }
+
+    .carousel::before,
+    .carousel::after {
+        border-color: rgba(255, 255, 255, 0.45);
+    }
+
+    .carousel-btn {
+        color: var(--white);
+        border-color: rgba(255, 255, 255, 0.5);
+    }
+
+    .carousel-btn-prev {
+        left: 10px;
+    }
+
+    .carousel-btn-next {
+        right: 10px;
+    }
+
+    .carousel-indicator {
+        background: rgba(255, 255, 255, 0.4);
+    }
+
+    .carousel-indicator.active {
+        background: var(--marca);
+    }
+}
+
 @media (max-width: 1024px) {
     .differential-card {
         grid-template-columns: 1fr;
@@ -2744,75 +2837,6 @@ body.tem-cookie-banner .whatsapp-float {
         color: var(--gray-500);
         white-space: normal;
         border-left: 0;
-    }
-
-    /* A diagonal não funciona em coluna única: vira uma faixa torta atrás do
-       texto. No mobile o hero volta a ser um bloco de tinta inteiro, com a
-       barra de controle na horizontal fechando o bloco. */
-    .hero {
-        padding-bottom: 0;
-    }
-
-    .hero::before {
-        clip-path: none;
-        inset: -1px;
-        width: auto;
-    }
-
-    .hero::after {
-        top: auto;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        width: auto;
-        height: 8px;
-        transform: none;
-        background: var(--strip-inv);
-    }
-
-    .hero-container {
-        grid-template-columns: 1fr;
-        gap: var(--spacing-xl);
-    }
-
-    .hero-image {
-        margin-bottom: 2.5rem;
-    }
-
-    /* Sobre tinta as fotos não podem usar multiply: o fundo branco viraria
-       preto e a máquina sumiria. */
-    .carousel-slide img {
-        mix-blend-mode: normal;
-    }
-
-    .carousel-slide {
-        background: var(--white);
-    }
-
-    .carousel::before,
-    .carousel::after {
-        border-color: rgba(255, 255, 255, 0.45);
-    }
-
-    .carousel-btn {
-        color: var(--white);
-        border-color: rgba(255, 255, 255, 0.5);
-    }
-
-    .carousel-btn-prev {
-        left: 4px;
-    }
-
-    .carousel-btn-next {
-        right: 4px;
-    }
-
-    .carousel-indicator {
-        background: rgba(255, 255, 255, 0.4);
-    }
-
-    .carousel-indicator.active {
-        background: var(--marca);
     }
 
     .about-content,

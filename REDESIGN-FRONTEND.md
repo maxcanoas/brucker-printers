@@ -85,6 +85,18 @@ imagem nenhuma. Sobre o corte corre a barra de controle de cor, recortada pelo
 que a faz acompanhar a diagonal em qualquer altura de viewport. Uma faixa girada
 por `rotate()` só casaria numa altura.
 
+**A diagonal só existe acima de 1250px.** Ela converge para a esquerda conforme
+desce, então em tela estreita avançava sobre a base do bloco de texto — e o
+texto do hero é branco, enquanto o papel do outro lado é claro: as últimas
+linhas do parágrafo ficavam ilegíveis entre ~950px e ~1280px. Calibrar o ângulo
+por breakpoint só empurrava o problema de uma faixa para outra. Abaixo de
+1250px o hero vira o que já era no celular: bloco de tinta inteiro, texto em
+cima, máquina embaixo, barra de controle fechando na horizontal.
+
+Verificado com `Range.getClientRects()` linha a linha (a caixa do elemento
+pode ser larga com linhas curtas), em 21 larguras de 360px a 2560px: nenhuma
+vaza, e a menor folga é de 21px, no próprio limiar.
+
 A diagonal aparece **uma vez só**. Repetida entre seções viraria o clichê de
 2015 que essa escolha existe para evitar.
 
