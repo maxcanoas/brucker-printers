@@ -252,7 +252,12 @@ if (contactForm) {
             return;
         }
 
+        // Diz ao Luciano de qual página o pedido saiu. O nome legível vem do
+        // data-pagina do <form>; sem ele, o caminho da URL ainda identifica.
+        const paginaOrigem = contactForm.getAttribute('data-pagina') || window.location.pathname;
+
         let whatsappMessage = `*Solicitação de Orçamento*\n\n`;
+        whatsappMessage += `*Origem:* site, ${paginaOrigem}\n`;
         whatsappMessage += `*Nome:* ${name}\n`;
         whatsappMessage += `*Empresa:* ${company}\n`;
         whatsappMessage += `*E-mail:* ${email}\n`;

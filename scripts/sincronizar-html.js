@@ -51,11 +51,24 @@ function substituirEntreMarcadores(html, inicioMarcador, fimMarcador, novo) {
         html.slice(fim);
 }
 
+// zapTexto é a mensagem do WhatsApp do header e do botão flutuante, e diz de
+// qual página o contato veio (ver exigirZapTexto em template.js). Os links de
+// WhatsApp escritos à mão no corpo destas páginas — o hero da home, o botão da
+// 404 — não passam por aqui: precisam ser mantidos com o mesmo texto à mão.
 const ARQUIVOS = [
-    { nome: 'index.html', ativo: null, schema: 'home' },
-    { nome: 'politica-privacidade-chamados.html', ativo: null, schema: 'interna' },
+    {
+        nome: 'index.html', ativo: null, schema: 'home',
+        zapTexto: 'Olá! Vim pelo site, pela página inicial, e gostaria de solicitar um orçamento.'
+    },
+    {
+        nome: 'politica-privacidade-chamados.html', ativo: null, schema: 'interna',
+        zapTexto: 'Olá! Vim pelo site, pela página de política de privacidade, e gostaria de falar com vocês.'
+    },
     // 404 é noindex: dado estruturado ali não serve para nada.
-    { nome: '404.html', ativo: null, schema: 'nenhum' }
+    {
+        nome: '404.html', ativo: null, schema: 'nenhum',
+        zapTexto: 'Olá! Vim pelo site, mas a página que eu procurava não foi encontrada. Podem me ajudar?'
+    }
 ];
 
 // Substitui o trecho entre a tag de abertura e seu fechamento.
@@ -135,7 +148,7 @@ ARQUIVOS.forEach(function (alvo) {
     // --- Menu ---
     // Reaproveita o header completo do template e extrai só o <nav>, para
     // que exista uma única definição de navegação no projeto.
-    const headerModelo = T.montarHeader({ ativo: alvo.ativo });
+    const headerModelo = T.montarHeader({ ativo: alvo.ativo, zapTexto: alvo.zapTexto });
     const navModelo = headerModelo.slice(
         headerModelo.indexOf('<nav class="nav"'),
         headerModelo.indexOf('</nav>') + '</nav>'.length
@@ -159,7 +172,7 @@ ARQUIVOS.forEach(function (alvo) {
     // por rodada e o modo --verificar nunca dizia "em dia".
     html = html.replace(/[ \t]*<a href="[^"]*" class="whatsapp-float"[\s\S]*?<\/a>[ \t]*\r?\n(?:[ \t]*\r?\n)*/g, '');
 
-    const rodapeModelo = T.montarFooter().replace(/^ {4}/, '');
+    const rodapeModelo = T.montarFooter({ zapTexto: alvo.zapTexto }).replace(/^ {4}/, '');
     const comRodape = substituirBloco(html, '<footer class="footer">', '</footer>', rodapeModelo);
     if (comRodape === null) {
         console.error('  ERRO      ' + alvo.nome + ' — bloco <footer class="footer"> não encontrado');

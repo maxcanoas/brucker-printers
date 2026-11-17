@@ -323,8 +323,10 @@ const CONTEUDO = {
 
 const escapar = T.escapar;
 
-function linkWhatsApp(nomeModelo) {
-    return T.linkWhatsApp('Olá! Gostaria de um orçamento para a ' + nomeModelo + '.');
+// A mensagem nomeia o modelo para o Luciano saber de qual página o contato
+// veio (ver exigirZapTexto em template.js).
+function textoWhatsApp(nomeModelo) {
+    return 'Olá! Vim pelo site, pela página da ' + nomeModelo + ', e gostaria de um orçamento.';
 }
 
 function porId(id) {
@@ -414,7 +416,8 @@ function jsonLdBreadcrumb(modelo, conteudo) {
 
 function montarPagina(modelo, conteudo) {
     const url = SITE + '/impressoras/' + conteudo.slug + '.html';
-    const zap = linkWhatsApp(modelo.nome);
+    const zapTexto = textoWhatsApp(modelo.nome);
+    const zap = T.linkWhatsApp(zapTexto);
     const destaques = modelo.destaques.map(function (d) {
         return '                        <li>' + escapar(d) + '</li>';
     }).join('\n');
@@ -468,7 +471,7 @@ ${T.montarHead({
     })}
 </head>
 <body>
-${T.montarHeader({ zap: zap, modelo: modelo.nome, ativo: 'impressoras' })}
+${T.montarHeader({ zapTexto: zapTexto, modelo: modelo.nome, ativo: 'impressoras' })}
 
     <main>
         <div class="pagina-topo">
@@ -568,7 +571,7 @@ ${blocoRelacionados(conteudo)}
         </section>
     </main>
 
-${T.montarFooter({ zapTexto: 'Olá! Gostaria de um orçamento para a ' + modelo.nome + '.', modelo: modelo.nome })}
+${T.montarFooter({ zapTexto: zapTexto, modelo: modelo.nome })}
 
 ${T.montarScripts()}
 </body>
@@ -649,7 +652,8 @@ function montarHub() {
             '                    </a>';
     }).join('\n');
 
-    const zapGeral = T.linkWhatsApp('Olá! Gostaria de mais informações sobre as impressoras Ricoh.');
+    const zapTextoHub = 'Olá! Vim pelo site, pela página de comparação dos modelos, e gostaria de mais informações sobre as impressoras Ricoh.';
+    const zapGeral = T.linkWhatsApp(zapTextoHub);
     const descricaoHub = 'Compare os 6 modelos de impressora Ricoh lado a lado: velocidade, volume mensal, formato e gramatura. Escolha o equipamento certo e peça um orçamento.';
 
     const trilhaHub = [
@@ -687,7 +691,7 @@ ${T.montarHead({
     })}
 </head>
 <body>
-${T.montarHeader({ zap: zapGeral, ativo: 'impressoras' })}
+${T.montarHeader({ zapTexto: zapTextoHub, ativo: 'impressoras' })}
 
     <main>
         <div class="pagina-topo">
@@ -757,7 +761,7 @@ ${cartoes}
         </section>
     </main>
 
-${T.montarFooter()}
+${T.montarFooter({ zapTexto: zapTextoHub })}
 
 ${T.montarScripts()}
 </body>

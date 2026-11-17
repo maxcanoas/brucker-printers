@@ -15,6 +15,7 @@
 //
 //   + links internos apontando para arquivo inexistente
 //   + âncoras (#secao) apontando para id que não existe
+//   + mensagem de WhatsApp própria em cada página (origem do lead)
 //
 // Sai com código 1 se houver erro, para poder ser usado antes de publicar.
 //
@@ -360,6 +361,51 @@ paginas.forEach(function (p) {
             }
         } else {
             paragrafosVistos.set(chave, p.url);
+        }
+    });
+});
+
+// --- Mensagem de WhatsApp identifica a página ---
+//
+// O Luciano descobre de onde veio o lead pela mensagem que chega no celular:
+// cada página pré-preenche um texto próprio ("Vim pelo site, pela página da
+// Ricoh Pro C5300, e..."). Se duas páginas usarem o mesmo texto, os contatos
+// delas ficam indistinguíveis na conversa, e o GA4 não ajuda nisso: registra
+// o clique, mas não tem como ligá-lo à conversa que chega no WhatsApp.
+//
+// template.js já recusa header e botão flutuante sem texto. Esta checagem
+// cobre o que ele não vê: os links escritos à mão (hero da home, botão da 404)
+// e a repetição de texto entre páginas. Vários links da mesma página com o
+// mesmo texto é o esperado.
+
+const donoDaMensagem = new Map();
+const repeticoesAcusadas = new Set();
+
+paginas.forEach(function (p) {
+    p.hrefs.forEach(function (href) {
+        if (!/^https:\/\/(wa\.me|api\.whatsapp\.com)\//.test(href)) return;
+
+        let texto = null;
+        try {
+            texto = new URL(href.replace(/&amp;/g, '&')).searchParams.get('text');
+        } catch (e) {
+            // URL malformada cai no erro de "sem mensagem" logo abaixo.
+        }
+
+        if (!texto) {
+            erros.push(p.url + ' — link de WhatsApp sem mensagem pré-preenchida: ' + href);
+            return;
+        }
+
+        const dono = donoDaMensagem.get(texto);
+        if (dono === undefined) {
+            donoDaMensagem.set(texto, p.url);
+        } else if (dono !== p.url && !repeticoesAcusadas.has(p.url + '\n' + texto)) {
+            // Header e botão flutuante repetem o texto na mesma página: sem
+            // isto, a mesma colisão sairia uma vez por link.
+            repeticoesAcusadas.add(p.url + '\n' + texto);
+            erros.push('mensagem de WhatsApp repetida entre ' + dono + ' e ' + p.url +
+                ' (o Luciano não saberá de qual das duas o contato veio): "' + texto + '"');
         }
     });
 });

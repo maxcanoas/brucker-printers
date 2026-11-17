@@ -51,7 +51,7 @@ const ARTIGOS = [
     excerto: 'Multiplicar a mensalidade pelos meses e comparar com o preço à vista é a conta que quase todo mundo faz — e ela está errada em três pontos. Veja o método completo.',
     ctaTitulo: 'Quer montar essa comparação para o seu caso?',
     ctaTexto: 'Levantamos os quatro custos com você, com os números da sua operação, e apresentamos as duas propostas lado a lado.',
-    zapTexto: 'Olá! Li o artigo sobre locação ou compra e gostaria de avaliar meu caso.',
+    zapTexto: 'Olá! Vim pelo site, pelo artigo do blog sobre locação ou compra de impressora, e gostaria de avaliar meu caso.',
     secoes: [
         {
             id: 'nao-existe-resposta-universal',
@@ -152,7 +152,7 @@ const ARTIGOS = [
     excerto: 'O rendimento declarado no catálogo pressupõe 5% de cobertura por cor. Seu folder colorido tem 40%. Este é só o primeiro dos quatro erros que distorcem a conta.',
     ctaTitulo: 'Quer ajuda para levantar esses números?',
     ctaTexto: 'O diagnóstico do parque cobre volume real por setor, consumo de suprimentos e taxa de refugo — as variáveis que a maioria das operações não tem medidas.',
-    zapTexto: 'Olá! Li o artigo sobre custo por página e gostaria de uma análise da minha operação.',
+    zapTexto: 'Olá! Vim pelo site, pelo artigo do blog sobre custo por página, e gostaria de uma análise da minha operação.',
     secoes: [
         {
             id: 'por-que-quase-ninguem-calcula-certo',
@@ -255,7 +255,7 @@ const ARTIGOS = [
     excerto: 'A conversa quase sempre começa pela velocidade, que é o critério que menos elimina opções. Comece pelo volume e pela gramatura — e leve um checklist de sete itens.',
     ctaTitulo: 'Já tem os sete números do checklist?',
     ctaTexto: 'Com eles em mãos, conseguimos recomendar o equipamento certo — inclusive dizer que o modelo menor já resolve, quando for o caso.',
-    zapTexto: 'Olá! Li o artigo sobre o que avaliar numa impressora de produção e quero uma recomendação.',
+    zapTexto: 'Olá! Vim pelo site, pelo artigo do blog sobre o que avaliar numa impressora colorida, e quero uma recomendação.',
     secoes: [
         {
             id: 'ordem-importa',
@@ -432,7 +432,7 @@ ${T.montarHead({
     })}
 </head>
 <body>
-${T.montarHeader({ zap: zap })}
+${T.montarHeader({ zapTexto: artigo.zapTexto })}
 
     <main>
         <div class="pagina-topo">
@@ -481,7 +481,7 @@ ${ARTIGOS.filter(function (outro) { return outro.slug !== artigo.slug; }).map(fu
         </section>
     </main>
 
-${T.montarFooter()}
+${T.montarFooter({ zapTexto: artigo.zapTexto })}
 
 ${T.montarScripts()}
 </body>
@@ -491,7 +491,8 @@ ${T.montarScripts()}
 
 function montarIndice() {
     const url = T.SITE + '/blog/';
-    const zap = T.linkWhatsApp('Olá! Gostaria de falar sobre impressoras Ricoh.');
+    const zapTexto = 'Olá! Vim pelo site, pela página do blog, e gostaria de falar sobre impressoras Ricoh.';
+    const zap = T.linkWhatsApp(zapTexto);
 
     const trilha = [
         { nome: 'Início', url: '/' },
@@ -519,7 +520,7 @@ ${T.montarHead({
     })}
 </head>
 <body>
-${T.montarHeader({ zap: zap })}
+${T.montarHeader({ zapTexto: zapTexto })}
 
     <main>
         <div class="pagina-topo">
@@ -551,7 +552,7 @@ ${T.montarCta({
         </section>
     </main>
 
-${T.montarFooter()}
+${T.montarFooter({ zapTexto: zapTexto })}
 
 ${T.montarScripts()}
 </body>

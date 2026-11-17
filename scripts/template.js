@@ -124,6 +124,24 @@ function linkWhatsApp(mensagem) {
     return 'https://wa.me/' + WHATSAPP + '?text=' + encodeURIComponent(mensagem);
 }
 
+// Mensagem pré-preenchida do WhatsApp: cada página tem a sua, e ela diz de
+// qual página o contato saiu ("Vim pelo site, pela página da Ricoh Pro
+// C5300, e..."). É o que permite ao Luciano saber a origem do lead lendo a
+// conversa — o GA4 registra a página do clique, mas não liga o clique à
+// conversa que chega no celular.
+//
+// Por isso não existe texto padrão: uma página nova sem zapTexto falha aqui,
+// em vez de sair com uma mensagem genérica que não diz de onde veio.
+// verificar-seo.js confere ainda que duas páginas não compartilhem o mesmo
+// texto.
+function exigirZapTexto(opcoes, quem) {
+    if (!opcoes || !opcoes.zapTexto) {
+        throw new Error(quem + ': zapTexto é obrigatório — a mensagem do WhatsApp ' +
+            'precisa dizer de qual página o contato veio.');
+    }
+    return opcoes.zapTexto;
+}
+
 // ===================================
 // HEAD
 // ===================================
@@ -251,7 +269,8 @@ function montarCss() {
 // HEADER
 // ===================================
 // ativo: 'impressoras' | 'solucoes' | null — marca o item corrente.
-// zap: link de WhatsApp específico da página, com data-modelo se aplicável.
+// zapTexto: mensagem de WhatsApp da página (obrigatória, ver exigirZapTexto).
+// modelo: nome do modelo, vira data-modelo para o GA4.
 
 // A navegação é gerada a partir de MODELOS e SERVICOS: incluir uma página
 // nova nessas listas já a coloca no menu e no mapa do site, sem risco de
@@ -291,8 +310,7 @@ ${itensServicos}
 }
 
 function montarHeader(opcoes) {
-    opcoes = opcoes || {};
-    const zap = opcoes.zap || linkWhatsApp('Olá! Gostaria de solicitar um orçamento.');
+    const zap = linkWhatsApp(exigirZapTexto(opcoes, 'montarHeader'));
     const dataModelo = opcoes.modelo ? ' data-modelo="' + escapar(opcoes.modelo) + '"' : '';
 
     return `    <header class="header" id="header">
@@ -390,8 +408,7 @@ ${servicos}
 // arquivos escritos à mão — assim o botão chega às dezenove páginas sem
 // precisar de um ponto de inserção próprio.
 function montarFooter(opcoes) {
-    opcoes = opcoes || {};
-    const zap = linkWhatsApp(opcoes.zapTexto || 'Olá! Gostaria de solicitar um orçamento.');
+    const zap = linkWhatsApp(exigirZapTexto(opcoes, 'montarFooter'));
     const dataModelo = opcoes.modelo ? ' data-modelo="' + escapar(opcoes.modelo) + '"' : '';
 
     return `    <a href="${zap}" class="whatsapp-float" target="_blank" rel="noopener noreferrer"

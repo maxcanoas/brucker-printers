@@ -43,7 +43,7 @@ const PAGINAS = [
     h1: 'Locação de impressoras Ricoh',
     tipoServico: 'Locação de equipamentos de impressão',
     resumo: 'Mensalidade fixa que já inclui equipamento, manutenção, peças originais e franquia de páginas. Sem investimento inicial e sem custo de manutenção fora do orçamento.',
-    zapTexto: 'Olá! Gostaria de um orçamento de locação de impressoras Ricoh.',
+    zapTexto: 'Olá! Vim pelo site, pela página de locação de impressoras, e gostaria de um orçamento de locação.',
     secoes: [
         {
             h2: 'O problema que a locação resolve',
@@ -109,7 +109,7 @@ const PAGINAS = [
     h1: 'Venda de impressoras Ricoh',
     tipoServico: 'Venda de equipamentos de impressão',
     resumo: 'Equipamentos novos e seminovos para quem prefere ter a impressora como ativo próprio, com garantia estendida disponível e suporte técnico depois da entrega.',
-    zapTexto: 'Olá! Gostaria de um orçamento de compra de impressoras Ricoh.',
+    zapTexto: 'Olá! Vim pelo site, pela página de venda de impressoras, e gostaria de um orçamento de compra.',
     secoes: [
         {
             h2: 'Comprar significa ter o ativo',
@@ -173,7 +173,7 @@ const PAGINAS = [
     h1: 'Assistência técnica Ricoh',
     tipoServico: 'Manutenção e assistência técnica de impressoras',
     resumo: 'Para quem já tem equipamento Ricoh e precisa de suporte contínuo: SLA de 24 a 48 horas, peças e suprimentos originais e equipe certificada pela Ricoh.',
-    zapTexto: 'Olá! Preciso de assistência técnica para minha impressora Ricoh.',
+    zapTexto: 'Olá! Vim pelo site, pela página de assistência técnica, e preciso de assistência para minha impressora Ricoh.',
     secoes: [
         {
             h2: 'O custo real de uma máquina parada',
@@ -246,7 +246,7 @@ const PAGINAS = [
     h1: 'Outsourcing de impressão',
     tipoServico: 'Terceirização da gestão de parque de impressão',
     resumo: 'Terceirização da gestão do parque de impressão: diagnóstico, equipamentos dimensionados, suprimentos e manutenção sob um contrato único, com custo por página conhecido.',
-    zapTexto: 'Olá! Gostaria de saber mais sobre outsourcing de impressão.',
+    zapTexto: 'Olá! Vim pelo site, pela página de outsourcing de impressão, e gostaria de saber mais.',
     secoes: [
         {
             h2: 'O que é outsourcing de impressão',
@@ -321,7 +321,7 @@ const PAGINAS = [
     descricao: 'Venda, locação e assistência técnica de impressoras Ricoh para gráficas em Porto Alegre e região metropolitana. Base em Canoas. Peça um orçamento.',
     h1: 'Impressoras para gráficas em Porto Alegre e região metropolitana',
     resumo: 'Nossa base fica em Canoas, na região metropolitana de Porto Alegre. Venda, locação e assistência técnica de impressoras Ricoh para gráficas da Grande POA.',
-    zapTexto: 'Olá! Sou de Porto Alegre e gostaria de um orçamento de impressoras Ricoh.',
+    zapTexto: 'Olá! Vim pelo site, pela página de atendimento em Porto Alegre, e gostaria de um orçamento de impressoras Ricoh.',
     regional: true,
     secoes: [
         {
@@ -514,7 +514,7 @@ function montarPagina(pagina) {
 ${head}
 </head>
 <body>
-${T.montarHeader({ zap: zap })}
+${T.montarHeader({ zapTexto: pagina.zapTexto })}
 
     <main>
         <div class="pagina-topo">
@@ -550,7 +550,7 @@ ${T.montarCta({ titulo: pagina.cta.titulo, texto: pagina.cta.texto, zap: zap, or
         </section>
     </main>
 
-${T.montarFooter()}
+${T.montarFooter({ zapTexto: pagina.zapTexto })}
 
 ${T.montarScripts()}
 </body>
